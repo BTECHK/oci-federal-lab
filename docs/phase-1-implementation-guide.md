@@ -6481,6 +6481,8 @@ echo '{"eventType":"com.oraclecloud.objectstorage.createobject","data":{"resourc
 > **Strong answer:** "CloudBees Jenkins is the enterprise distribution of Jenkins. It adds features critical for federal environments: RBAC with fine-grained permissions, audit trails for compliance (who ran what pipeline when), high availability with managed controllers, and enterprise support with SLAs. The core pipeline syntax (Jenkinsfile, stages, steps) is identical — CloudBees wraps Jenkins with enterprise governance. I built my pipelines on open-source Jenkins because CloudBees requires a license, but every Jenkinsfile I wrote would run on CloudBees without modification."
 >
 > **Weak answer:** "I'm not sure what CloudBees is." (Shows you didn't read the JD carefully)
+>
+> **What's coming next:** In Phase 2, you will migrate this open-source Jenkins instance to CloudBees CI (using the 30-day free trial) to experience the migration firsthand — backup, WAR replacement, license activation, and enterprise feature configuration. Phase 3 deepens CloudBees usage with pipeline templates, CasC bundle versioning, and cross-team governance. By the end, you'll have a complete Jenkins → CloudBees CI migration story for interviews.
 
 ---
 

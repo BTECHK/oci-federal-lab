@@ -3241,18 +3241,13 @@ Your Laptop (git push)
 
 📍 **Bastion Terminal**
 
-> **CloudBees vs Open-Source Jenkins**
+> **CloudBees CI — Returning from Phase 2 Migration**
 >
-> This lab uses open-source Jenkins. In AFS production environments, you'd use **CloudBees Jenkins** which adds:
-> - **RBAC**: Control who can create/run/approve pipelines (maps to NIST AC-3)
-> - **Audit logging**: Every pipeline run, approval, and config change is logged (maps to NIST AU-2)
-> - **Managed controllers**: High-availability Jenkins with automatic failover
-> - **Pipeline templates**: Standardized pipeline patterns enforced across teams
-> - **Cross-team visibility**: Dashboard showing all teams' pipeline health
+> In Phase 2, you migrated from open-source Jenkins to CloudBees CI (or the open-source plugin equivalent). You configured RBAC, CasC, and audit trails. Phase 3 starts with a fresh environment, so you'll do a speed-run of that setup, then go deeper with **pipeline templates**, **cross-team visibility**, and **CasC bundle versioning** in Step 23.13.
 >
 > Your Jenkinsfile syntax is 100% compatible — CloudBees runs standard Jenkins pipelines. The difference is the governance wrapper around it.
 
-> Jenkins was installed in Phase 1 (Phase 18). If it is running on this VM already, skip to the verification block. If Day 1's Terraform provisioned a fresh VM, follow the abbreviated install below.
+> This is a fresh Phase 3 environment. Follow the abbreviated install below, then apply your CloudBees CI trial WAR (or install the plugin stack) as you did in Phase 2.
 
 **Install Java 17:**
 
@@ -4547,30 +4542,247 @@ git push origin main
 
 ---
 
-### Step 23.13 — CloudBees Enterprise Features (Open-Source Equivalents)
+### Step 23.13 — Advanced CloudBees CI Governance (1.5 hrs)
 
-The JD says "CloudBees Jenkins." CloudBees CI is open-source Jenkins + an enterprise governance layer. You can't run CloudBees without a license, but you CAN implement the open-source equivalents of its key features. This gives you hands-on understanding of what CloudBees adds and why it matters in federal environments.
+You migrated from open-source Jenkins to CloudBees CI in Phase 2 — you configured RBAC, CasC, and audit trails. Phase 3 goes deeper into the enterprise governance features that differentiate CloudBees from open-source Jenkins. These are the features that hiring managers ask about.
+
+> **Returning concept:** RBAC, CasC, and audit trail were set up in Phase 2. This phase assumes they're already configured (Phase 3 starts from a fresh environment, so you'll do a speed-run of the Phase 2 CloudBees install first — same WAR replacement or plugin install, abbreviated). Focus here is on **advanced patterns**, not re-doing the basics.
 
 **[BASTION TERMINAL]**
 
-#### Configuration as Code (JCasC)
+#### Speed-Run: CloudBees CI Setup (15 min, abbreviated)
 
-CloudBees extends JCasC with "CasC bundles" pushed from Operations Center to all managed controllers. Here's the open-source foundation:
+Repeat the Phase 2 migration on your fresh Phase 3 environment. This is muscle memory — you've done it before.
 
 ```bash
-# Install the Configuration as Code plugin
-java -jar /opt/jenkins/jenkins-cli.jar -s http://localhost:8080/ \
-  -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) \
-  install-plugin configuration-as-code -restart
+# Install Java 17 + Jenkins (same as Phase 1/2)
+sudo dnf install -y java-17-openjdk java-17-openjdk-devel
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo dnf install -y jenkins
 
-# Wait for Jenkins to restart
-sleep 30
+# If using CloudBees CI trial (Path A from Phase 2):
+# Replace WAR before first start
+sudo cp /home/opc/cloudbees-core.war /usr/share/java/jenkins.war
 
-# Create the JCasC configuration file
+# If using plugin stack (Path B from Phase 2):
+# Start Jenkins, then install plugins (JCasC, Role Strategy, Audit Trail, Folder)
+
+sudo systemctl enable --now jenkins
+sudo firewall-cmd --permanent --add-port=8080/tcp && sudo firewall-cmd --reload
+
+# Apply CasC config (copy from Phase 2 or git repo)
 sudo mkdir -p /var/lib/jenkins/casc_configs
-sudo tee /var/lib/jenkins/casc_configs/jenkins.yaml << 'CASCEOF'
+# Copy your jenkins.yaml from git
+echo 'CASC_JENKINS_CONFIG=/var/lib/jenkins/casc_configs' | sudo tee -a /etc/sysconfig/jenkins
+sudo systemctl restart jenkins
+```
+
+Set up folders (`platform-team/`, `app-team/`) and roles as you did in Phase 2. This should take 10-15 minutes since you've done it before.
+
+---
+
+#### 1. Pipeline Templates — Enforced Organizational Standards (30 min)
+
+CloudBees CI's Pipeline Templates are locked-down, parameterized pipeline definitions that teams consume but cannot modify. This is the #1 differentiator from open-source shared libraries. With shared libraries, teams CAN choose not to import them. With templates, the structure is enforced.
+
+In open-source Jenkins, we simulate templates using a shared library that **requires** certain stages:
+
+```bash
+# Create the shared library (or extend from Phase 2)
+mkdir -p ~/jenkins-shared-lib/vars
+cd ~/jenkins-shared-lib
+
+# Create an enforced pipeline template
+cat > vars/federalPipeline.groovy << 'TEMPLATEEOF'
+// federalPipeline — Enforced pipeline template
+// Teams call this instead of writing their own pipeline structure.
+// Security stages (Trivy, SBOM) CANNOT be skipped.
+//
+// Usage in Jenkinsfile:
+//   @Library('oci-shared-lib') _
+//   federalPipeline(
+//     appName: 'fedcompliance',
+//     terraformDir: 'terraform/',
+//     environment: 'lab'
+//   )
+
+def call(Map config) {
+    def appName = config.get('appName', 'app')
+    def terraformDir = config.get('terraformDir', 'terraform/')
+    def environment = config.get('environment', 'dev')
+    def skipDeploy = config.get('skipDeploy', false)
+
+    pipeline {
+        agent any
+
+        environment {
+            IMAGE_TAG = "${appName}:${BUILD_NUMBER}"
+        }
+
+        stages {
+            // === MANDATORY STAGES (teams cannot skip these) ===
+
+            stage('Checkout') {
+                steps {
+                    checkout scm
+                }
+            }
+
+            stage('Terraform Validate') {
+                steps {
+                    dir(terraformDir) {
+                        sh 'terraform init -backend=false'
+                        sh 'terraform validate'
+                    }
+                }
+            }
+
+            stage('Security: Trivy Scan') {
+                // This stage is MANDATORY — templates enforce it
+                steps {
+                    sh "docker build -t ${IMAGE_TAG} ."
+                    sh "trivy image --exit-code 1 --severity CRITICAL ${IMAGE_TAG}"
+                    sh "trivy image --format json --output trivy-report.json ${IMAGE_TAG}"
+                    archiveArtifacts artifacts: 'trivy-report.json'
+                }
+            }
+
+            stage('Security: SBOM Generation') {
+                // This stage is MANDATORY — EO 14028 compliance
+                steps {
+                    sh "syft ${IMAGE_TAG} -o spdx-json > sbom.json"
+                    archiveArtifacts artifacts: 'sbom.json'
+                }
+            }
+
+            stage('Ansible Lint') {
+                steps {
+                    sh 'ansible-lint ansible/ || echo "Lint warnings (non-blocking)"'
+                }
+            }
+
+            // === APPROVAL GATE (governed by RBAC) ===
+
+            stage('Approval') {
+                steps {
+                    timeout(time: 30, unit: 'MINUTES') {
+                        input message: "Deploy ${appName} to ${environment}?",
+                              submitter: 'admin,deployer'
+                    }
+                }
+            }
+
+            // === DEPLOYMENT (optional, controlled by parameter) ===
+
+            stage('Deploy') {
+                when { expression { !skipDeploy } }
+                steps {
+                    sh "echo 'Deploying ${IMAGE_TAG} to ${environment}'"
+                    // Actual deployment commands go here
+                }
+            }
+        }
+
+        post {
+            always {
+                echo "Pipeline complete for ${appName} — build #${BUILD_NUMBER}"
+            }
+            failure {
+                echo "ALERT: Pipeline failed for ${appName}"
+            }
+        }
+    }
+}
+TEMPLATEEOF
+
+git add .
+git commit -m "Add federalPipeline template — enforced security stages"
+```
+
+Configure in Jenkins UI: Manage Jenkins → System → Global Pipeline Libraries:
+- Name: `oci-shared-lib`
+- Default version: `main`
+- Source: Git, point to `~/jenkins-shared-lib`
+
+**Now create a Jenkinsfile that uses the template:**
+
+```groovy
+// This is what a team's Jenkinsfile looks like when using the template.
+// The team specifies parameters but CANNOT skip the Trivy/SBOM stages.
+@Library('oci-shared-lib') _
+
+federalPipeline(
+    appName: 'fedcompliance',
+    terraformDir: 'terraform/',
+    environment: 'lab'
+)
+```
+
+> **That's it.** The entire team's Jenkinsfile is 4 lines. The security scanning, SBOM generation, approval gates, and deployment logic are all enforced by the template. Teams can't bypass them.
+
+**Create a second pipeline to prove the template works for multiple teams:**
+
+In Jenkins UI: New Item → Pipeline in `app-team/` folder → name: `app-team-service`
+
+```groovy
+@Library('oci-shared-lib') _
+
+federalPipeline(
+    appName: 'app-team-service',
+    terraformDir: 'terraform/',
+    environment: 'dev',
+    skipDeploy: true  // This team just wants CI, not CD
+)
+```
+
+Run both pipelines. Both execute the same security stages. Neither team can skip Trivy or SBOM.
+
+> **Interview Insight: "How do you enforce security standards across multiple teams' pipelines?"**
+>
+> **Strong answer:** "I use pipeline templates — a shared library that defines the entire pipeline structure including mandatory security stages. Teams consume the template with 4 lines of Jenkinsfile, specifying only their app name and environment. They cannot skip the Trivy scan or SBOM generation. In CloudBees CI, this is formalized as Pipeline Templates with a locked-down structure and parameterized inputs. The open-source equivalent uses shared libraries with the same pattern. Either way, organizational security standards are enforced, not optional."
+>
+> **Weak answer:** "We trust teams to add security scanning to their pipelines." (In federal environments, trust is not a compliance strategy.)
+
+---
+
+#### 2. Cross-Team Pipeline Visibility (15 min)
+
+In an enterprise with multiple teams, leadership needs a dashboard showing all teams' pipeline health — without having access to modify anything.
+
+**Set up the `auditor` view:**
+
+1. Log in as `admin`
+2. Create a new View: Jenkins → New View → name: `all-teams-dashboard` → select "List View"
+3. Add all pipelines from both `platform-team/` and `app-team/` folders
+4. Save
+
+Now log in as `auditor` (read-only role from RBAC setup):
+- `auditor` can see the dashboard, all pipeline statuses, build history
+- `auditor` CANNOT build, configure, or modify anything
+- This maps to NIST AC-3 (access enforcement) and AU-6 (audit review)
+
+```bash
+# Verify via audit trail that the auditor's login was logged
+sudo grep "auditor" /var/log/jenkins/audit.log
+```
+
+> **CloudBees extends this:** Operations Center provides a single dashboard across ALL managed controllers — not just one Jenkins instance. A federal program with 5 teams on 5 separate controllers gets one unified view. Open-source Jenkins limits visibility to a single controller.
+
+---
+
+#### 3. CasC Bundle Versioning — GitOps for Jenkins (20 min)
+
+In Phase 2, you created a CasC YAML file. Now practice the GitOps workflow: change the YAML in git → Jenkins config updates.
+
+```bash
+cd ~/fedcompliance-project  # or your repo directory
+
+# Edit the CasC config — change the system message
+cat > jenkins/casc/jenkins.yaml << 'CASCEOF'
 jenkins:
-  systemMessage: "FedCompliance Lab - Managed by Configuration as Code"
+  systemMessage: "FedCompliance Lab v3 — Managed by CasC + GitOps (Phase 3)"
+  numExecutors: 3
   securityRealm:
     local:
       allowsSignup: false
@@ -4581,6 +4793,8 @@ jenkins:
           name: "Deploy Service Account"
         - id: "auditor"
           name: "Audit Viewer"
+        - id: "app-deployer"
+          name: "App Team Deployer"
   authorizationStrategy:
     roleBased:
       roles:
@@ -4590,20 +4804,12 @@ jenkins:
               - "Overall/Administer"
             entries:
               - user: "admin"
-          - name: "deployer"
-            permissions:
-              - "Job/Build"
-              - "Job/Read"
-              - "Job/Workspace"
-            entries:
-              - user: "deployer"
           - name: "viewer"
             permissions:
               - "Overall/Read"
               - "Job/Read"
             entries:
               - user: "auditor"
-  numExecutors: 2
 
 unclassified:
   audit-trail:
@@ -4611,188 +4817,74 @@ unclassified:
     pattern: ".*/(?:configSubmit|doDelete|postBuildResult|enable|disable|cancelQueue|stop|toggleLogKeep|doWipeOutWorkspace|createItem|createView|toggleOffline|cancelQuietDown|quietDown|restart|exit|safeRestart).*"
 CASCEOF
 
-# Set the CASC_JENKINS_CONFIG environment variable
-echo 'CASC_JENKINS_CONFIG=/var/lib/jenkins/casc_configs' | sudo tee -a /etc/sysconfig/jenkins
-sudo systemctl restart jenkins
+git add jenkins/casc/jenkins.yaml
+git commit -m "CasC v3: add app-deployer user, increase executors to 3"
 ```
 
-**Verify:** Navigate to Manage Jenkins → Configuration as Code. You should see your YAML loaded. Click "View Configuration" to see the current config in YAML form.
-
-> **ELI5: Why Configuration as Code?**
->
-> Without CasC, Jenkins config lives in XML files that nobody version-controls. When Jenkins breaks, you rebuild from scratch. With CasC, your entire Jenkins config is a YAML file in git. Rebuild Jenkins? Apply the YAML. Need 10 identical Jenkins instances? Same YAML. This is GitOps for Jenkins itself.
->
-> CloudBees extends this: Operations Center pushes CasC bundles to all managed controllers simultaneously. One YAML change → every Jenkins instance updates.
-
-#### Folder-Based RBAC (Role Strategy Plugin)
-
-CloudBees has built-in folder-level RBAC. Here's the open-source equivalent:
+Now apply the updated CasC:
 
 ```bash
-# Install Role-based Authorization Strategy plugin
-java -jar /opt/jenkins/jenkins-cli.jar -s http://localhost:8080/ \
-  -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) \
-  install-plugin role-strategy -restart
+# Copy updated config to Jenkins
+sudo cp jenkins/casc/jenkins.yaml /var/lib/jenkins/casc_configs/jenkins.yaml
 
-sleep 30
+# Reload CasC without restarting Jenkins
+curl -X POST "http://localhost:8080/configuration-as-code/reload" \
+  --user admin:YOUR_PASSWORD
 ```
 
-Then in the Jenkins UI:
-1. Navigate to Manage Jenkins → Security → Authorization
-2. Select "Role-Based Strategy"
-3. Go to Manage Jenkins → Manage and Assign Roles → Manage Roles
-4. Create roles:
-   - **Global roles:** `admin` (all permissions), `reader` (Overall/Read only)
-   - **Project roles:**
-     - `platform-deployer` with pattern `platform-.*` (can build/read platform jobs)
-     - `app-deployer` with pattern `app-.*` (can build/read app jobs)
-5. Create folders: `platform-team/`, `app-team/`
-6. Move the FedCompliance pipeline into `platform-team/`
-7. Assign Roles → assign `platform-deployer` to the `deployer` user
+**Verify:**
+1. Jenkins UI → system message should say "FedCompliance Lab v3"
+2. Manage Jenkins → Users → `app-deployer` should exist
+3. Number of executors should be 3
 
-**Verify:** Log in as `deployer` — you should only see jobs in `platform-team/`, not `app-team/`.
+> **The workflow:** Code change → git commit → deploy CasC YAML → Jenkins updates. This is GitOps for Jenkins configuration. In CloudBees CI, Operations Center pushes CasC bundles to all managed controllers automatically — you don't even need to `curl` a reload endpoint. But the principle is identical: Jenkins config is code, versioned in git, deployed via automation.
 
-> **Interview Insight: "How does Jenkins handle access control in a multi-team environment?"**
->
-> **Strong answer:** "In open-source Jenkins, I use the Role-based Authorization Strategy plugin with folder-level roles — each team gets a folder, and roles are assigned per folder with pattern matching. This gives least-privilege access at the CI/CD layer. CloudBees CI extends this with built-in RBAC that inherits through the folder hierarchy and integrates with Operations Center for centralized user management across multiple managed controllers. The concept is the same — folder-based isolation with role inheritance — but CloudBees makes it native rather than plugin-dependent."
->
-> **Weak answer:** "I give everyone admin access." (Instant disqualification for federal)
+---
 
-#### Shared Library (Foundation for Pipeline Templates)
+#### 4. Shared Library as Governance Enforcement (15 min)
 
-CloudBees has Pipeline Templates — locked-down, parameterized pipelines. The open-source foundation is Shared Libraries:
+The shared library from the pipeline template enforces that every pipeline MUST call `securityScan()`. A pipeline that doesn't use the template is non-compliant.
+
+Create a governance check that validates all pipelines use the template:
 
 ```bash
-# Create a shared library repo structure
-mkdir -p ~/jenkins-shared-lib/vars
-cd ~/jenkins-shared-lib
-git init
+cat > scripts/validate-pipelines.sh << 'VALIDATEEOF'
+#!/bin/bash
+# validate-pipelines.sh — Check that all Jenkinsfiles use the federal template
+# This is compliance-as-code for CI/CD pipelines
 
-# Create a reusable pipeline step
-cat > vars/ociTerraformDeploy.groovy << 'LIBEOF'
-def call(Map config = [:]) {
-    def tfDir = config.get('directory', 'terraform/')
-    def environment = config.get('environment', 'dev')
-    def autoApprove = config.get('autoApprove', false)
+echo "=== Pipeline Governance Validation ==="
+echo "Checking all Jenkinsfiles use the federalPipeline template..."
 
-    stage("Terraform Init (${environment})") {
-        dir(tfDir) {
-            sh 'terraform init -input=false'
-        }
-    }
+FAIL=0
+for jenkinsfile in $(find . -name "Jenkinsfile" -not -path "./.git/*"); do
+    if grep -q "federalPipeline" "$jenkinsfile"; then
+        echo "  PASS: $jenkinsfile uses federalPipeline template"
+    elif grep -q "@Library('oci-shared-lib')" "$jenkinsfile"; then
+        echo "  WARN: $jenkinsfile uses shared library but not the template"
+    else
+        echo "  FAIL: $jenkinsfile does NOT use approved pipeline pattern"
+        FAIL=1
+    fi
+done
 
-    stage("Terraform Plan (${environment})") {
-        dir(tfDir) {
-            sh "terraform plan -var-file=${environment}.tfvars -out=tfplan"
-            archiveArtifacts artifacts: 'tfplan'
-        }
-    }
+if [ $FAIL -eq 1 ]; then
+    echo ""
+    echo "GOVERNANCE VIOLATION: Some pipelines do not use the approved template."
+    echo "All pipelines must use federalPipeline() for NIST 800-53 compliance."
+    exit 1
+fi
 
-    if (!autoApprove) {
-        stage("Approve (${environment})") {
-            timeout(time: 30, unit: 'MINUTES') {
-                input message: "Apply Terraform plan for ${environment}?"
-            }
-        }
-    }
+echo ""
+echo "All pipelines compliant."
+VALIDATEEOF
 
-    stage("Terraform Apply (${environment})") {
-        dir(tfDir) {
-            sh 'terraform apply -input=false tfplan'
-        }
-    }
-}
-LIBEOF
-
-# Create a reusable security scanning step
-cat > vars/securityScan.groovy << 'LIBEOF'
-def call(Map config = [:]) {
-    def imageName = config.get('image', '')
-    def failOnHigh = config.get('failOnHigh', true)
-
-    stage('Trivy Container Scan') {
-        sh "trivy image --format json --output trivy-report.json ${imageName}"
-        archiveArtifacts artifacts: 'trivy-report.json'
-
-        if (failOnHigh) {
-            sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${imageName}"
-        }
-    }
-
-    stage('SBOM Generation') {
-        sh "syft ${imageName} -o spdx-json > sbom.json"
-        archiveArtifacts artifacts: 'sbom.json'
-    }
-}
-LIBEOF
-
-git add .
-git commit -m "Initial shared library with ociTerraformDeploy and securityScan"
+chmod +x scripts/validate-pipelines.sh
+git add scripts/validate-pipelines.sh
+git commit -m "Add pipeline governance validation script"
 ```
 
-Configure in Jenkins UI: Manage Jenkins → System → Global Pipeline Libraries:
-- Name: `oci-shared-lib`
-- Default version: `main`
-- Source: Git, point to the local repo path
-
-Then simplify the Jenkinsfile:
-```groovy
-@Library('oci-shared-lib') _
-
-pipeline {
-    agent any
-    stages {
-        stage('Build') {
-            steps {
-                sh 'docker build -t fedcompliance:${BUILD_NUMBER} .'
-            }
-        }
-        stage('Security') {
-            steps {
-                securityScan(image: "fedcompliance:${BUILD_NUMBER}")
-            }
-        }
-        stage('Deploy') {
-            steps {
-                ociTerraformDeploy(directory: 'terraform/', environment: 'lab')
-            }
-        }
-    }
-}
-```
-
-> **Interview Insight: "How do you standardize pipelines across multiple teams?"**
->
-> **Strong answer:** "I use Jenkins Shared Libraries — reusable Groovy functions in a git repo that any Jenkinsfile can import with `@Library`. I built shared steps for Terraform deployment and security scanning that enforce consistent patterns. CloudBees extends this concept with Pipeline Templates — parameterized, locked-down pipeline definitions that teams consume without being able to modify the structure. Templates are more governed; shared libraries are more flexible. Both solve the same problem: consistent pipeline patterns at scale."
-
-#### Audit Trail
-
-```bash
-# Install Audit Trail plugin
-java -jar /opt/jenkins/jenkins-cli.jar -s http://localhost:8080/ \
-  -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword) \
-  install-plugin audit-trail -restart
-
-sleep 30
-```
-
-Configure in Jenkins UI: Manage Jenkins → System → Audit Trail:
-- Add Logger → Log File
-- Log Location: `/var/log/jenkins/audit.log`
-- Log File Size: 10MB
-- Log File Count: 5
-
-```bash
-# Create the log directory
-sudo mkdir -p /var/log/jenkins
-sudo chown jenkins:jenkins /var/log/jenkins
-
-# Trigger some actions (build, config change), then review
-sudo tail -20 /var/log/jenkins/audit.log
-# Shows: who did what, when, from which IP
-```
-
-> **Federal Reality Check:** In a FedRAMP environment, audit trails are mandatory (NIST 800-53 AU-2, AU-3). Open-source Jenkins needs the Audit Trail plugin. CloudBees CI has audit logging built in — every build, approval, config change, and plugin installation is logged and exportable. This is one of the key reasons federal programs use CloudBees over open-source.
+> **Interview talking point:** "I built a governance layer around Jenkins pipelines. The shared library enforces that every pipeline runs Trivy scanning and SBOM generation. A validation script checks that all Jenkinsfiles in the repo use the approved template. Non-compliant pipelines are flagged. This is compliance-as-code for CI/CD — it ties into the compliance-as-code evidence collector we build later in Phase 25."
 
 ---
 
@@ -5930,6 +6022,8 @@ argocd app history fedcompliance
 📍 **Bastion Terminal**
 
 > In the GitOps model, Jenkins only needs to: build the image, scan it, push it to OCIR, then commit the new image tag to `values.yaml` in git. ArgoCD handles the K8s deployment. The pipeline no longer needs `kubectl` at all.
+>
+> **CloudBees CI note:** If you're running CloudBees CI (from Phase 2 migration), the approval gate in this pipeline is governed by your folder-based RBAC — only users with the `platform-deployer` role can approve deployments. The audit trail logs every approval with timestamp, user, and IP. Consider importing the shared library (`@Library('oci-shared-lib') _`) and using the `federalPipeline` template from Step 23.13 to enforce security stages.
 
 Pipeline changes from Phase 23:
 - **REMOVED:** Stage 8 (kubectl apply + sed IMAGE_TAG) — ArgoCD replaces this entirely

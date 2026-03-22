@@ -31,12 +31,12 @@ Build the foundation: OCI networking, compute, Oracle Autonomous Database, a Fas
 ### Phase 2: Disaster Recovery & Backup Architecture
 *"Design and execute a DR drill for a federal compliance system."*
 
-Build DR infrastructure: cross-region replication, automated backup verification, k3s Kubernetes cluster, AIDE file integrity monitoring, incident classification with OCI GenAI, webhook-driven audit pipelines, and measured RTO/RPO.
+Build DR infrastructure: cross-region replication, automated backup verification, k3s Kubernetes cluster, AIDE file integrity monitoring, incident classification with OCI GenAI, webhook-driven audit pipelines, and measured RTO/RPO. **Migrate from open-source Jenkins to CloudBees CI** — configure enterprise RBAC, Configuration as Code, and audit trail logging.
 
 ### Phase 3: CI/CD Modernization & AI-Augmented Operations
 *"Modernize the deployment pipeline with GitOps, supply chain security, and AI-powered monitoring."*
 
-Production-grade delivery: multi-stage Jenkins pipelines with security scanning, Helm charts, ArgoCD GitOps, Trivy + SBOM supply chain security, API authentication (keys + mTLS concepts), scikit-learn anomaly detection, and CloudBees Jenkins enterprise concepts.
+Production-grade delivery: multi-stage Jenkins pipelines with security scanning, Helm charts, ArgoCD GitOps, Trivy + SBOM supply chain security, API authentication (keys + mTLS concepts), scikit-learn anomaly detection, and **advanced CloudBees CI governance** (pipeline templates, CasC bundle versioning, cross-team visibility, shared library enforcement).
 
 ---
 
@@ -48,7 +48,7 @@ Production-grade delivery: multi-stage Jenkins pipelines with security scanning,
 | **Linux** | Oracle Linux 8 (SELinux, LVM, systemd, firewalld, PAM, sysctl, journalctl) |
 | **IaC** | Terraform (progressive: manual → basics → modules) |
 | **Config Mgmt** | Ansible (progressive: playbooks → drift detection → roles + vault) |
-| **CI/CD** | Jenkins (progressive: simple → scheduled → multi-stage + security scanning) |
+| **CI/CD** | Jenkins → CloudBees CI (progressive: open-source install → CloudBees migration → pipeline templates + governance) |
 | **Containers** | Podman (Oracle Linux native) + Docker (comparison), containerd under K8s |
 | **Kubernetes** | k3s (multi-node on ARM A1 free-tier instances) |
 | **Packaging** | Helm |

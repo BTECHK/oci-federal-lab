@@ -78,14 +78,16 @@ This is a learning lab, not a production application. The "product" is the infra
 - [ ] Idempotent — running twice produces no changes
 - [ ] Progressive complexity: playbooks (P1) → drift detection (P2) → roles + vault (P3)
 
-### US-006: CI/CD Pipeline (Jenkins)
-**Description:** As a cloud engineer, I want to build Jenkins pipelines so that deployments are automated and auditable.
+### US-006: CI/CD Pipeline (Jenkins → CloudBees CI)
+**Description:** As a cloud engineer, I want to build Jenkins pipelines and migrate to CloudBees CI so that I can demonstrate the enterprise governance layer federal programs require.
 
 **Acceptance Criteria:**
-- [ ] Jenkins installed and configured on Oracle Linux
-- [ ] Jenkinsfile with validate → build → deploy stages
-- [ ] Progressive complexity: simple (P1) → scheduled (P2) → multi-stage + security scanning (P3)
-- [ ] CloudBees enterprise concepts documented (JCasC, folder RBAC, shared libraries)
+- [ ] Open-source Jenkins installed on Oracle Linux (P1)
+- [ ] Jenkinsfile with validate → build → deploy stages (P1)
+- [ ] Migration to CloudBees CI (trial WAR replacement or plugin stack) (P2)
+- [ ] Enterprise features configured: folder RBAC, CasC, audit trail (P2)
+- [ ] Advanced CloudBees governance: pipeline templates, CasC versioning, cross-team visibility (P3)
+- [ ] Progressive complexity: open-source install (P1) → CloudBees migration (P2) → pipeline templates + governance (P3)
 
 ### US-007: Container Builds (Podman + Docker)
 **Description:** As a cloud engineer, I want to containerize the API using both Podman and Docker so that I understand the Oracle Linux native tooling.
