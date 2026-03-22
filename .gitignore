@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+venv/
+.venv/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfvars
+!*.tfvars.example
+
+# Ansible
+*.retry
+
+# Secrets & credentials
+.env
+.env.*
+!.env.example
+credentials/
+credentials.json
+*-credentials.json
+service-account*.json
+*.pem
+*.key
+ansible-vault-password
+vault-password.txt
+
+# SSH keys
+id_rsa*
+*.pub
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+
+# Data files
+*.db
+*.csv
+
+# Large binary files
+*.pdf
+
+# Claude Code / planning
+.claude_session_context.md
+.planning/
+
+# Temp files
+nul
+*.tmp
+*.bak
