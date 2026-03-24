@@ -174,6 +174,63 @@ You should see `fedtracker-lab` in the compartment list. Click into it — it wi
 
 ---
 
+### Step 1.2.1 — Set Up Budget & Spending Alerts
+📍 **OCI Console**
+
+> **🧠 ELI5 — OCI Budgets:** A budget is a spending guardrail you attach to a compartment. It tracks how much you've spent (or are forecast to spend) and sends email alerts when you cross thresholds you define. Budgets don't hard-stop spending — OCI has no automatic kill switch — but they give you early warning so you can shut down resources before costs spiral. In federal environments, unmonitored spending is an audit finding (NIST 800-53 SA-2).
+
+> **Cost check:** Budgets and alert rules are free — there is no cost to create or maintain them.
+
+**Create the budget:**
+
+1. Navigate to **Billing & Cost Management** → **Budgets** (use the search bar if needed)
+2. Click **Create Budget**
+3. Fill in:
+   - **Name:** `fedlab-monthly-budget`
+   - **Description:** `Monthly spending cap for OCI Federal Lab project`
+   - **Budget Scope:** Select **Compartment**
+   - **Target Compartment:** `fedtracker-lab`
+   - **Schedule:** `Monthly`
+   - **Budget Amount (in USD):** `160`
+   - **Day of the month to begin budget processing:** `1` (default)
+4. In the **Budget Alert Rule** section (same form):
+   - **Threshold Metric:** `Actual Spend`
+   - **Threshold Type:** `Percentage of Budget`
+   - **Threshold %:** `50`
+   - **Email Recipients:** `<YOUR_EMAIL>, <ACCOUNT_HOLDER_EMAIL>` (comma-separated — include the account owner so they have visibility)
+5. Click **Create**
+
+**Add two more alert rules:**
+
+6. Click into `fedlab-monthly-budget` (you should see it in the budget list)
+7. Under **Alert Rules**, click **Create Alert Rule**:
+   - **Threshold Metric:** `Actual Spend`
+   - **Threshold Type:** `Percentage of Budget`
+   - **Threshold %:** `80`
+   - **Email Recipients:** `<YOUR_EMAIL>, <ACCOUNT_HOLDER_EMAIL>`
+   - Click **Create**
+8. Click **Create Alert Rule** again:
+   - **Threshold Metric:** `Forecast Spend`
+   - **Threshold Type:** `Percentage of Budget`
+   - **Threshold %:** `100`
+   - **Email Recipients:** `<YOUR_EMAIL>, <ACCOUNT_HOLDER_EMAIL>`
+   - Click **Create**
+
+**Verify:**
+
+You should see `fedlab-monthly-budget` with **3 alert rules** listed:
+- 50% actual spend (awareness — "halfway through budget")
+- 80% actual spend (warning — "slow down or investigate")
+- 100% forecast spend (predictive — "on track to exceed budget this month")
+
+> **Interview Insight: "How did you manage cloud costs?"**
+>
+> **Strong answer:** "I set up compartment-scoped budgets with three alert tiers — 50% actual for awareness, 80% actual for warning, and 100% forecast for predictive alerting. Combined with resource tagging and a Python cost compliance script, I had full visibility into spending. This maps to NIST 800-53 SA-2 resource allocation requirements."
+>
+> **Weak answer:** "I watched the billing dashboard." (Reactive, not proactive)
+
+---
+
 ### Step 1.3 — Create Basic VCN via Wizard
 📍 **OCI Console**
 
