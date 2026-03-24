@@ -4295,7 +4295,7 @@ Jenkins → fedcompliance-pipeline → Configure → Pipeline section
 # 1. Update deployment.yaml — replace <REGION> and <NAMESPACE>
 nano ~/fedcompliance/k8s/deployment.yaml
 # Find:    image: <REGION>.ocir.io/<NAMESPACE>/fedcompliance:IMAGE_TAG
-# Replace: image: us-ashburn-1.ocir.io/mytenancy/fedcompliance:IMAGE_TAG
+# Replace: image: us-ashburn-1.ocir.io/<YOUR_TENANCY_NAMESPACE>/fedcompliance:IMAGE_TAG
 
 # 2. Update Jenkinsfile — replace OCI_NAMESPACE and K3S_SERVER_PRIVATE_IP
 nano ~/fedcompliance/Jenkinsfile
@@ -4358,7 +4358,7 @@ Jenkins → fedcompliance-pipeline → Build Now
 1. Click into the running build (`fedcompliance-pipeline → #1`)
 2. In Stage View or Console Output, look for the approval dialog:
    ```
-   Deploy us-ashburn-1.ocir.io/mytenancy/fedcompliance:a3f91c2 to k3s cluster?
+   Deploy us-ashburn-1.ocir.io/<YOUR_TENANCY_NAMESPACE>/fedcompliance:a3f91c2 to k3s cluster?
    [Approve Deployment] [Abort]
    ```
 3. Before approving, review:
@@ -4409,7 +4409,7 @@ kubectl get svc -n fedcompliance
 # Confirm what image is actually running (should match the pipeline's Git SHA tag)
 kubectl get deployment fedcompliance -n fedcompliance \
   -o jsonpath='{.spec.template.spec.containers[0].image}'
-# Expected: us-ashburn-1.ocir.io/mytenancy/fedcompliance:a3f91c2
+# Expected: us-ashburn-1.ocir.io/<YOUR_TENANCY_NAMESPACE>/fedcompliance:a3f91c2
 # (where a3f91c2 is the short SHA from the build)
 
 # Check application logs — confirm clean startup
@@ -4524,7 +4524,7 @@ grep "IMAGE_TAG\|image:" k8s/deployment.yaml
 # If IMAGE_TAG is missing (replaced with a SHA), restore the placeholder:
 git checkout k8s/deployment.yaml
 grep "IMAGE_TAG" k8s/deployment.yaml
-# Expected: image: us-ashburn-1.ocir.io/mytenancy/fedcompliance:IMAGE_TAG
+# Expected: image: us-ashburn-1.ocir.io/<YOUR_TENANCY_NAMESPACE>/fedcompliance:IMAGE_TAG
 
 git status
 # If deployment.yaml was restored, commit it:
@@ -5130,8 +5130,8 @@ type: application       # "application" = runnable workload; "library" = reusabl
 version: 0.1.0          # Chart version — increment when chart structure changes
 appVersion: "1.0.0"     # Application version — informational; image tag controls actual version
 maintainers:
-  - name: kyle
-    email: kyle@example.com
+  - name: <YOUR_NAME>
+    email: <YOUR_EMAIL>
 EOF
 ```
 
@@ -5154,7 +5154,7 @@ cat > helm/fedcompliance/values.yaml << 'EOF'
 
 # Image configuration
 image:
-  repository: us-ashburn-1.ocir.io/mytenancy/fedcompliance
+  repository: us-ashburn-1.ocir.io/<YOUR_TENANCY_NAMESPACE>/fedcompliance
   # tag defaults to "latest" — the CI pipeline overrides this with a Git SHA
   tag: "latest"
   # IfNotPresent: only pull if the tag is not already on the node
@@ -5478,7 +5478,7 @@ helm template fedcompliance ~/fedcompliance/helm/fedcompliance \
 ```
 
 Expected: raw Kubernetes YAML with all `{{ }}` expressions replaced by actual values. Look for:
-- `image: us-ashburn-1.ocir.io/mytenancy/fedcompliance:a3f91c2` — confirms `--set image.tag` worked
+- `image: us-ashburn-1.ocir.io/<YOUR_TENANCY_NAMESPACE>/fedcompliance:a3f91c2` — confirms `--set image.tag` worked
 - `replicas: 2` — from `values.yaml`
 - `namespace: fedcompliance` — from `values.namespace`
 
@@ -5560,7 +5560,7 @@ helm list -n fedcompliance
 # Verify the image tag in the running Deployment
 kubectl get deployment fedcompliance -n fedcompliance \
   -o jsonpath='{.spec.template.spec.containers[0].image}'
-# Expected: us-ashburn-1.ocir.io/mytenancy/fedcompliance:<CURRENT_SHA>
+# Expected: us-ashburn-1.ocir.io/<YOUR_TENANCY_NAMESPACE>/fedcompliance:<CURRENT_SHA>
 
 # Test application response
 K3S_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
@@ -6038,7 +6038,7 @@ pipeline {
 
     environment {
         REGISTRY      = "us-ashburn-1.ocir.io"
-        TENANCY_NS    = "mytenancy"
+        TENANCY_NS    = "<YOUR_TENANCY_NAMESPACE>"
         IMAGE_NAME    = "${REGISTRY}/${TENANCY_NS}/fedcompliance"
         IMAGE_TAG     = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
 

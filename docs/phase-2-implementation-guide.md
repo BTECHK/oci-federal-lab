@@ -323,9 +323,11 @@ resource "oci_core_vcn" "fedanalytics_vcn" {
   dns_label      = "fedanalytics"
 
   freeform_tags = {
-    "Project"     = "fedanalytics-lab"
+    "Project"     = "fedanalytics"
     "Environment" = "lab"
-    "Phase"       = "2"
+    "Phase"       = "phase-2"
+    "Owner"       = "<YOUR_NAME>"
+    "CostCenter"  = "interview-prep"
   }
 }
 
@@ -531,8 +533,9 @@ resource "oci_core_instance" "bastion" {
   }
 
   freeform_tags = {
-    "Project"     = "fedanalytics-lab"
+    "Project"     = "fedanalytics"
     "Environment" = "lab"
+    "Phase"       = "phase-2"
     "Role"        = "bastion"
   }
 }
@@ -563,8 +566,9 @@ resource "oci_core_instance" "app_server" {
   }
 
   freeform_tags = {
-    "Project"     = "fedanalytics-lab"
+    "Project"     = "fedanalytics"
     "Environment" = "lab"
+    "Phase"       = "phase-2"
     "Role"        = "app-server"
   }
 }

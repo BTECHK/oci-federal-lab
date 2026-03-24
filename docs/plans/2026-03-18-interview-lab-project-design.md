@@ -861,7 +861,7 @@ Managed K8s:        OKE                  EKS                    GKE             
 - Each project introduces 1-2 NEW tools alongside the constants
 
 ### RULE 15: IMPLEMENTATION GUIDE STYLE
-- Kyle builds DevOps/infra by hand (Terraform, Ansible, K8s manifests, Bash, Python, Helm charts)
+- The user builds DevOps/infra by hand (Terraform, Ansible, K8s manifests, Bash, Python, Helm charts)
 - App code is copy-paste with thorough comments
 - New concepts: full ELI5, section-by-section build, verification steps
 - Returning concepts: step-by-step commands, no ELI5, still followable

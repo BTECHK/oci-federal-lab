@@ -2,7 +2,7 @@
 
 > A hands-on cloud engineering lab simulating a federal compliance environment on Oracle Cloud Infrastructure. Three independent phases progressively build infrastructure, security hardening, disaster recovery, and CI/CD automation — all on Oracle Linux with production-grade tooling.
 
-**Author:** Kyle Atekwana
+**Author:** BTECHK
 **Cloud:** Oracle Cloud Infrastructure (OCI)
 **Linux:** Oracle Linux 8
 **Budget:** $0–$100 (OCI $300 trial credits)

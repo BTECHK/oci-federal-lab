@@ -133,7 +133,7 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 1. Go to [cloud.oracle.com](https://cloud.oracle.com)
 2. Click **Sign Up for Free**
 3. Fill in your details:
-   - **Cloud Account Name:** Choose something like `kylelab` (this becomes your tenancy name)
+   - **Cloud Account Name:** Choose something short and memorable, e.g., `fnamelname` or `mylab01` (this becomes your tenancy name)
    - **Home Region:** Choose the region closest to you (e.g., `US East (Ashburn)` or `US West (Phoenix)`)
    - You'll need a credit card for verification — you will NOT be charged
 4. Wait for the welcome email (usually 5-15 minutes)
@@ -1810,7 +1810,7 @@ curl "http://localhost:8000/personnel?skip=2&limit=2"
 ```bash
 # Add a new personnel record (POST with JSON body)
 curl -X POST -H "Content-Type: application/json" \
-  -d '{"name":"Kyle Kastern","role":"Cloud Engineer","clearance_level":"SECRET","project_id":"PROJ-004"}' \
+  -d '{"name":"Jane Doe","role":"Cloud Engineer","clearance_level":"SECRET","project_id":"PROJ-004"}' \
   http://localhost:8000/personnel
 # Expected: {"message": "Personnel record created", "id": 6}
 # Note the 201 status code (use curl -v to see it)
@@ -1819,7 +1819,7 @@ curl -X POST -H "Content-Type: application/json" \
 ```bash
 # Get the record you just created
 curl http://localhost:8000/personnel/6
-# Expected: JSON with Kyle Kastern's full record
+# Expected: JSON with Jane Doe's full record
 ```
 
 ```bash
@@ -2710,8 +2710,8 @@ python3 -c "import oci; print(oci.__version__)"
 # Initialize git repo (if not already done)
 cd /opt/fedtracker
 git init
-git config user.name "Kyle Kastern"
-git config user.email "your-email@example.com"
+git config user.name "<YOUR_NAME>"
+git config user.email "<YOUR_EMAIL>"
 
 # Create .gitignore
 cat > .gitignore << 'EOF'
@@ -3912,7 +3912,7 @@ Apply these tags to all resources in `fedtracker-lab`:
 |---------|-------|---------|
 | `Project` | `fedtracker` | Which project owns this resource |
 | `Environment` | `lab` | Dev/staging/prod classification |
-| `Owner` | `kyle` | Who is responsible |
+| `Owner` | `<YOUR_NAME>` | Who is responsible |
 | `CostCenter` | `interview-prep` | Cost allocation |
 
 For each resource (VMs, VCN, DB), go to its details page → **Tags** → **Add tags** and add all four tags.
@@ -4210,7 +4210,7 @@ variable "freeform_tags" {
   default = {
     "Project"     = "fedtracker"
     "Environment" = "lab"
-    "Owner"       = "kyle"
+    "Owner"       = "<YOUR_NAME>"
     "CostCenter"  = "interview-prep"
   }
 }
@@ -5347,7 +5347,7 @@ cat > /opt/fedtracker/Dockerfile << 'DOCKEOF'
 FROM oraclelinux:8-slim AS builder
 
 # Metadata labels
-LABEL maintainer="kyle" \
+LABEL maintainer="<YOUR_NAME>" \
       description="FedTracker Federal Personnel Tracking API" \
       version="1.0.0"
 DOCKEOF
@@ -6438,7 +6438,7 @@ echo '{}' | fn invoke fedtracker-functions health-checker
 # Expected: JSON with health check results
 
 # Invoke the audit processor with a simulated event
-echo '{"eventType":"com.oraclecloud.objectstorage.createobject","data":{"resourceName":"test-evidence.txt","additionalDetails":{"bucketName":"audit-evidence","namespace":"mytenancy"}}}' | fn invoke fedtracker-functions audit-processor
+echo '{"eventType":"com.oraclecloud.objectstorage.createobject","data":{"resourceName":"test-evidence.txt","additionalDetails":{"bucketName":"audit-evidence","namespace":"<YOUR_TENANCY_NAMESPACE>"}}}' | fn invoke fedtracker-functions audit-processor
 # Expected: JSON with processing results
 ```
 
@@ -6906,8 +6906,8 @@ ssh app-server "curl -s http://localhost:8000/personnel"
 ```
 
 ## Key Contacts
-- Infrastructure: Kyle (Terraform owner)
-- Application: Kyle (FedTracker maintainer)
+- Infrastructure: <YOUR_NAME> (Terraform owner)
+- Application: <YOUR_NAME> (FedTracker maintainer)
 - Database: Oracle Autonomous DB (auto-managed)
 
 ## Lessons Learned

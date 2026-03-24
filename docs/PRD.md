@@ -1,7 +1,7 @@
 # PRD: OCI Federal Compliance Lab
 
 **Version:** 1.0
-**Author:** Kyle Atekwana
+**Author:** BTECHK
 **Date:** March 2026
 **Status:** Active
 **Project Type:** Portfolio / Interview Preparation Lab
