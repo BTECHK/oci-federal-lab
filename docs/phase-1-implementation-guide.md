@@ -174,60 +174,145 @@ You should see `fedtracker-lab` in the compartment list. Click into it — it wi
 
 ---
 
-### Step 1.2.1 — Set Up Budget & Spending Alerts
+### Step 1.2.1 — Cost Protection Setup
 📍 **OCI Console**
 
-> **🧠 ELI5 — OCI Budgets:** A budget is a spending guardrail you attach to a compartment. It tracks how much you've spent (or are forecast to spend) and sends email alerts when you cross thresholds you define. Budgets don't hard-stop spending — OCI has no automatic kill switch — but they give you early warning so you can shut down resources before costs spiral. In federal environments, unmonitored spending is an audit finding (NIST 800-53 SA-2).
+> **🧠 ELI5 — Budget Alerts and Quotas:** Cloud billing can surprise you. OCI budget alerts email you when spending hits a threshold — but they're "soft limits" (warnings only). Quotas are "hard limits" — they physically block resource creation if you exceed them. Combining both gives you an early warning system AND a safety net. Set these up BEFORE creating any resources.
 
-> **Cost check:** Budgets and alert rules are free — there is no cost to create or maintain them.
+> **⚠️ Why this matters:** If someone else's credit card is on this account, protect it. A single misconfigured GPU instance could cost $20+/hour. Budget alerts + quotas + tagging = zero surprises.
 
-**Create the budget:**
+> **Cost check:** Budgets, alert rules, tag namespaces, and quota policies are all free — no cost to create or maintain them.
 
-1. Navigate to **Billing & Cost Management** → **Budgets** (use the search bar if needed)
+**Step 1.2.1a — Create a Budget with Email Alerts**
+
+1. Navigate to **Billing & Cost Management** → **Budgets**
 2. Click **Create Budget**
 3. Fill in:
    - **Name:** `fedlab-monthly-budget`
-   - **Description:** `Monthly spending cap for OCI Federal Lab project`
+   - **Description:** `Monthly spending cap for federal lab project`
    - **Budget Scope:** Select **Compartment**
-   - **Target Compartment:** `fedtracker-lab`
+   - **Target Compartment:** `fedtracker-lab` (or root — root covers the entire tenancy)
    - **Schedule:** `Monthly`
-   - **Budget Amount (in USD):** `160`
+   - **Budget Amount (in USD):** `160` (adjust to your comfort level)
    - **Day of the month to begin budget processing:** `1` (default)
-4. In the **Budget Alert Rule** section (same form):
+4. In the **Budget Alert Rule** section (same form), create your first alert:
    - **Threshold Metric:** `Actual Spend`
    - **Threshold Type:** `Percentage of Budget`
    - **Threshold %:** `50`
    - **Email Recipients:** `<YOUR_EMAIL>, <ACCOUNT_HOLDER_EMAIL>` (comma-separated — include the account owner so they have visibility)
 5. Click **Create**
 
-**Add two more alert rules:**
+**Add more alert rules:**
 
-6. Click into `fedlab-monthly-budget` (you should see it in the budget list)
-7. Under **Alert Rules**, click **Create Alert Rule**:
-   - **Threshold Metric:** `Actual Spend`
-   - **Threshold Type:** `Percentage of Budget`
-   - **Threshold %:** `80`
+6. Click into `fedlab-monthly-budget` → go to the **Budget Alert Rules** tab
+7. Click **Create Alert Rule**:
+   - **Threshold Metric:** `Actual Spend` | **Threshold Type:** `Percentage of Budget` | **Threshold %:** `80`
    - **Email Recipients:** `<YOUR_EMAIL>, <ACCOUNT_HOLDER_EMAIL>`
    - Click **Create**
 8. Click **Create Alert Rule** again:
-   - **Threshold Metric:** `Forecast Spend`
-   - **Threshold Type:** `Percentage of Budget`
-   - **Threshold %:** `100`
+   - **Threshold Metric:** `Forecast Spend` | **Threshold Type:** `Percentage of Budget` | **Threshold %:** `100`
    - **Email Recipients:** `<YOUR_EMAIL>, <ACCOUNT_HOLDER_EMAIL>`
    - Click **Create**
 
+> **Why multiple alerts?** Actual spend alerts catch you after the fact. Forecast alerts catch you before — OCI analyzes your usage trend and warns you if you're on track to exceed the budget. Add more alert rules (25%, 75%, etc.) if you want finer-grained visibility.
+
+> **📝 Note:** Budget alerts evaluate every 24 hours, so there's a delay. This is why quotas (Step 1.2.1d) are your real hard stop.
+
+**Step 1.2.1b — Create Tag Namespace for Cost Tracking**
+
+1. Navigate to **Governance & Administration** → **Tag Namespaces**
+2. Click **Create Tag Namespace**
+3. Fill in:
+   - **Namespace:** `fedlab-cost`
+   - **Description:** `Cost tracking tags for federal lab project`
+4. Click **Create**
+5. Inside the namespace, create these **Tag Key Definitions** (click **Create Tag Key Definition** for each):
+
+| Tag Key | Description | Cost-Tracking? |
+|---|---|---|
+| `project` | Which project owns this resource | ✅ Yes — check the box |
+| `phase` | Which phase (phase-1, phase-2, phase-3) | ✅ Yes |
+| `component` | Resource type (compute, network, database, storage, container) | ✅ Yes |
+| `lifetime` | Expected lifetime (always-free, temporary, persistent) | ✅ Yes |
+| `owner` | Person responsible for this resource | ✅ Yes |
+
+> **Why defined tags instead of freeform?** Defined tags live in a namespace with controlled values — they can be made mandatory, they appear in Cost Analysis reports, and they enable budget-per-tag tracking. Freeform tags are flexible but can't be enforced or used for budgets. We'll use BOTH: defined tags for cost tracking, freeform tags for quick labels.
+
+**Step 1.2.1c — Set Tag Defaults (Auto-Apply to New Resources)**
+
+1. Navigate to **Identity & Security** → **Compartments**
+2. Click into `fedtracker-lab`
+3. Click the **Tag Defaults** tab
+4. Click **Create Tag Default**
+5. Add defaults:
+   - **Tag namespace:** `fedlab-cost` | **Tag key:** `project` | **Default value:** `fedtracker`
+   - Click **Create tag default**
+6. Repeat for `owner`:
+   - **Tag namespace:** `fedlab-cost` | **Tag key:** `owner` | **User-applied value** (this prompts the user to enter their name at resource creation)
+7. Optionally add `phase`:
+   - **Tag namespace:** `fedlab-cost` | **Tag key:** `phase` | **Default value:** `phase-1`
+
+> These tags are automatically applied to every new resource in the compartment. No manual tagging needed for the basics. Each phase has its own compartment, so `phase-2` and `phase-3` get their own tag defaults later.
+
+**Step 1.2.1d — Create Quota Policy (Hard Spending Limits)**
+
+1. Navigate to **Governance & Administration** → **Quota Policies** (under Tenancy Management in the left nav)
+2. Click **Create Quota**
+3. Fill in:
+   - **Name:** `fedlab-quota-limits`
+   - **Description:** `Hard limits on resource creation to prevent overspending`
+4. In the **Quota policy** text area, paste these statements (all 6 lines, no blank lines after the last one):
+
+```
+set compute-core quota standard-a1-core-count to 4 in tenancy
+zero compute-core quota /*gpu*/ in tenancy
+zero compute-core quota hpc2-core-count in tenancy
+set block-storage quota total-storage-gb to 200 in tenancy
+zero database quota /*exadata*/ in tenancy
+set object-storage quota storage-bytes to 21474836480 in tenancy
+```
+
+> **⚠️ Copy-paste note:** Do NOT include comment lines (starting with `#`) — the quota editor does not support them. The `/*gpu*/` and `/*exadata*/` are wildcards that block ALL GPU types and Exadata database types. Object storage uses bytes: 21474836480 = 20 GB.
+
+What each statement does:
+1. **ARM compute:** Limits A1 Flex instances to 4 OCPUs (Always Free limit)
+2. **GPU block:** Prevents launching any GPU instance (expensive — $1-20+/hr)
+3. **HPC block:** Prevents launching HPC bare metal instances
+4. **Block storage:** Limits to 200 GB (Always Free limit)
+5. **Exadata block:** Prevents launching Exadata databases (enterprise pricing)
+6. **Object storage:** Limits to 20 GB
+
+5. Click **Create**
+
+> **Why quota policies matter:** Unlike budget alerts (which only warn you), quotas BLOCK resource creation if you hit the limit. If you accidentally try to launch a GPU instance or an Exadata database, OCI will reject the API call. This is your credit card protection.
+
+> **📝 Note:** New quota policies can take up to 10 minutes to become active.
+
+**Step 1.2.1e — Bookmark Cost Analysis**
+
+1. Navigate to **Billing & Cost Management** → **Cost Analysis**
+2. Configure the report:
+   - **Grouping dimensions** dropdown: select `Tag` — a popup dialog will appear:
+     - **Tag Namespace:** select `fedlab-cost` (change from "None (free-form-tag)")
+     - **Tag Key:** select `component`
+     - **Match any value** (select this radio button)
+     - Click **Select**
+   - **Start date:** 1st of the current month
+   - **End date:** today's date
+   - **Granularity:** `Daily`
+   - **Show:** `Cost`
+   - Click **Apply**
+3. Bookmark this page — check it daily during the project
+
 **Verify:**
 
-You should see `fedlab-monthly-budget` with **3 alert rules** listed:
-- 50% actual spend (awareness — "halfway through budget")
-- 80% actual spend (warning — "slow down or investigate")
-- 100% forecast spend (predictive — "on track to exceed budget this month")
+- [ ] Budget exists with alert rules configured
+- [ ] Tag namespace `fedlab-cost` exists with 5 tag keys (project, phase, component, lifetime, owner)
+- [ ] Tag defaults are set on the `fedtracker-lab` compartment
+- [ ] Quota policy `fedlab-quota-limits` exists and is active
+- [ ] Cost Analysis page is bookmarked
 
-> **Interview Insight: "How did you manage cloud costs?"**
->
-> **Strong answer:** "I set up compartment-scoped budgets with three alert tiers — 50% actual for awareness, 80% actual for warning, and 100% forecast for predictive alerting. Combined with resource tagging and a Python cost compliance script, I had full visibility into spending. This maps to NIST 800-53 SA-2 resource allocation requirements."
->
-> **Weak answer:** "I watched the billing dashboard." (Reactive, not proactive)
+> **💼 Interview Insight — Cost Management:** "Before deploying a single resource, I set up OCI budgets with both actual and forecast alerts, created a defined tag namespace for cost tracking, set compartment-level tag defaults for auto-tagging, and implemented quota policies as hard limits. In federal environments, uncontrolled cloud spend is a compliance finding — FinOps is part of operations, not an afterthought."
 
 ---
 
