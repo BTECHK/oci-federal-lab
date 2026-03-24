@@ -590,8 +590,8 @@ resource "oci_database_autonomous_database" "fedanalytics_db" {
   db_name                  = "fedanalyticsdb"
   db_workload              = "OLTP"
   is_free_tier             = true
-  cpu_core_count           = 1
-  data_storage_size_in_tbs = 1
+  compute_count            = 1    # Replaces deprecated cpu_core_count in provider v5.x+
+  data_storage_size_in_gbs = 20   # Always Free tier provides 20 GB (not 1 TB)
   admin_password           = var.db_admin_password
 
   freeform_tags = {
@@ -908,7 +908,7 @@ METRICS = {
     "webhooks_validated": 0,
     "webhooks_rejected": 0,
     "last_ingest_time": None,
-    "start_time": datetime.now(timezone.utc).isoformat() + "Z"
+    "start_time": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 }
 APPEOF
 ```
@@ -1114,7 +1114,7 @@ def health_check():
             "webhooks_received": METRICS["webhooks_received"]
         },
         "uptime_since": METRICS["start_time"],
-        "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     }
 APPEOF
 ```
@@ -1171,7 +1171,7 @@ def ingest_data(request: IngestRequest):
     # Update metrics
     METRICS["records_ingested"] += accepted
     METRICS["ingest_errors"] += rejected
-    METRICS["last_ingest_time"] = datetime.now(timezone.utc).isoformat() + "Z"
+    METRICS["last_ingest_time"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     log_audit("INGEST", "ingest_data", resource_id=batch_id,
               details=f"Batch {batch_id}: {accepted} accepted, {rejected} rejected from {request.source}")
@@ -1182,7 +1182,7 @@ def ingest_data(request: IngestRequest):
         records_accepted=accepted,
         records_rejected=rejected,
         batch_id=batch_id,
-        timestamp=datetime.now(timezone.utc).isoformat() + "Z"
+        timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     )
 APPEOF
 ```
@@ -1234,7 +1234,7 @@ def ingest_status():
         "recent_batches": recent_batches,
         "last_ingest_time": METRICS["last_ingest_time"],
         "error_count": METRICS["ingest_errors"],
-        "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     }
 APPEOF
 ```
@@ -1346,7 +1346,7 @@ async def receive_webhook(
         "event_type": event_type,
         "signature_valid": signature_valid,
         "action_taken": action_taken,
-        "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     }
 APPEOF
 ```
@@ -1469,7 +1469,7 @@ def get_metrics():
             "error_log_count": error_logs,
             "audit_entries": audit_entries
         },
-        "timestamp": datetime.now(timezone.utc).isoformat() + "Z"
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     }
 APPEOF
 ```
@@ -2117,6 +2117,9 @@ If the CloudBees CI trial isn't available, install plugins that approximate its 
 JENKINS_URL="http://localhost:8080"
 JENKINS_AUTH="admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword 2>/dev/null || echo 'your-admin-password')"
 
+# Download the Jenkins CLI JAR from the running instance
+wget http://localhost:8080/jnlpJars/jenkins-cli.jar -O /opt/jenkins/jenkins-cli.jar
+
 # Configuration as Code (JCasC)
 java -jar /opt/jenkins/jenkins-cli.jar -s $JENKINS_URL \
   -auth $JENKINS_AUTH \
@@ -2263,7 +2266,7 @@ sleep 30
 
 ```bash
 # Version-control the CasC config
-cd ~/fedanalytics-project  # or wherever your repo is
+cd ~/oci-federal-lab-phase2  # your Phase 2 project repo
 mkdir -p jenkins/casc
 cp /var/lib/jenkins/casc_configs/jenkins.yaml jenkins/casc/
 git add jenkins/casc/jenkins.yaml
@@ -2323,7 +2326,9 @@ pipeline {
                     oci --version || { echo "OCI CLI not installed"; exit 1; }
 
                     # List recent backups in Object Storage
-                    # Replace with your actual bucket and namespace
+                    # Replace <YOUR_TENANCY_NAMESPACE> with your actual namespace
+                    # Find it in OCI Console → Tenancy Details → Object Storage Namespace
+                    OCI_NAMESPACE="<YOUR_TENANCY_NAMESPACE>"
                     oci os object list \
                       --bucket-name fedanalytics-backups \
                       --namespace-name $OCI_NAMESPACE \
@@ -2340,6 +2345,7 @@ pipeline {
                 sh '''
                     # Ensure most recent backup is less than 24 hours old
                     echo "Checking backup freshness..."
+                    OCI_NAMESPACE="<YOUR_TENANCY_NAMESPACE>"
                     LATEST=$(oci os object list \
                       --bucket-name fedanalytics-backups \
                       --namespace-name $OCI_NAMESPACE \
@@ -2455,11 +2461,13 @@ Read this aloud 3 times:
 
 ---
 
-## PHASE 2 COMPLETE
+## PHASE 2 — DAYS 1-3 COMPLETE
 
-**Phase 2 covered Phases 20-22 (Days 1-3):** Infrastructure deployment with Terraform + Ansible, FedAnalytics FastAPI application with webhook integration, OCI Generative AI compliance reports, and Jenkins to CloudBees CI migration with enterprise governance features (RBAC, CasC, audit trail).
+**Phase 2 Days 1-3 covered Phases 20-22:** Infrastructure deployment with Terraform + Ansible, FedAnalytics FastAPI application with webhook integration, and Jenkins to CloudBees CI migration with enterprise governance features (RBAC, CasC, audit trail).
 
-**Skills practiced:** Terraform (OCI provider reps), Ansible (hardening + deployment), FastAPI (second build with webhook/HMAC patterns), OCI Autonomous Database, OCI Generative AI Service, systemd service management, webhook signature validation, Jenkins CI/CD, CloudBees CI migration, folder-based RBAC, Configuration as Code, audit trail compliance (NIST 800-53).
+**Skills practiced so far:** Terraform (OCI provider reps), Ansible (hardening + deployment), FastAPI (second build with webhook/HMAC patterns), OCI Autonomous Database, systemd service management, webhook signature validation, Jenkins CI/CD, CloudBees CI migration, folder-based RBAC, Configuration as Code, audit trail compliance (NIST 800-53).
+
+> **⚠️ Remaining (Days 3-5):** k3s Kubernetes cluster setup, AIDE file integrity monitoring, Object Storage with WORM retention locks, ransomware simulation, and the full DR drill. These sections are under development.
 
 **Total Phase 2 artifacts:** Terraform configs, Ansible playbooks, FedAnalytics FastAPI app, systemd service files, database schema, Jenkins CasC YAML, CloudBees comparison doc, backup validation pipeline.
 
