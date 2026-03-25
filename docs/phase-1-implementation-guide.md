@@ -665,7 +665,7 @@ sudo visudo
 
 ```bash
 # Switch to the new user to test it
-su - clouduser
+sudo su - clouduser
 
 # Verify you can use sudo
 sudo whoami
@@ -1523,7 +1523,7 @@ Switch to the clouduser and start building:
 
 ```bash
 # Switch to clouduser (who owns the /opt/fedtracker directory)
-su - clouduser
+sudo su - clouduser
 ```
 
 **Build `/opt/fedtracker/main.py` section by section:**
@@ -2035,7 +2035,7 @@ Now that you've built a REST API, here's how it compares to other API patterns y
 ```bash
 # Make sure you're clouduser
 whoami
-# Expected: clouduser (if not, run: su - clouduser)
+# Expected: clouduser (if not, run: sudo su - clouduser)
 
 # Start the application manually with uvicorn
 cd /opt/fedtracker && python3 main.py
@@ -2438,7 +2438,7 @@ http://<PUBLIC_IP>:8000/docs
 Switch to clouduser:
 
 ```bash
-su - clouduser
+sudo su - clouduser
 ```
 
 **Build `/opt/fedtracker/health_check.sh` section by section:**
@@ -2716,7 +2716,7 @@ sudo chown clouduser:clouduser /home/clouduser/.oci/oci_api_key.pem
 sudo chmod 600 /home/clouduser/.oci/oci_api_key.pem
 
 # Switch back to clouduser
-su - clouduser
+sudo su - clouduser
 
 # Fix the config file permissions too
 chmod 600 ~/.oci/config
@@ -3740,7 +3740,7 @@ sudo pip3.11 install oracledb
 
 ```bash
 # Test the connection
-su - clouduser
+sudo su - clouduser
 
 python3 << 'PYEOF'
 import oracledb
@@ -4192,7 +4192,7 @@ For each resource (VMs, VCN, DB), go to its details page → **Tags** → **Add 
 ```bash
 # Run the OCI reporter script to check tagging
 ssh app-server
-su - clouduser
+sudo su - clouduser
 python3 /opt/fedtracker/oci_reporter.py
 # Expected: All resources now show tags instead of "⚠ NONE"
 ```
@@ -5607,7 +5607,7 @@ podman --version
 **Step 1:** Base image and metadata
 
 ```bash
-su - clouduser
+sudo su - clouduser
 
 cat > /opt/fedtracker/Dockerfile << 'DOCKEOF'
 # --- Stage 1: Build stage ---
@@ -5768,7 +5768,7 @@ sudo usermod -aG docker clouduser
 ```bash
 # Log out and back in to pick up docker group
 exit
-su - clouduser
+sudo su - clouduser
 
 # Build with Docker — same Dockerfile, same result
 cd /opt/fedtracker
@@ -6002,7 +6002,7 @@ scp -J bastion opc@<APP_SERVER_PRIVATE_IP>:/tmp/cis-report.html ~/Desktop/
 📍 **VM Terminal** (app-server, build by hand)
 
 ```bash
-su - clouduser
+sudo su - clouduser
 
 cat > /opt/fedtracker/cis_scan.sh << 'SCANEOF'
 #!/bin/bash
@@ -6155,7 +6155,7 @@ ollama run tinyllama "What is CIS in cybersecurity? Reply in 2 sentences."
 📍 **VM Terminal** (build by hand)
 
 ```bash
-su - clouduser
+sudo su - clouduser
 
 cat > /opt/fedtracker/evidence_collector.py << 'PYEOF'
 #!/usr/bin/env python3
@@ -7193,7 +7193,7 @@ DREOF
 
 ```bash
 ssh app-server
-su - clouduser
+sudo su - clouduser
 
 cat > /opt/fedtracker/cost_reporter.py << 'PYEOF'
 #!/usr/bin/env python3

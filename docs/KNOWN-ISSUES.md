@@ -12,6 +12,11 @@ Last updated: 2026-03-25
 - Tag default values get wiped to blank on wizard retry even when entered correctly
 - Compartment dropdown in other services (VCN, Compute) may not show new compartments for several minutes → hard refresh (F5) required
 
+## Guide Command Errors
+
+- `su - clouduser` fails with "Permission denied" because cloud users have no password set → must use `sudo su - clouduser` (uses opc's NOPASSWD sudo, not the target user's password)
+- On OL9, `opc` is NOT in the `wheel` group (unlike OL8) — sudo access comes from `/etc/sudoers.d/90-cloud-init-users` instead
+
 ## OCI Documentation vs Reality
 
 - Tag Defaults nav: NOT at `Governance → Tag Defaults`. Actual path: `Identity → Compartments → [compartment] → Tag Defaults tab`
