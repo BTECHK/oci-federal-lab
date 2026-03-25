@@ -179,6 +179,8 @@ You should see `fedtracker-lab` in the compartment list. Click into it — it wi
 ### Step 1.2.1 — Cost Protection Setup
 📍 **OCI Console**
 
+> **Prerequisites:** Complete Step 1.2 (Create Compartment) first if you haven't already — tag defaults and budget scoping require the compartment to exist.
+
 > **🧠 ELI5 — Budget Alerts and Quotas:** Cloud billing can surprise you. OCI budget alerts email you when spending hits a threshold — but they're "soft limits" (warnings only). Quotas are "hard limits" — they physically block resource creation if you exceed them. Combining both gives you an early warning system AND a safety net. Set these up BEFORE creating any resources.
 
 > **⚠️ Why this matters:** If someone else's credit card is on this account, protect it. A single misconfigured GPU instance could cost $20+/hour. Budget alerts + quotas + tagging = zero surprises.
@@ -482,10 +484,12 @@ echo "=== ROUTE TABLES ===" && oci network route-table list --compartment-id <CO
 
 5. **Image and Shape** section:
    - Click **Edit** next to Image and Shape
-   - **Image:** Click **Change Image** → select **Oracle Linux** → select **Oracle Linux 8** (not 9) → click **Select Image**
-   - **Shape:** Click **Change Shape** → select **Ampere** (ARM) → select **VM.Standard.A1.Flex** → set **OCPU count: 2** and **Memory: 8 GB** → click **Select Shape**
+   - **Image:** Click **Change Image** → select **Oracle Linux** → select **Oracle Linux 8 or 9** — either works. If A1 Flex is only available with OL9, select that. → click **Select Image**
+   - **Shape:** Click **Change Shape** → select **Ampere** (ARM) → select **VM.Standard.A1.Flex** → set **OCPU count: 1** and **Memory: 6 GB** (A1 Flex allocates 6 GB per OCPU — sufficient for Phase 1) → click **Select Shape**
 
 > **🧠 ELI5 — Shapes and Images:** A *shape* is the hardware configuration — how many CPUs and how much RAM your VM gets. `VM.Standard.A1.Flex` means it uses ARM processors (like your phone's chip, very efficient) and "Flex" means you choose how many CPUs and RAM. An *image* is the operating system template — Oracle Linux 8 is Red Hat Enterprise Linux-compatible, which is the standard for federal environments.
+
+> **Out of capacity?** A1 Flex is in high demand. If you see "Out of capacity" in one AD, try the other two ADs. If all three fail, try again in a few hours (capacity fluctuates). As a last resort, use `VM.Standard.E2.1.Micro` (1 OCPU / 1 GB) — it's always available and works for Phase 1, though you may need to upgrade for Phase 2.
 
 6. **Networking** section:
    - **VCN:** `legacy-vcn`
@@ -505,14 +509,14 @@ echo "=== ROUTE TABLES ===" && oci network route-table list --compartment-id <CO
 
 Wait 1-2 minutes for the instance to show **RUNNING** status. Note the **Public IP Address** shown on the instance details page — you'll need this for SSH.
 
-> **Cost check:** VM.Standard.A1.Flex with 2 OCPU / 8 GB RAM = $0.00/month on Always Free tier. OCI gives you 4 OCPUs and 24 GB RAM total for free A1 Flex instances. You're using half. Verify at: [oracle.com/cloud/free](https://www.oracle.com/cloud/free/)
+> **Cost check:** VM.Standard.A1.Flex with 1 OCPU / 6 GB RAM = $0.00/month on Always Free tier. OCI gives you 4 OCPUs and 24 GB RAM total for free A1 Flex instances. You're using a quarter of your OCPU budget. Verify at: [oracle.com/cloud/free](https://www.oracle.com/cloud/free/)
 
 **Verify:**
 
 On the instance details page, confirm:
 - **State:** Running
-- **Shape:** VM.Standard.A1.Flex (2 OCPU, 8 GB)
-- **Image:** Oracle Linux 8
+- **Shape:** VM.Standard.A1.Flex (1 OCPU, 6 GB)
+- **Image:** Oracle Linux 8 or 9
 - **Public IP:** A valid IP address is shown (e.g., 129.xxx.xxx.xxx)
 
 ---
@@ -521,6 +525,12 @@ On the instance details page, confirm:
 📍 **Local Terminal**
 
 > **🧠 ELI5 — SSH (Secure Shell):** SSH is how you remotely control a Linux server. It creates an encrypted tunnel between your laptop and the cloud VM, so you can type commands as if you were sitting at the server's keyboard. The private key file is your proof of identity — like a digital badge that the server checks before letting you in.
+
+> **🖥️ Windows Users:** The commands below use Unix-style syntax. On Windows:
+> - Use **Git Bash** (recommended) or **PowerShell** for SSH commands
+> - Replace `chmod 600` with this PowerShell command (run as Admin): `icacls "C:\Users\<USERNAME>\.ssh\<keyfile>" /inheritance:r /grant:r "<USERNAME>:R"`
+> - When creating `~/.ssh/config`, make sure it's saved as `config` (no `.txt` extension) — Notepad adds `.txt` by default
+> - **VS Code Remote SSH** is a great alternative: install the "Remote - SSH" extension, then F1 → "Remote-SSH: Connect to Host"
 
 First, fix the key file permissions (SSH refuses keys that are too open):
 
@@ -556,9 +566,9 @@ You're in. Every command from now on happens in this VM terminal unless a locati
 **Verify:**
 
 ```bash
-# Confirm you're on Oracle Linux 8
+# Confirm you're on Oracle Linux 8 or 9
 cat /etc/oracle-release
-# Expected: Oracle Linux Server release 8.x
+# Expected: Oracle Linux Server release 8.x or 9.x (depending on image selected)
 
 # Confirm your hostname
 hostname
@@ -593,7 +603,7 @@ uname -m
 | `ssh -i key opc@<IP>` connects | Shell prompt appears | Check: (1) key file path is correct, (2) `chmod 600` was run on the key, (3) public IP is correct, (4) you're using `opc` not `root`, (5) security list allows SSH on port 22 (wizard default enables this) |
 | `ssh` says "Permission denied" | Should not happen | Wrong key file, or key permissions too open. Run `chmod 600` on the key file |
 | `ssh` says "Connection timed out" | Should not happen | Security list may be missing port 22 rule, or you're trying to reach the private subnet IP instead of the public IP |
-| `cat /etc/oracle-release` shows Oracle Linux 8 | `Oracle Linux Server release 8.x` | You selected the wrong image — terminate the instance and recreate with Oracle Linux 8 |
+| `cat /etc/oracle-release` shows Oracle Linux 8 or 9 | `Oracle Linux Server release 8.x or 9.x` | You selected the wrong image — terminate the instance and recreate with Oracle Linux 8 or 9 |
 | `uname -m` shows `aarch64` | `aarch64` (ARM) | You selected the wrong shape — this is fine for learning, but A1 Flex is the Always Free shape |
 
 ---
