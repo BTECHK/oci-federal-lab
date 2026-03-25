@@ -170,6 +170,8 @@ Sign in to the OCI Console. You should see the main dashboard with your tenancy 
 
 You should see `fedtracker-lab` in the compartment list. Click into it — it will be empty for now.
 
+> **⚠️ Propagation delay:** New compartments can take a few minutes to appear in other service pages (e.g., VCN, Compute). If `fedtracker-lab` doesn't show up in a Compartment dropdown, do a **hard refresh** (`Ctrl + Shift + R`) and try again. If it still doesn't appear, click the **expand arrow** (▶) next to your root compartment in the dropdown to reveal child compartments.
+
 > **Important:** For the rest of this lab, **always** select the `fedtracker-lab` compartment in the left sidebar dropdown when creating resources. If you accidentally create something in the root compartment, it still works but makes cleanup harder.
 
 ---
@@ -288,21 +290,29 @@ What each statement does:
 
 > **📝 Note:** New quota policies can take up to 10 minutes to become active.
 
-**Step 1.2.1e — Bookmark Cost Analysis**
+**Step 1.2.1e — Create a Saved Cost Report**
 
 1. Navigate to **Billing & Cost Management** → **Cost Analysis**
 2. Configure the report:
-   - **Grouping dimensions** dropdown: select `Tag` — a popup dialog will appear:
-     - **Tag Namespace:** select `fedlab-cost` (change from "None (free-form-tag)")
-     - **Tag Key:** select `component`
-     - **Match any value** (select this radio button)
-     - Click **Select**
    - **Start date:** 1st of the current month
    - **End date:** today's date
    - **Granularity:** `Daily`
    - **Show:** `Cost`
+   - **Grouping dimensions:** `Service` (default — shows cost broken down by OCI service)
+3. Add a tag filter:
+   - Click **Add filter** → select **Tag** — a popup dialog will appear:
+     - **Tag Namespace:** select `fedlab-cost` (change from "None (free-form-tag)")
+     - **Tag Key:** select `component`
+     - **Match any value** (select this radio button)
+     - Click **Select**
    - Click **Apply**
-3. Bookmark this page — check it daily during the project
+4. Click **Save as new report** (top of page, next to the Reports dropdown)
+5. **Name:** `fedlab-daily-cost-by-component`
+6. Click **Save**
+
+> Your saved report now appears in the **Reports** dropdown under "Saved Reports." Check it daily during the project — no browser bookmark needed, the report is saved in OCI with your filter settings intact. You can save up to 10 custom reports.
+
+> **📝 Note:** If your `fedlab-cost` tag namespace doesn't appear in the Tag filter dropdown, this is normal — cost-tracking tag data can take 24-48 hours to populate in Cost Analysis after tag creation. Come back to this step after deploying your first tagged resources. The filter will work once OCI has cost data associated with your tags.
 
 **Verify:**
 
@@ -347,6 +357,112 @@ Click into `legacy-vcn`. You should see:
 - A NAT Gateway
 - 2 Route Tables
 - 2 Security Lists
+
+> **⚠️ Wizard not working?** If the VCN wizard fails with "Invalid tags" (a known OCI Console bug when tag defaults are configured), use the [CLI Alternative: Create VCN via Cloud Shell](#cli-alternative-create-vcn-via-cloud-shell) section below instead.
+
+---
+
+#### CLI Alternative: Create VCN via Cloud Shell
+
+> **When to use this:** If the VCN wizard fails due to tag validation errors, phantom freeform tags, or other wizard bugs, you can create the identical network stack via OCI Cloud Shell (the `>_` terminal icon in the top-right of the OCI Console). Each command below creates one resource. Run them in order, one at a time.
+
+**Prerequisites — gather these values first:**
+
+| Placeholder | How to Find It | Example Format |
+|---|---|---|
+| `COMPARTMENT_OCID` | Identity → Compartments → click `fedtracker-lab` → copy OCID | `ocid1.compartment.oc1..aaaaaa...` |
+| `VCN_OCID` | Created in Step 1 below — copy `"id"` from the JSON response | `ocid1.vcn.oc1.iad.aaaaaa...` |
+| `IG_OCID` | Created in Step 2 — copy `"id"` from the response | `ocid1.internetgateway.oc1.iad.aaaaaa...` |
+| `NAT_OCID` | Created in Step 3 — copy `"id"` from the response | `ocid1.natgateway.oc1.iad.aaaaaa...` |
+| `SERVICE_ID` | Created in Step 4a — the raw output value | `ocid1.service.oc1.iad.aaaaaa...` |
+| `DEFAULT_RT_OCID` | From Step 1 response → `"default-route-table-id"` | `ocid1.routetable.oc1.iad.aaaaaa...` |
+| `PRIVATE_RT_OCID` | Created in Step 6 — copy `"id"` from the response | `ocid1.routetable.oc1.iad.aaaaaa...` |
+| `YOUR_OWNER_TAG` | Your name or identifier for cost tracking | e.g., `jsmith` |
+
+> **📋 Copy-paste tip:** Each command below is a single line — no backslashes, no line breaks. Paste the entire line into Cloud Shell and press Enter once. Replace all `<PLACEHOLDER>` values with your actual OCIDs before pasting.
+
+**Step 1 — Create VCN:**
+```bash
+oci network vcn create --compartment-id <COMPARTMENT_OCID> --cidr-blocks '["10.0.0.0/16"]' --display-name legacy-vcn --dns-label legacyvcn --defined-tags '{"fedlab-cost": {"phase": "phase-1", "owner": "<YOUR_OWNER_TAG>", "component": "network", "project": "fedtracker"}}'
+```
+> Save the `"id"` → this is your `VCN_OCID`. Also save `"default-route-table-id"` → this is your `DEFAULT_RT_OCID`.
+
+**Step 2 — Create Internet Gateway:**
+```bash
+oci network internet-gateway create --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --display-name internet-gateway-legacy-vcn --is-enabled true --defined-tags '{"fedlab-cost": {"phase": "phase-1", "owner": "<YOUR_OWNER_TAG>", "component": "network", "project": "fedtracker"}}'
+```
+> Save the `"id"` → this is your `IG_OCID`.
+
+**Step 3 — Create NAT Gateway:**
+```bash
+oci network nat-gateway create --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --display-name nat-gateway-legacy-vcn --defined-tags '{"fedlab-cost": {"phase": "phase-1", "owner": "<YOUR_OWNER_TAG>", "component": "network", "project": "fedtracker"}}'
+```
+> Save the `"id"` → this is your `NAT_OCID`.
+
+**Step 4a — Get Service ID (for Service Gateway):**
+```bash
+oci network service list --query "data[?contains(name, 'All')].id | [0]" --raw-output
+```
+> Save the output → this is your `SERVICE_ID`.
+
+**Step 4b — Create Service Gateway:**
+```bash
+oci network service-gateway create --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --display-name service-gateway-legacy-vcn --services '[{"service-id": "<SERVICE_ID>"}]' --defined-tags '{"fedlab-cost": {"phase": "phase-1", "owner": "<YOUR_OWNER_TAG>", "component": "network", "project": "fedtracker"}}'
+```
+
+**Step 5 — Update Default Route Table (for public subnet → Internet Gateway):**
+```bash
+oci network route-table update --rt-id <DEFAULT_RT_OCID> --route-rules '[{"destination": "0.0.0.0/0", "destinationType": "CIDR_BLOCK", "networkEntityId": "<IG_OCID>"}]' --force
+```
+
+**Step 6 — Create Private Route Table (for private subnet → NAT Gateway):**
+```bash
+oci network route-table create --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --display-name private-route-table-legacy-vcn --route-rules '[{"destination": "0.0.0.0/0", "destinationType": "CIDR_BLOCK", "networkEntityId": "<NAT_OCID>"}]' --defined-tags '{"fedlab-cost": {"phase": "phase-1", "owner": "<YOUR_OWNER_TAG>", "component": "network", "project": "fedtracker"}}'
+```
+> Save the `"id"` → this is your `PRIVATE_RT_OCID`.
+
+**Step 7 — Create Public Subnet:**
+```bash
+oci network subnet create --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --cidr-block 10.0.0.0/24 --display-name public-subnet-legacy-vcn --dns-label publicsub --prohibit-internet-ingress false --defined-tags '{"fedlab-cost": {"phase": "phase-1", "owner": "<YOUR_OWNER_TAG>", "component": "network", "project": "fedtracker"}}'
+```
+
+**Step 8 — Create Private Subnet:**
+```bash
+oci network subnet create --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --cidr-block 10.0.1.0/24 --display-name private-subnet-legacy-vcn --dns-label privatesub --prohibit-internet-ingress true --route-table-id <PRIVATE_RT_OCID> --defined-tags '{"fedlab-cost": {"phase": "phase-1", "owner": "<YOUR_OWNER_TAG>", "component": "network", "project": "fedtracker"}}'
+```
+
+**Verify — run these commands to confirm everything was created:**
+
+```bash
+echo "=== VCN ===" && oci network vcn list --compartment-id <COMPARTMENT_OCID> --query "data[].{Name:\"display-name\", State:\"lifecycle-state\", CIDR:\"cidr-block\"}" --output table
+```
+
+```bash
+echo "=== SUBNETS ===" && oci network subnet list --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --query "data[].{Name:\"display-name\", CIDR:\"cidr-block\"}" --output table
+```
+
+```bash
+echo "=== GATEWAYS ===" && oci network internet-gateway list --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --query "data[].{Name:\"display-name\", State:\"lifecycle-state\"}" --output table && oci network nat-gateway list --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --query "data[].{Name:\"display-name\", State:\"lifecycle-state\"}" --output table && oci network service-gateway list --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --query "data[].{Name:\"display-name\", State:\"lifecycle-state\"}" --output table
+```
+
+```bash
+echo "=== ROUTE TABLES ===" && oci network route-table list --compartment-id <COMPARTMENT_OCID> --vcn-id <VCN_OCID> --query "data[].{Name:\"display-name\", State:\"lifecycle-state\"}" --output table
+```
+
+**Expected output:**
+
+| Resource | Name | Expected State |
+|---|---|---|
+| VCN | `legacy-vcn` | AVAILABLE, CIDR 10.0.0.0/16 |
+| Public Subnet | `public-subnet-legacy-vcn` | AVAILABLE, CIDR 10.0.0.0/24 |
+| Private Subnet | `private-subnet-legacy-vcn` | AVAILABLE, CIDR 10.0.1.0/24 |
+| Internet Gateway | `internet-gateway-legacy-vcn` | AVAILABLE |
+| NAT Gateway | `nat-gateway-legacy-vcn` | AVAILABLE |
+| Service Gateway | `service-gateway-legacy-vcn` | AVAILABLE |
+| Route Table (default) | `Default Route Table for legacy-vcn` | AVAILABLE |
+| Route Table (private) | `private-route-table-legacy-vcn` | AVAILABLE |
+
+---
 
 > **Cost check:** VCN, subnets, internet gateway, NAT gateway = $0.00/month on Always Free tier. Networking resources are free on OCI. Verify at: [oracle.com/cloud/free](https://www.oracle.com/cloud/free/)
 

@@ -72,3 +72,7 @@ Thumbs.db
 nul
 *.tmp
 *.bak
+
+# OCI audit logs and error dumps
+logs and errors/
+logs-and-errors/
