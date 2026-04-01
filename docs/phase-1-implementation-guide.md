@@ -125,10 +125,13 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 | Tag | Where | What It Looks Like |
 |-----|-------|-------------------|
 | 📍 **OCI Console** | Oracle Cloud web UI | cloud.oracle.com — clicking buttons, navigating menus |
-| 📍 **Local Terminal** | Your machine's terminal | bash / PowerShell / Git Bash on your laptop |
+| 📍 **Local Terminal** | Your machine's terminal | PowerShell / Git Bash on your laptop (Terraform, git, SSH, curl) |
+| 📍 **WSL2 Terminal** | Windows Subsystem for Linux | Ubuntu shell on your laptop — **required for Ansible commands** (Ansible doesn't run on Windows) |
 | 📍 **VM Terminal** | SSH into Oracle Linux VM | `ssh opc@<public_ip>` — commands run on the cloud server |
 | 📍 **Editor** | Your text editor | VS Code, nano, vim — editing files |
 | 📍 **Browser** | Web browser | Testing endpoints, viewing Swagger docs, Jenkins UI |
+
+> **Windows users:** Most local commands work in PowerShell or Git Bash. Ansible is the exception — it requires a Linux environment. Install WSL2 (`wsl --install` in PowerShell as admin) and run all `ansible-playbook` and `ansible` commands from WSL2. VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code. Your Windows filesystem is accessible from WSL2 at `/mnt/c/Users/...`.
 
 ---
 
@@ -5331,41 +5334,42 @@ ssh -i ~/.ssh/fedtracker -J opc@$(terraform output -raw bastion_public_ip) opc@$
 ---
 
 ### Step 12.1 — Install Ansible
-📍 **Local Terminal**
+📍 **WSL2 Terminal** (Windows) / **Local Terminal** (macOS/Linux)
 
 > **🧠 ELI5 — Ansible:** Ansible is a configuration management tool that automates server setup. You write a "playbook" — a YAML file describing what you want the server to look like — and Ansible connects via SSH and makes it happen. No agent needed on the target server (unlike Puppet or Chef). It's idempotent — running the same playbook twice produces the same result without breaking anything.
 
+> **Windows users — install WSL2 first (one-time setup).** Ansible does **not** run on Windows — not in PowerShell, not in Git Bash, not via pip on Windows Python. You need a real Linux environment. Run this in **PowerShell as Administrator**:
+>
+> ```powershell
+> wsl --install
+> ```
+>
+> This installs Ubuntu on WSL2. After rebooting, open "Ubuntu" from the Start menu to set up your Linux username/password. Then install Ansible **inside WSL2**:
+
 ```bash
+# WSL2 (Ubuntu) — install pip if not present, then install Ansible
+sudo apt update && sudo apt install -y python3-pip
+pip3 install ansible
+
 # macOS
 brew install ansible
 
 # Linux
-python3.11 -m pip install ansible
+python3 -m pip install ansible
 
-# Verify
+# Verify (run from WSL2 on Windows)
 ansible --version
 # Expected: ansible [core 2.x.x]
 ```
 
-> **Windows users:** Ansible does **not** run natively on Windows. You need a Linux environment on your Windows machine. Two options:
->
-> - **WSL2 (recommended):** Install Windows Subsystem for Linux — `wsl --install` in PowerShell (admin). This gives you a full Ubuntu environment. Install Ansible inside WSL2 with `pip install ansible`. All Ansible commands in this guide should be run from WSL2.
-> - **Git Bash + pip:** `pip install ansible` may partially work in Git Bash, but Ansible relies on Linux-specific modules and SSH behaviors that can break on Windows. WSL2 is more reliable.
->
-> After installing WSL2, your workflow is: edit files in VS Code (Windows), run Terraform from PowerShell or Git Bash (Windows), run Ansible from WSL2 (Linux). VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code.
+> **Your WSL2 workflow:** Edit files in VS Code (Windows) — run Terraform and git from PowerShell or Git Bash (Windows) — run Ansible from WSL2 (Linux). Your Windows files are accessible from WSL2 at `/mnt/c/Users/<YOUR_USERNAME>/`. VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code (Terminal → New Terminal → select "Ubuntu (WSL)").
 
 ---
 
 ### Step 12.2 — Create Inventory File
 📍 **Editor** (build by hand)
 
-```bash
-# Your repo already has ansible/inventory/ and ansible/playbooks/ from the initial scaffold.
-# If they don't exist, create them:
-mkdir -p ~/oci-federal-lab/ansible/inventory
-mkdir -p ~/oci-federal-lab/ansible/playbooks
-cd ~/oci-federal-lab/ansible
-```
+> Your repo scaffold already has `ansible/inventory/` and `ansible/playbooks/` directories (with `.gitkeep` placeholder files). No need to create them — just add the inventory file directly.
 
 **Build `ansible/inventory/inventory.ini`:**
 
@@ -5388,9 +5392,13 @@ ansible_ssh_common_args='-o ProxyJump=opc@<BASTION_PUBLIC_IP>'
 
 > **Important:** Replace the IP placeholders with your actual IPs from `terraform output`.
 
-**Verify:**
+**Verify** (run from **WSL2** on Windows):
 
 ```bash
+# Navigate to your repo (WSL2 path to Windows filesystem)
+# Windows path: ~/oci-federal-lab → WSL2 path: /mnt/c/Users/<YOUR_USERNAME>/oci-federal-lab
+cd /mnt/c/Users/<YOUR_USERNAME>/oci-federal-lab   # adjust to your actual path
+
 # Test connectivity
 ansible all -i ansible/inventory/inventory.ini -m ping
 # Expected: bastion | SUCCESS and app-server | SUCCESS
@@ -5742,9 +5750,11 @@ ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playb
 ---
 
 ### Step 12.5 — Run Both Playbooks
-📍 **Local Terminal**
+📍 **WSL2 Terminal** (Windows) / **Local Terminal** (macOS/Linux)
 
 ```bash
+# Windows users: use your WSL2 path
+# cd /mnt/c/Users/<YOUR_USERNAME>/oci-federal-lab
 cd ~/oci-federal-lab
 
 # Run hardening first
@@ -5863,7 +5873,7 @@ Update `ansible/inventory/inventory.ini` with these new IPs.
 ---
 
 ### Step 13.3 — Configure with Ansible
-📍 **Local Terminal**
+📍 **WSL2 Terminal** (Windows) / **Local Terminal** (macOS/Linux)
 
 ```bash
 cd ~/oci-federal-lab
@@ -7783,7 +7793,7 @@ terraform apply
 # Expected: app-server recreated with new IP
 ```
 
-**Step 5: Update inventory and run Ansible**
+**Step 5: Update inventory and run Ansible** (from WSL2 on Windows)
 
 ```bash
 # Get new IP
@@ -7894,7 +7904,7 @@ NEW_IP=$(terraform output -raw app_server_private_ip)
 # Update ansible/inventory/inventory.ini with new IP
 ```
 
-### Step 4: Configure and Deploy
+### Step 4: Configure and Deploy (from WSL2 on Windows)
 ```bash
 ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
 ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml

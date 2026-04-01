@@ -773,7 +773,7 @@ terraform state list
 ---
 
 ### Step 21.1 — Install Ansible (if not already installed)
-📍 **Local Terminal**
+📍 **WSL2 Terminal** (Windows) / **Local Terminal** (macOS/Linux)
 
 > **Prerequisite:** Ansible must be installed on your local machine (the "control node"). If you installed it in Phase 1, skip to Step 21.2.
 
@@ -1800,7 +1800,7 @@ EOF
 ---
 
 ### Step 21.5 — Deploy with Ansible
-📍 **Local Terminal**
+📍 **WSL2 Terminal** (Windows) / **Local Terminal** (macOS/Linux)
 
 ```bash
 cd ~/oci-federal-lab-phase2
