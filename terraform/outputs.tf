@@ -9,7 +9,7 @@ output "app_server_private_ip" {
   value       = oci_core_instance.app_server.private_ip
 }
 
- "vcn_id" ">output "vcn_id" {
+output "vcn_id" {
   description = "OCID of the VCN"
   value       = oci_core_vcn.main.id
 }

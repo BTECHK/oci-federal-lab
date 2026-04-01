@@ -23,6 +23,7 @@ override.tf.json
 *_override.tf.json
 *.tfvars
 !*.tfvars.example
+*.tfstate.backup
 
 # Ansible
 *.retry
@@ -39,7 +40,7 @@ service-account*.json
 *.key
 ansible-vault-password
 vault-password.txt
-
+*/github/oci-federal-lab/auth
 # SSH keys
 id_rsa*
 *.pub
@@ -66,6 +67,7 @@ Thumbs.db
 
 # Claude Code / planning
 .claude_session_context.md
+.claude/
 .planning/
 
 # Temp files

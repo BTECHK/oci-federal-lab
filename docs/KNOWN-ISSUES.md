@@ -2,7 +2,7 @@
 
 Errors encountered during implementation. Reference before starting new phases or guides.
 
-Last updated: 2026-03-25
+Last updated: 2026-03-30
 
 ---
 
@@ -16,15 +16,25 @@ Last updated: 2026-03-25
 
 - `su - clouduser` fails with "Permission denied" because cloud users have no password set → must use `sudo su - clouduser` (uses opc's NOPASSWD sudo, not the target user's password)
 - On OL9, `opc` is NOT in the `wheel` group (unlike OL8) — sudo access comes from `/etc/sudoers.d/90-cloud-init-users` instead
+- `pip3.11` / `pip3` can install packages to a different site-packages path than `python3` uses — even after `alternatives --set python3`. Use `python3.11 -m pip install` (or `python3 -m pip install`) to guarantee the same interpreter finds the modules
+- `sudo alternatives --set python3 /usr/bin/python3.11` fails with "No such file or directory" if the alternatives entry doesn't exist yet → must run `sudo alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1` first to register the option
+- `sudo alternatives --set python3 /usr/bin/python3.11` breaks `firewall-cmd` on OL9 with `ModuleNotFoundError: No module named 'gi'` — system tools (firewall-cmd, semanage) depend on Python 3.9 packages. Fix: `sudo dnf install python3-gobject -y`, or don't change system python3 at all — use `python3.11` explicitly instead
+- clouduser sudoers drop-in scoped to `systemctl restart/status fedtracker` only blocks later guide steps that need broader sudo (dnf, pip, alternatives, tee, chown, firewall-cmd) → use `NOPASSWD:ALL` for lab, tighten with Ansible on Day 3
+- Step 11.5 `terraform.tfvars` references `~/.ssh/fedtracker.pub` which is never created anywhere in the guide → use existing bastion `.pub` key or generate a new one. Guide needs explicit instructions.
+- Step 11.5 says "Oracle Linux 8" but user is on OL9 (OL8+A1 Flex combo may be unavailable) → image OCID lookup instructions needed, specifying OL9 + aarch64 for A1 Flex shape
+- Step 11.5 `private_key_path = "~/.oci/oci_api_key.pem"` may not exist locally — OCI API key was created on the legacy-server (now destroyed). Need local API key setup instructions before Terraform.
 
 ## OCI Documentation vs Reality
 
+- VCN resource navigation: Internet Gateways, NAT Gateways, Route Tables, Security Lists, and Subnets are **tabs** at the top of the VCN detail page (Gateways, Routing, Security, Subnets) — NOT items in the left sidebar as many guides/tutorials describe
 - Tag Defaults nav: NOT at `Governance → Tag Defaults`. Actual path: `Identity → Compartments → [compartment] → Tag Defaults tab`
 - Cost Analysis: tags are under **Add filter → Tag**, not the "Grouping dimensions" dropdown
 - Quota policy names in OCI docs don't always match API (e.g., `blockstorage` vs `block-storage`, `objectstorage` vs `object-storage`)
 - `#` comments are NOT valid in OCI Policy Builder or Quota Policy editor — causes parser error
 - Quota policies are NOT IAM policies — they live at `Governance → Quota Policies`, not `Identity → Policies`
 - Object storage quotas use bytes not GB (20 GB = 21474836480 bytes)
+- API Keys nav differs between Identity Domains (new) and old IAM: **Identity Domains:** Profile → My profile → Tokens and keys tab → API keys. **Old IAM:** Profile → User Settings → scroll to API Keys. Most new tenancies use Identity Domains. The GenAI "Create API key" page is a completely different thing — don't confuse it with Identity API keys
+- Oracle rebranded Autonomous Database → **Autonomous AI Database**. Nav path is now `Oracle AI Database → Autonomous AI Database` (not `Oracle Database → Autonomous Database`). The "Databases" menu item is for MySQL HeatWave, PostgreSQL, NoSQL — not ADB. Create button now says "Create Autonomous AI Database". "Deployment type: Shared Infrastructure" is gone (just "Serverless"). OCPU → ECPU. Always Free auto-locks ECPU + storage (fields disappear when toggled)
 
 ## Windows / SSH Gotchas
 
@@ -48,3 +58,10 @@ Last updated: 2026-03-25
 - OCI quota policy comments (`#`) cause API errors — keep comments separate from statements
 - Always paste CLI commands as single lines — multi-line paste from LLMs adds invisible characters
 - When copying OCIDs from OCI Console, watch for trailing spaces
+- **VS Code markdown preview adds invisible anchor artifacts to code blocks** — copying HCL/Terraform from the rendered preview (not the raw `.md`) produces broken syntax like `"tenancy_ocid" ">variable "tenancy_ocid" {`. Always copy from the raw code block, not the preview. This also applies to any heading-like pattern inside a fenced code block.
+
+## Guide Continuity Gaps (Fixed)
+
+- **Day 1 app code lost on server termination** — Step 6.2 committed code to a local git repo on the legacy-server but never pushed to remote. Steps 9.5, 12.8 (Ansible deploy), 14.2 (Docker build), and git commits on Days 3 and 5 all assumed `app/main.py` existed in the local `~/oci-federal-lab` repo. Fixed by adding SCP + git push instructions to Step 6.2 and a migration checkpoint between Day 1 and Day 2.
+- **Step 14.4 references `ssh legacy-server`** but by Day 4 the legacy server has been terminated → changed to `ssh app-server` (matches guide's SSH config alias from Step 8.10)
+- **Legacy server never explicitly terminated** — No step in the guide instructed users to terminate the legacy-server or legacy-vcn before Day 2. Users need the OCPU capacity. Added Step 8.0 for explicit teardown with deletion order guidance.

@@ -52,7 +52,7 @@
 
 | Phase | AI Use Case | Tool (Free) | OCI Native Equivalent | Pattern |
 |-------|-------------|-------------|----------------------|---------|
-| **1** | Compliance Evidence Collector | **Ollama** (local LLM) | OCI Generative AI Service | Air-gapped local inference |
+| **1** | FedRAMP Readiness Agent | **Ollama** (local LLM) | OCI Cloud Guard + OCI Generative AI Service | Air-gapped local inference, rules-based checks + AI narrative |
 | **2** | Incident Classification & Response | **OCI Generative AI Service** (Cohere Command or Meta Llama) | OCI Generative AI Service | Cloud-native AI, covered by $300 trial credits |
 | **3** | Security Pattern Detection | **scikit-learn** (classical ML) | OCI Anomaly Detection | Statistical ML, no LLM |
 
@@ -118,9 +118,9 @@
 | **OCI setup** | Manual first, then Terraform | Terraform from the start | Terraform with modules |
 | **Ansible depth** | Basic hardening playbook | Drift detection + remediation | Roles + Vault integration |
 | **CI/CD pipeline** | Simple validate + deploy (Jenkins) | Scheduled checks pipeline | Multi-stage with security scanning |
-| **Python focus** | OCI SDK cost script + AI evidence collector | Log correlator + cost modeler | OCI Function + compliance reporter |
+| **Python focus** | OCI SDK cost script + FedRAMP readiness agent | Log correlator + cost modeler | OCI Function + compliance reporter |
 | **Linux depth** | Fundamentals | Operational troubleshooting | Advanced tuning + systemd |
-| **AI pillar** | Ollama evidence collector | OCI Generative AI incident classifier | scikit-learn pattern detection |
+| **AI pillar** | Ollama FedRAMP readiness agent | OCI Generative AI incident classifier | scikit-learn pattern detection |
 | **Security pillar** | OpenSCAP CIS scanning | AIDE file integrity | Trivy + SBOM supply chain |
 | **Container pillar** | Podman + Docker + Compose | k3s hard-ish way | 3.1: pipeline + kubectl apply, 3.2: Helm + ArgoCD |
 | **Core narrative** | "Build it right" | "Break it, fix it" | "Automate everything" |
@@ -256,7 +256,7 @@ Internet
   - Run CIS Oracle Linux 8 benchmark scan -> HTML compliance report
   - Bash script to automate: run scan, parse results, log pass/fail count
   - Remediate top 5 failures manually
-- **NEW CONCEPT:** AI-Powered Compliance Evidence Collector — full ELI5
+- **NEW CONCEPT:** FedRAMP Readiness Agent — full ELI5
   - Install Ollama on compute instance, pull small model (mistral:7b or llama3:8b)
   - Python script collects system evidence: CIS scan results, SSH config, firewall rules, IAM state, service status
   - Feeds evidence to Ollama -> generates narrative summary per control family
@@ -630,13 +630,13 @@ Includes: OCI account bootstrap, VCN, compute, Autonomous DB, Oracle Linux admin
 
 ## PILLAR DETAIL: AI INTEGRATION
 
-### Phase 1: AI-Powered Compliance Evidence Collector (Ollama)
-- **What:** Python script auto-collects system evidence (CIS scan results, SSH config, firewall rules, IAM state, service status, disk encryption) and feeds it to a local LLM to generate narrative evidence summaries per compliance control family.
-- **Output:** Markdown evidence package ready for assessor review.
-- **Tool:** Ollama running mistral:7b or llama3:8b locally on compute instance.
-- **OCI native equivalent:** OCI Generative AI Service (FedRAMP High authorized).
-- **Why local:** Demonstrates air-gapped AI capability — evidence data never leaves the instance. This matters for classified environments.
-- **Interview framing:** "I automated the most painful part of ATO — evidence collection. The script scrapes 15 system configs and generates draft evidence narratives. In production, this would use OCI GenAI Service; I used Ollama to demonstrate air-gapped capability."
+### Phase 1: FedRAMP Readiness Agent (Ollama)
+- **What:** Python script checks ~18 NIST 800-53 Rev 5 controls from the FedRAMP Moderate baseline across 6 control families (AC, AU, CM, IA, SC, SI). Uses a JSON checklist with weighted scoring (Lynis-style earned/possible model). Feeds structured results to Ollama for narrative readiness report generation.
+- **Output:** FedRAMP Readiness Report with per-family findings, weighted score, and AI-generated assessment narrative.
+- **Tool:** Ollama running tinyllama locally on compute instance. Agent runs on the private subnet VM (no internet egress needed — air-gapped by design).
+- **OCI native equivalent:** OCI Cloud Guard (compliance detection) + OCI Generative AI Service (narrative generation).
+- **Why local:** Demonstrates air-gapped AI capability — compliance evidence and check results never leave the instance. Container runs with `--network=none` to prove network isolation. This matters for classified environments and SCIF operations.
+- **Interview framing:** "I built a FedRAMP readiness agent that checks 18 NIST 800-53 controls with a weighted scoring model. It runs Ollama locally with no network access — the same air-gapped pattern used in classified environments. In production, I'd use OCI Cloud Guard for native compliance monitoring and OCI GenAI Service for higher quality models."
 
 ### Phase 2: AI-Assisted Incident Classification & Response (OCI Generative AI Service)
 - **What:** During DR drill, Python script captures incident indicators (AIDE file changes, backup status, service health, log anomalies), sends to OCI Generative AI Service, model classifies incident type (ransomware, data corruption, insider threat) and recommends response steps. Auto-generates incident response report.

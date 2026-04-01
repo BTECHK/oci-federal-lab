@@ -40,6 +40,16 @@ Production-grade delivery: multi-stage Jenkins pipelines with security scanning,
 
 ---
 
+## Results
+
+| Phase | Screenshot | What It Proves |
+|-------|-----------|---------------|
+| Phase 1 | ![Swagger UI + Health Check](docs/screenshots/phase-1-swagger-and-health.png) | REST API built from scratch, running on OCI, with auto-generated docs |
+| Phase 2 | ![k3s + AIDE](docs/screenshots/phase-2-k3s-and-aide.png) | Kubernetes cluster running + file integrity monitoring (NIST SI-7) |
+| Phase 3 | ![Jenkins Pipeline](docs/screenshots/phase-3-jenkins-pipeline.png) | Full CI/CD with security scanning (Trivy + SBOM), GitOps delivery |
+
+---
+
 ## Tech Stack
 
 | Category | Tools |
@@ -54,7 +64,7 @@ Production-grade delivery: multi-stage Jenkins pipelines with security scanning,
 | **Packaging** | Helm |
 | **GitOps** | ArgoCD |
 | **API** | FastAPI (Python) — REST, Webhooks, API Gateway, API auth |
-| **AI** | Ollama (local LLM), OCI GenAI, scikit-learn |
+| **AI** | Ollama (FedRAMP readiness agent), OCI GenAI, scikit-learn |
 | **Security** | OpenSCAP (CIS), AIDE (file integrity), Trivy + Syft (supply chain) |
 | **Scripting** | Bash, Python |
 

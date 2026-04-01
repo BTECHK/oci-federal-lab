@@ -1,22 +1,23 @@
 # AFS Cloud Engineer Interview Lab — Phase 1 Implementation Guide
 ## Legacy-to-Cloud Migration on OCI
 
-**Goal:** Build a "legacy" server manually, then migrate to a secure, automated OCI environment with Terraform, Ansible, Jenkins, Podman/Docker, and AI-assisted compliance — while learning REST API fundamentals by building a FastAPI app from scratch.
-**Total Cost:** $0.00 (OCI Always Free tier)
-**Primary Tool:** SSH Terminal + OCI Console (DevOps/infra files built by hand; FastAPI app built section-by-section with ELI5)
-**Prerequisite:** None — this is Day 1
+**Goal:** Simulate a real legacy-to-cloud migration — build a "legacy" app locally, containerize it, push to OCI Container Registry, and deploy on OCI compute. Then automate with Terraform, Ansible, Jenkins, and assess FedRAMP readiness with an AI-powered compliance agent — while learning REST API fundamentals by building a FastAPI app from scratch.
+**Total Cost:** $0.00 (OCI Always Free tier + Docker Desktop free)
+**Primary Tool:** Docker Desktop (local) + SSH Terminal + OCI Console (DevOps/infra files built by hand; FastAPI app built section-by-section with ELI5)
+**Prerequisite:** Docker Desktop installed on Windows
 
 ---
 
 ## WHAT YOU'RE BUILDING
 
-Day 1 builds the "before" state — a manually-configured legacy server with no automation, no proper security, no backup strategy. Over Days 2-5, you tear this down and rebuild it properly. You need to feel the pain of manual work first so the automation makes sense.
+Day 1 builds the "before" state — a manually-configured legacy server with no automation, no proper security, no backup strategy. On Day 4, you containerize the app locally and migrate it to OCI via OCIR (simulating a real lift-and-shift). Over Days 2-5, you tear down the manual setup and rebuild it properly. You need to feel the pain of manual work first so the automation makes sense.
 
 | Component | Day 1 (Legacy) | Day 5 (Modern) |
 |-----------|----------------|-----------------|
 | Infrastructure | Manual OCI console clicks | Terraform IaC |
 | Configuration | SSH + manual commands | Ansible playbooks |
 | Deployment | Manual install + systemctl | Jenkins CI/CD pipeline |
+| Migration | App runs on "on-prem" (local Docker) | Containerized on OCI via OCIR registry |
 | Security | Default settings | Hardened (SSH, firewall, IAM, auditd, OpenSCAP) |
 | Networking | Flat public subnet | Public/private with bastion |
 | Database | SQLite on the VM | Oracle Autonomous DB (Always Free) |
@@ -25,7 +26,7 @@ Day 1 builds the "before" state — a manually-configured legacy server with no 
 | Backup | None | Block volume + Object Storage + DR runbook |
 | Cost Control | None | Tags + budget alerts + cost scripts |
 | Monitoring | None | Bash + Python health/cost scripts |
-| Compliance | None | OpenSCAP CIS + Ollama AI evidence |
+| Compliance | None | OpenSCAP CIS + FedRAMP readiness agent (Ollama AI) |
 | Serverless | None | OCI Functions (audit processor + health check) |
 
 ---
@@ -62,6 +63,20 @@ Internet
 └────────────────────────────────────────────┘
 ```
 
+**Day 4 — Migration Flow (containerize and migrate):**
+
+```
+┌─────────────────────────┐     ┌──────────────────────┐     ┌─────────────────────────┐
+│  Windows Workstation     │     │  OCI Container        │     │  OCI Compute VM          │
+│  ("on-prem" simulation)  │     │  Registry (OCIR)      │     │  (legacy-server)         │
+│                          │     │                       │     │                          │
+│  Docker Desktop          │     │  fedtracker-lab/      │     │  Podman                  │
+│  FedTracker container    │────▶│  fedtracker:1.0       │────▶│  FedTracker container    │
+│  Build + test locally    │push │  500 MB free tier     │pull │  Port 8000               │
+│                          │     │                       │     │  + FedRAMP Agent          │
+└─────────────────────────┘     └──────────────────────┘     └─────────────────────────┘
+```
+
 **Day 5 — Target Architecture (where you're headed):**
 
 ```
@@ -91,8 +106,10 @@ Internet
 │  │ (Always Free, 20 GB)        │                      │
 │  └─────────────────────────────┘                      │
 │                                                        │
+│  OCIR: fedtracker-lab/fedtracker container images       │
 │  OCI Functions: audit processor, health check          │
-│  Object Storage: backups, cost reports, evidence       │
+│  Object Storage: backups, cost reports                 │
+│  FedRAMP Readiness Agent + Ollama (air-gapped AI)      │
 │  Tags + Budget Alerts on all resources                 │
 └────────────────────────────────────────────────────────┘
 ```
@@ -701,9 +718,12 @@ sudo visudo -f /etc/sudoers.d/clouduser
 Add this content:
 
 ```
-# Allow clouduser to restart the FedTracker service without a password
-clouduser ALL=(root) NOPASSWD: /usr/bin/systemctl restart fedtracker, /usr/bin/systemctl status fedtracker
+# LAB ONLY — broad sudo access for lab exercises (Days 1-2)
+# Day 3 Ansible hardening playbook will replace this with a narrow rule
+clouduser ALL=(ALL) NOPASSWD:ALL
 ```
+
+> ⚠️ **This is intentionally over-permissive for the lab.** In production, you'd scope NOPASSWD to specific commands only (e.g., `clouduser ALL=(root) NOPASSWD: /usr/bin/systemctl restart fedtracker, /usr/bin/systemctl status fedtracker`). We're using `NOPASSWD:ALL` here because the lab guide requires clouduser to run `sudo` for dozens of different commands (dnf, pip, systemctl, firewall-cmd, tee, chown, etc.). On Day 3, the Ansible hardening playbook will tighten this to the narrow production rule.
 
 ```bash
 # Validate the sudoers syntax (critical — a broken sudoers file locks you out)
@@ -773,12 +793,13 @@ sudo dnf install -y git wget curl vim
 
 # Install Python 3.11 (required for modern FastAPI/Pydantic v2)
 sudo dnf install -y python3.11 python3.11-pip python3.11-devel
-sudo alternatives --set python3 /usr/bin/python3.11
 ```
 
+> ⚠️ **Do NOT run `sudo alternatives --set python3 /usr/bin/python3.11`.** Changing the system-wide `python3` to 3.11 breaks system tools like `firewall-cmd` and `semanage` that depend on Python 3.9 packages (e.g., `gi` module). Instead, use `python3.11` explicitly for all lab commands. System tools keep working, your code uses the right version.
+
 ```bash
-# Verify Python was installed correctly
-python3 --version
+# Verify Python 3.11 was installed correctly
+python3.11 --version
 # Expected: Python 3.11.x
 
 # Check what's installed related to Python
@@ -807,7 +828,7 @@ dnf search oracle
 | `dnf list installed` | | List all currently installed packages |
 | `dnf info` | | Show detailed info about a specific package |
 | `dnf search` | | Search package names and descriptions |
-| `python3 --version` | | Print installed Python version (should show 3.11.x) |
+| `python3.11 --version` | | Print installed Python version (should show 3.11.x) |
 
 </em></sub>
 
@@ -1473,23 +1494,25 @@ resolvectl status 2>/dev/null || cat /etc/resolv.conf
 
 ```bash
 # Install FastAPI, uvicorn (the ASGI server), and pydantic (data validation)
-sudo pip3.11 install fastapi uvicorn pydantic
+sudo python3.11 -m pip install fastapi uvicorn pydantic
 ```
 
-> **Why install globally with `sudo pip3.11`?** This is the "legacy" approach — installing Python packages system-wide without virtual environments. It works but creates problems: version conflicts between apps, no isolation, messy upgrades. Day 3 will do this properly with a virtual environment in the Ansible playbook. We're doing it the wrong way first so you understand why virtual environments exist.
+> **Why install globally with `sudo python3.11 -m pip`?** This is the "legacy" approach — installing Python packages system-wide without virtual environments. It works but creates problems: version conflicts between apps, no isolation, messy upgrades. Day 3 will do this properly with a virtual environment in the Ansible playbook. We're doing it the wrong way first so you understand why virtual environments exist.
 
-> ⚠️ **In production, never use `sudo pip3.11 install`.** Always use virtual environments (`python3 -m venv`). We're being intentionally sloppy here for the legacy simulation.
+> ⚠️ **Why `python3.11 -m pip` instead of `pip3.11`?** Running pip as a module (`python3.11 -m pip`) guarantees packages install to the same Python that will run your code. Using `pip3.11` directly can install to a different site-packages path — then `python3.11` can't find the modules. This is especially common on OL9 where system Python 3.9 coexists with 3.11.
+
+> ⚠️ **In production, never use `sudo python3.11 -m pip install`.** Always use virtual environments (`python3.11 -m venv`). We're being intentionally sloppy here for the legacy simulation.
 
 **Verify:**
 
 ```bash
-python3 -c "import fastapi; print(fastapi.__version__)"
+python3.11 -c "import fastapi; print(fastapi.__version__)"
 # Expected: 0.x.x (version number printed)
 
-python3 -c "import uvicorn; print(uvicorn.__version__)"
+python3.11 -c "import uvicorn; print(uvicorn.__version__)"
 # Expected: 0.x.x (version number printed)
 
-python3 -c "import pydantic; print(pydantic.__version__)"
+python3.11 -c "import pydantic; print(pydantic.__version__)"
 # Expected: 2.x.x or 1.x.x (version number printed)
 ```
 
@@ -1527,6 +1550,8 @@ sudo su - clouduser
 ```
 
 **Build `/opt/fedtracker/main.py` section by section:**
+
+> ⚠️ **Step 1 uses `cat >` (overwrite). Steps 2-11 use `cat >>` (append).** If you re-run Step 1 after completing later steps, it will **erase the entire file** and start over. If you need to start fresh, that's fine — just re-run all steps in order.
 
 **Step 1: Imports and app creation** — every FastAPI app starts here
 
@@ -1643,6 +1668,14 @@ APPEOF
 > **🧠 ELI5 — Pydantic Data Validation:** Imagine a bouncer at a club who checks IDs. Pydantic is your data bouncer — before any request reaches your code, Pydantic checks that the data matches the rules you defined. If someone sends `{"name": ""}` (empty name), Pydantic rejects it with a `422 Unprocessable Entity` error before your code even runs. The `Field(...)` with `...` means "this field is required" (the `...` is Python's Ellipsis object, used by Pydantic as a sentinel for "required"). `Field(default="UNCLASSIFIED")` means "optional, defaults to UNCLASSIFIED if not provided."
 
 > **💼 Interview Insight — Data Validation:** When interviewers ask about input validation, they're testing whether you understand that you should never trust client data. A strong answer: "I use Pydantic models with FastAPI to validate all incoming data at the API boundary — field types, required fields, min/max lengths are all enforced automatically before my business logic runs. This prevents injection attacks and data corruption." A weak answer: "I check the data in my endpoint function with if statements." The difference is systematic vs. ad-hoc validation.
+
+**Checkpoint — verify models are in the file:**
+
+```bash
+grep -c "class Personnel" /opt/fedtracker/main.py
+# Expected: 2 (PersonnelCreate and PersonnelResponse)
+# If 0: Step 3 didn't run or Step 1 was re-run after Step 3 — re-run Steps 1-3 in order
+```
 
 **Step 4: Database helpers** — connect to SQLite, create tables, seed data
 
@@ -1997,8 +2030,13 @@ head -20 /opt/fedtracker/main.py
 # Expected: shebang, docstring, imports including fastapi and pydantic
 
 # Verify the app runs without import errors (quick syntax check)
-python3 -c "import sys; sys.path.insert(0, '/opt/fedtracker'); import main; print('OK')"
+python3.11 -c "import sys; sys.path.insert(0, '/opt/fedtracker'); import main; print('OK')"
 # Expected: OK (no import errors)
+
+# Checkpoint: verify all endpoints made it into the file
+grep -c "@app\." /opt/fedtracker/main.py
+# Expected: 6 (health, personnel list, personnel create, personnel get, audit, audit/export)
+# If less than 6: a cat >> step was skipped — re-run the missing step(s)
 ```
 
 ---
@@ -2038,7 +2076,7 @@ whoami
 # Expected: clouduser (if not, run: sudo su - clouduser)
 
 # Start the application manually with uvicorn
-cd /opt/fedtracker && python3 main.py
+cd /opt/fedtracker && python3.11 main.py
 ```
 
 You should see:
@@ -2113,10 +2151,10 @@ curl http://localhost:8000/audit
 
 ```bash
 # Export audit log as CSV
-curl -X POST http://localhost:8000/audit/export -o audit_log.csv
-cat audit_log.csv
+curl -X POST http://localhost:8000/audit/export -o ~/audit_log.csv
+cat ~/audit_log.csv
 # Expected: CSV file with audit entries
-rm audit_log.csv
+rm ~/audit_log.csv
 ```
 
 Now **stop the manual app** by going back to the first terminal and pressing `Ctrl+C`.
@@ -2126,23 +2164,23 @@ Now **stop the manual app** by going back to the first terminal and pressing `Ct
 ---
 
 ### Step 4.2 — Visit the Auto-Generated API Documentation
-📍 **Browser**
+📍 **VM Terminal** (then Browser after Step 4.3)
 
 > **🧠 ELI5 — OpenAPI / Swagger:** FastAPI automatically generates interactive API documentation from your code. It reads your function signatures, Pydantic models, and docstrings to create a browsable interface where you can test every endpoint directly from your browser. This documentation stays perfectly in sync with your code — if you add an endpoint, it appears in the docs instantly.
 
-While the app is running (start it again with `cd /opt/fedtracker && python3 main.py`):
+While the app is running (start it again with `cd /opt/fedtracker && python3.11 main.py`), verify the docs endpoint responds from the VM itself:
 
-```
-http://<PUBLIC_IP>:8000/docs
+```bash
+# Verify Swagger UI is served (from the VM — no firewall rule needed for localhost)
+curl -s http://localhost:8000/docs | head -5
+# Expected: HTML containing "swagger-ui" — this confirms FastAPI auto-docs are working
+
+# Verify ReDoc is served
+curl -s http://localhost:8000/redoc | head -5
+# Expected: HTML containing "redoc"
 ```
 
-> This is the Swagger UI — you'll see all 6 endpoints with their descriptions, parameters, and request/response schemas. Click any endpoint → **Try it out** → **Execute** to test it live.
-
-```
-http://<PUBLIC_IP>:8000/redoc
-```
-
-> This is ReDoc — an alternative documentation style that's more readable for consumers of your API. Both are auto-generated from the same code.
+> **⚠️ Browser access requires Step 4.3:** You can't visit `http://<PUBLIC_IP>:8000/docs` in your browser yet — port 8000 isn't open in the OCI Security List. After Step 4.3 adds the ingress rule and firewalld opens the port, you'll be able to browse Swagger UI and ReDoc from your laptop. For now, the `curl localhost` test above confirms the docs are working.
 
 > **💼 Interview Insight — API Documentation:** "One advantage of FastAPI is auto-generated OpenAPI documentation. Every endpoint, parameter, and response schema is documented at `/docs` without writing a single line of documentation code. In production, this saves hours and eliminates documentation drift — the docs are always accurate because they're generated from the code."
 
@@ -2199,7 +2237,7 @@ Environment=SQLITE_PATH=/opt/fedtracker/fedtracker.db
 # uvicorn main:app — "in the main module, find the app object"
 # --host 0.0.0.0 — listen on all interfaces (required for external access)
 # --port 8000 — FastAPI/uvicorn default port
-ExecStart=/usr/local/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 # If the app crashes, restart it after 5 seconds
 Restart=always
@@ -2234,16 +2272,9 @@ SVCEOF
 
 **Step 4: Harden the service file with security directives**
 
-Add security and resource limit directives to the `[Service]` section:
+Add security and resource limit directives to the `[Service]` section by rewriting the full service file:
 
 ```bash
-# Add security hardening to the service file
-sudo tee -a /etc/systemd/system/fedtracker.service.d/hardening.conf > /dev/null << 'SVCEOF'
-# Create an override file instead of editing the main service file
-# This is the systemd drop-in pattern — keeps your customizations separate
-SVCEOF
-
-# Actually, let's add the directives directly to the service file
 # Re-create the full service file with security hardening:
 sudo tee /etc/systemd/system/fedtracker.service > /dev/null << 'SVCEOF'
 [Unit]
@@ -2256,7 +2287,7 @@ Group=clouduser
 WorkingDirectory=/opt/fedtracker
 Environment=DB_TYPE=sqlite
 Environment=SQLITE_PATH=/opt/fedtracker/fedtracker.db
-ExecStart=/usr/local/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -2342,13 +2373,9 @@ journalctl -u fedtracker -f
 # Test the app through the systemd-managed service
 curl http://localhost:8000/health
 # Expected: {"status": "healthy", ...}
-
-# Test from outside the VM (from your local machine)
-# Replace <PUBLIC_IP> with your VM's public IP
-curl http://<PUBLIC_IP>:8000/health
-# Expected: {"status": "healthy", ...}
-# If this times out, check the OCI security list — see troubleshooting table below
 ```
+
+> **⚠️ Don't test `<PUBLIC_IP>:8000` yet.** Port 8000 isn't open in the OCI Security List — external requests will time out. The localhost test above confirms systemd is running the app correctly. You'll open the port and test from your laptop in the next step.
 
 > **Important:** The OCI security list (network-level firewall) must also allow port 8000. The VCN wizard's default security list only allows SSH (port 22). You need to add an ingress rule for port 8000.
 
@@ -2412,7 +2439,7 @@ http://<PUBLIC_IP>:8000/docs
 | `curl` returns "Connection refused" | Should return JSON | Nothing is listening on port 8000. Service not running — `sudo systemctl start fedtracker` |
 | `curl` returns "Connection timed out" | Should return JSON | Firewall blocking — check both firewalld AND OCI security list |
 | `journalctl -u fedtracker` shows "Permission denied" | Should show startup messages | File permissions wrong: `ls -la /opt/fedtracker/main.py` — should be owned by clouduser. Fix: `sudo chown clouduser:clouduser /opt/fedtracker/main.py` |
-| `journalctl -u fedtracker` shows "ModuleNotFoundError: fastapi" | Should show startup messages | FastAPI not installed globally: `sudo pip3.11 install fastapi uvicorn pydantic`. Or wrong Python path in service file |
+| `journalctl -u fedtracker` shows "ModuleNotFoundError: fastapi" | Should show startup messages | FastAPI not installed globally: `sudo python3.11 -m pip install fastapi uvicorn pydantic`. Or wrong Python path in service file |
 | `journalctl -u fedtracker` shows "command not found: uvicorn" | Should find uvicorn | Check path: `which uvicorn`. If it's in `/usr/local/bin/`, update the `ExecStart` path in the service file. Run `sudo systemctl daemon-reload` after editing |
 | SQLite database not created | `fedtracker.db` should exist | Check `ls -la /opt/fedtracker/`. If missing, the app didn't start successfully — check service logs |
 | Swagger UI not loading at `/docs` | Interactive API page | Ensure you're using port 8000 (not 5000). Check OCI security list allows 8000. Try with VM's public IP |
@@ -2654,21 +2681,35 @@ ls -la /opt/fedtracker/health_check.sh
 
 ```bash
 # Install the OCI Python SDK
-pip3.11 install oci --user
+python3.11 -m pip install oci --user
 ```
 
-> **Why `--user`?** Installing with `--user` puts the package in your home directory instead of system-wide. This is slightly better than `sudo pip3.11 install` but still not as good as a virtual environment. We're splitting the difference for Day 1.
+> **Why `--user`?** Installing with `--user` puts the package in your home directory instead of system-wide. This is slightly better than `sudo python3.11 -m pip install` but still not as good as a virtual environment. We're splitting the difference for Day 1.
 
 **Set up OCI API key authentication:**
 
 📍 **OCI Console**
 
-1. Click your **Profile icon** (top-right) → **User Settings**
-2. Scroll down to **API Keys** → click **Add API Key**
-3. Select **Generate API Key Pair**
-4. Click **Download Private Key** — save as `~/.oci/oci_api_key.pem`
-5. Click **Add**
-6. A **Configuration File Preview** box appears — **copy this text** (you'll need it next)
+1. Click your **Profile icon** (top-right) → **My profile**
+2. Click the **Tokens and keys** tab
+3. Under **API keys**, click **Add API key**
+4. Select **Generate API Key Pair**
+5. Click **Download Private Key** — save it to your local machine (e.g., `C:\Users\<username>\Downloads\oci_api_key.pem` on Windows, `~/Downloads/oci_api_key.pem` on Mac/Linux)
+6. Click **Add**
+7. A **Configuration File Preview** box appears — **copy this text** (you'll need it next)
+
+> **⚠️ Not seeing "Tokens and keys"?** If your tenancy uses the older OCI IAM (not Identity Domains), the path is: Profile icon → User Settings → scroll down to API Keys → Add API Key. Most new tenancies use Identity Domains.
+
+> **Important — keep this key on your local machine too.** You'll need `~/.oci/oci_api_key.pem` locally for Terraform (Day 2 Step 11). Copy the downloaded key to your local OCI config directory now:
+>
+> ```bash
+> # Local Terminal (Git Bash on Windows)
+> mkdir -p ~/.oci
+> cp ~/Downloads/oci_api_key.pem ~/.oci/oci_api_key.pem
+> chmod 600 ~/.oci/oci_api_key.pem
+> ```
+>
+> Also save the Configuration File Preview text to `~/.oci/config` locally — Terraform reads this file for authentication.
 
 📍 **VM Terminal**
 
@@ -2690,19 +2731,17 @@ OCIEOF
 
 > **Important:** Replace each value above with the actual values from the Configuration File Preview you copied from the OCI Console. The user OCID, tenancy OCID, fingerprint, and region must match your account.
 
-```bash
-# Upload the private key you downloaded from the OCI Console
-# From your LOCAL machine, use scp to transfer it:
-```
+Now transfer the private key you downloaded to the VM:
 
-📍 **Local Terminal**
+📍 **Local Terminal** (Git Bash on Windows, or Terminal on Mac/Linux)
 
 ```bash
-# Transfer the API key to the VM (adjust paths as needed)
+# Transfer the API key from your local machine to the VM
+# On Windows (Git Bash), ~ = C:\Users\<username>, so ~/Downloads works
 scp -i ~/.ssh/legacy-server.key ~/Downloads/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/
-
-# Then on the VM:
 ```
+
+> **Windows note:** If you saved the key somewhere other than Downloads, adjust the path. In Git Bash, use forward slashes: `scp -i ~/.ssh/legacy-server.key /c/Users/YourName/path/to/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/`
 
 📍 **VM Terminal**
 
@@ -2732,9 +2771,9 @@ cat > /opt/fedtracker/oci_reporter.py << 'PYEOF'
 """
 OCI Resource Reporter
 Queries OCI APIs to report on compute instances, their status,
-and tagging compliance. Run with: python3 oci_reporter.py
+and tagging compliance. Run with: python3.11 oci_reporter.py
 
-Requires: pip3.11 install oci
+Requires: python3.11 -m pip install oci
 Requires: ~/.oci/config with valid API key authentication
 """
 
@@ -2894,7 +2933,7 @@ Now run the reporter:
 
 ```bash
 # Run the OCI resource reporter
-python3 /opt/fedtracker/oci_reporter.py
+python3.11 /opt/fedtracker/oci_reporter.py
 ```
 
 **Expected output:**
@@ -2951,7 +2990,7 @@ ls -la /opt/fedtracker/oci_reporter.py
 # Expected: file exists, owned by clouduser
 
 # Verify OCI SDK is installed
-python3 -c "import oci; print(oci.__version__)"
+python3.11 -c "import oci; print(oci.__version__)"
 # Expected: version number (e.g., 2.x.x)
 ```
 
@@ -2961,7 +3000,7 @@ python3 -c "import oci; print(oci.__version__)"
 
 | Command | Flag(s) | What It Does |
 |---------|---------|-------------|
-| `pip3.11 install` | `--user` | Install a Python package in the user's home directory |
+| `python3.11 -m pip install` | `--user` | Install a Python package in the user's home directory |
 | `mkdir` | `-p` | Create directory (and parents). `-p` = no error if it exists |
 | `chmod` | `600` | Set file to owner-read/write only (for security-sensitive files) |
 | `scp` | `-i <key>` | Securely copy files between machines over SSH |
@@ -2972,7 +3011,7 @@ python3 -c "import oci; print(oci.__version__)"
 ---
 
 ### Step 6.2 — Git Commit Day 1 Work
-📍 **VM Terminal**
+📍 **VM Terminal (legacy-server)**
 
 ```bash
 # Initialize git repo (if not already done)
@@ -3012,20 +3051,44 @@ git commit -m "Day 1: FedTracker FastAPI app, health check script, OCI reporter
 - systemd service file for production-like deployment"
 ```
 
+Now save the Day 1 code to your GitHub repo so it survives when you tear down this server:
+
+📍 **Local Terminal** (your Windows machine)
+
+```bash
+# Create the app directory in your local repo
+mkdir -p ~/Desktop/github/oci-federal-lab/app
+
+# Copy the three app files from the VM to your local repo
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/main.py ~/Desktop/github/oci-federal-lab/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/health_check.sh ~/Desktop/github/oci-federal-lab/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/oci_reporter.py ~/Desktop/github/oci-federal-lab/app/
+
+# Commit and push
+cd ~/Desktop/github/oci-federal-lab
+git add app/
+git commit -m "Day 1: FedTracker app code (main.py, health_check.sh, oci_reporter.py)"
+git push
+```
+
+> **Why SCP instead of pushing from the VM?** The VM is throwaway infrastructure — configuring GitHub SSH keys on it would be wasted effort. SCP gets the files off the server. Your local machine already has git configured. This is how real migrations work: get the code into version control before decommissioning the server.
+>
+> **🧠 Interview framing:** "Before decommissioning legacy infrastructure, the first step is always ensuring code and configuration artifacts are in version control. The server is disposable — the code is not."
+
 ---
 
 ## PHASE 7: TROUBLESHOOTING LAB — LINUX & APP (1 hr)
 
 > This section is where you intentionally break things and fix them. This is the MOST VALUABLE part for interview prep. When an interviewer asks "how would you troubleshoot a web application that's unreachable?", you'll have a real answer because you actually did it. Don't skip any steps — go through the full diagnosis process every time, even if you already know the answer.
 >
-> 📍 **Where work happens:** VM Terminal.
+> 📍 **Where work happens:** VM Terminal (legacy-server) — this is still Day 1's single VM.
 >
 > 🛠️ **Build approach:** Break → Diagnose → Fix → Verify. Every step.
 
 ---
 
 ### Step 7.1 — Break the Firewall
-📍 **VM Terminal**
+📍 **VM Terminal (legacy-server)**
 
 > **Scenario:** A junior admin accidentally removed the port 8000 firewall rule. The FedTracker app is unreachable from the internet. You need to figure out why and fix it.
 
@@ -3035,6 +3098,27 @@ git commit -m "Day 1: FedTracker FastAPI app, health check script, OCI reporter
 # Remove the port 8000 rule (simulating a misconfiguration)
 sudo firewall-cmd --remove-port=8000/tcp --permanent
 sudo firewall-cmd --reload
+```
+
+> **⚠️ If `firewall-cmd` itself errors** with `ModuleNotFoundError: No module named 'gi'`, your system `python3` is pointing at 3.11 instead of 3.9. Fix it first: `sudo alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 2 && sudo alternatives --set python3 /usr/bin/python3.9`. See [KNOWN-ISSUES.md](KNOWN-ISSUES.md) for details.
+
+**See the failure:**
+
+📍 **Local Terminal**
+
+```bash
+# Try to reach the app from your laptop
+curl http://<PUBLIC_IP>:8000/health
+# Expected: Connection times out — the app is unreachable from outside
+```
+
+📍 **VM Terminal (legacy-server)**
+
+```bash
+# But on the VM itself:
+curl http://localhost:8000/health
+# Expected: {"status": "healthy", ...} — the app is fine locally!
+# So the problem is between the outside world and the app — now diagnose it
 ```
 
 **Now diagnose it (pretend you don't know what's wrong):**
@@ -3092,7 +3176,7 @@ curl http://<PUBLIC_IP>:8000/health
 ---
 
 ### Step 7.2 — Break File Permissions
-📍 **VM Terminal**
+📍 **VM Terminal (legacy-server)**
 
 > **Scenario:** Someone accidentally changed the permissions on the application file. The service crashes on restart and you need to figure out why.
 
@@ -3101,7 +3185,12 @@ curl http://<PUBLIC_IP>:8000/health
 ```bash
 # Remove all permissions from the app file
 sudo chmod 000 /opt/fedtracker/main.py
+
+# Also remove Python's bytecode cache (otherwise Python uses the cached .pyc and doesn't crash)
+sudo rm -rf /opt/fedtracker/__pycache__
 ```
+
+> **Why delete `__pycache__`?** Python compiles `.py` files to bytecode (`.pyc`) in `__pycache__/` for faster startup. If the cache exists, Python can run from it even if the original `.py` file is unreadable. Removing it forces Python to read `main.py` directly — which will fail because we removed all permissions. The cache regenerates automatically on the next successful start.
 
 **Trigger the failure:**
 
@@ -3151,6 +3240,8 @@ systemctl status fedtracker
 # Expected: Active: active (running)
 ```
 
+> **Note:** Python will automatically regenerate `__pycache__/` on restart — no manual action needed.
+
 **Verify:**
 
 ```bash
@@ -3163,7 +3254,7 @@ curl http://localhost:8000/health
 ---
 
 ### Step 7.3 — Break the Service
-📍 **VM Terminal**
+📍 **VM Terminal (legacy-server)**
 
 > **Scenario:** The FedTracker service was accidentally stopped and disabled. Users report the app is down.
 
@@ -3245,6 +3336,52 @@ curl http://localhost:8000/health
 
 ---
 
+### ⛔ Before Day 2: Migration Checkpoint
+
+> **STOP.** Day 2 creates new VMs in a new network. The legacy server from Day 1 will be terminated to free up Always Free OCPU capacity. Verify these artifacts are saved before continuing.
+
+**Must be in your GitHub repo (`~/Desktop/github/oci-federal-lab/`):**
+- [ ] `app/main.py` — the complete FastAPI app (6 endpoints)
+- [ ] `app/health_check.sh` — the Bash health check script
+- [ ] `app/oci_reporter.py` — the OCI SDK reporter
+
+**Verify:**
+
+```bash
+ls ~/Desktop/github/oci-federal-lab/app/
+# Expected: health_check.sh  main.py  oci_reporter.py
+
+git -C ~/Desktop/github/oci-federal-lab log --oneline -1
+# Expected: shows your Day 1 commit
+```
+
+**What you DON'T need to save:**
+- `fedtracker.db` — SQLite database is replaced by Oracle Autonomous DB on Day 2
+- `fedtracker.service` — systemd unit is recreated with Oracle DB env vars
+- `~/.oci/config` on the VM — recreated on the new app-server
+- Anything in `legacy-vcn` — Day 2 builds a new VCN from scratch
+
+---
+
+### Step 8.0 — Terminate Legacy Infrastructure
+📍 **OCI Console**
+
+> Day 1's infrastructure was intentionally manual and disposable. You need to free up Always Free OCPU capacity (4 total A1 OCPUs) for the bastion and app-server you're about to create.
+
+1. Navigate to **Compute** → **Instances**
+2. Find `legacy-server` → click ⋮ menu → **Terminate**
+   - Check "Permanently delete the attached boot volume"
+   - Click **Terminate**
+3. Wait for termination to complete (2-3 minutes)
+4. Navigate to **Networking** → **Virtual Cloud Networks** → `legacy-vcn`
+5. Delete in order: Subnets → Gateways → Route Tables → Security Lists → VCN
+
+> ⚠️ **Order matters.** VCN resources have dependencies. You can't delete a subnet while instances are in it, or a VCN while subnets exist. Work from the inside out.
+
+> **🧠 Interview framing:** "I intentionally destroyed the manually-built environment because I could rebuild it properly with code. The fact that I was comfortable deleting everything shows confidence in my IaC and automation skills."
+
+---
+
 ## PHASE 8: THE PROPER ARCHITECTURE — VCN REDESIGN (2 hrs)
 
 > Day 1 put everything in a public subnet — the VM, the app, the database, all directly accessible from the internet. That's how legacy systems end up configured, and it's a security nightmare. Today you redesign the network properly: the app server goes in a **private subnet** (no direct internet access), a **bastion host** in the public subnet provides SSH access, and a **NAT gateway** lets the private subnet reach the internet for updates. This is how every production federal environment is architected.
@@ -3291,8 +3428,8 @@ Internet
 │  └───────────────────────────────┘                │
 │                                                    │
 │  Internet Gateway ← Public subnet route           │
-│  NAT Gateway ← Private subnet route               │
-│  Service Gateway ← OCI services (optional)        │
+│  NAT Gateway ← Private subnet route (internet)    │
+│  Service Gateway ← Private subnet route (OCI svc) │
 └────────────────────────────────────────────────────┘
 ```
 
@@ -3327,7 +3464,7 @@ Internet
 
 > **🧠 ELI5 — Internet Gateway:** An Internet Gateway is the VCN's front door to the internet. Without it, nothing in the VCN can communicate with the outside world. The public subnet's route table points to the Internet Gateway for outbound traffic, and it also allows inbound traffic to reach public IPs.
 
-1. Inside `fedtracker-vcn`, click **Internet Gateways** in the left sidebar
+1. Inside `fedtracker-vcn`, click the **Gateways** tab → scroll to **Internet Gateways**
 2. Click **Create Internet Gateway**
 3. Fill in:
    - **Name:** `fedtracker-igw`
@@ -3339,7 +3476,7 @@ Internet
 ### Step 8.4 — Create NAT Gateway
 📍 **OCI Console**
 
-1. Inside `fedtracker-vcn`, click **NAT Gateways** in the left sidebar
+1. Inside `fedtracker-vcn`, click the **Gateways** tab → scroll to **NAT Gateways**
 2. Click **Create NAT Gateway**
 3. Fill in:
    - **Name:** `fedtracker-natgw`
@@ -3350,6 +3487,23 @@ Internet
 
 ---
 
+### Step 8.4b — Create Service Gateway
+📍 **OCI Console**
+
+> **🧠 ELI5 — Service Gateway:** A Service Gateway lets your private subnet talk to Oracle services (like Autonomous AI Database, Object Storage) over Oracle's internal network — not the public internet. The NAT Gateway handles outbound internet traffic, but Oracle services live on the **Oracle Services Network**, a separate backbone. Without a Service Gateway, your app server in the private subnet can't reach the database. Think of it as a private back door directly into Oracle's service buildings, bypassing the public streets entirely.
+
+1. Inside `fedtracker-vcn`, click the **Gateways** tab → scroll to **Service Gateways**
+2. Click **Create Service Gateway**
+3. Fill in:
+   - **Name:** `fedtracker-sgw`
+   - **Compartment:** `fedtracker-lab`
+   - **Services:** Select **All IAD Services In Oracle Services Network** (or your region's equivalent — e.g., `All PHX Services...` for Phoenix)
+4. Click **Create Service Gateway**
+
+> **Why "All Services" instead of just the database?** Selecting all services future-proofs the gateway — Object Storage, Container Registry, and other OCI services also use this path. There's no cost difference.
+
+---
+
 ### Step 8.5 — Create Route Tables
 📍 **OCI Console**
 
@@ -3357,7 +3511,7 @@ Internet
 
 **Public subnet route table:**
 
-1. Inside `fedtracker-vcn`, click **Route Tables** in the left sidebar
+1. Inside `fedtracker-vcn`, click the **Routing** tab
 2. Click **Create Route Table**
 3. Fill in:
    - **Name:** `public-rt`
@@ -3378,7 +3532,13 @@ Internet
      - **Target Type:** NAT Gateway
      - **Destination CIDR:** `0.0.0.0/0`
      - **Target:** `fedtracker-natgw`
+   - Click **+ Another Route Rule**:
+     - **Target Type:** Service Gateway
+     - **Destination Service:** `All IAD Services In Oracle Services Network` (or your region equivalent)
+     - **Target:** `fedtracker-sgw`
 3. Click **Create**
+
+> **Why two rules on `private-rt`?** The NAT Gateway rule handles general internet traffic (e.g., `dnf install`, pip downloads). The Service Gateway rule handles traffic to Oracle services (Autonomous AI Database, Object Storage). Without the second rule, the app server can't connect to the database — the connection hangs because it tries to reach the DB through the NAT Gateway, which can't access the Oracle Services Network.
 
 ---
 
@@ -3389,7 +3549,7 @@ Internet
 
 **Public subnet security list:**
 
-1. Inside `fedtracker-vcn`, click **Security Lists** in the left sidebar
+1. Inside `fedtracker-vcn`, click the **Security** tab
 2. Click **Create Security List**
 3. Fill in:
    - **Name:** `public-sl`
@@ -3398,11 +3558,12 @@ Internet
    - Rule 1: SSH from your IP
      - **Source CIDR:** `0.0.0.0/0` (in production, restrict to your IP)
      - **IP Protocol:** TCP
+     - **Source Port Range:** (leave blank)
      - **Destination Port Range:** `22`
 5. Add **Egress Rules**:
    - Rule 1: Allow all outbound
      - **Destination CIDR:** `0.0.0.0/0`
-     - **IP Protocol:** All Protocols
+     - **IP Protocol:** select **All Protocols** from the dropdown (the port fields disappear)
 6. Click **Create Security List**
 
 **Private subnet security list:**
@@ -3435,7 +3596,7 @@ Internet
 
 **Public subnet:**
 
-1. Inside `fedtracker-vcn`, click **Subnets** in the left sidebar
+1. Inside `fedtracker-vcn`, click the **Subnets** tab
 2. Click **Create Subnet**
 3. Fill in:
    - **Name:** `public-subnet`
@@ -3466,7 +3627,8 @@ In `fedtracker-vcn`, you should see:
 - 2 subnets: `public-subnet` (10.0.1.0/24) and `private-subnet` (10.0.2.0/24)
 - Internet Gateway: `fedtracker-igw`
 - NAT Gateway: `fedtracker-natgw`
-- 2 Route Tables: `public-rt` (→ IGW) and `private-rt` (→ NAT GW)
+- Service Gateway: `fedtracker-sgw`
+- 2 Route Tables: `public-rt` (→ IGW) and `private-rt` (→ NAT GW + Service GW)
 - 2 Security Lists: `public-sl` and `private-sl`
 
 ---
@@ -3493,6 +3655,7 @@ Save the bastion SSH key:
 ```bash
 mv ~/Downloads/bastion.key ~/.ssh/bastion.key
 chmod 600 ~/.ssh/bastion.key
+# Windows (PowerShell): icacls "$HOME\.ssh\bastion.key" /inheritance:r /grant:r "${env:USERNAME}:(R)"
 ```
 
 ---
@@ -3523,6 +3686,7 @@ Save the app server SSH key:
 ```bash
 mv ~/Downloads/app-server.key ~/.ssh/app-server.key
 chmod 600 ~/.ssh/app-server.key
+# Windows (PowerShell): icacls "$HOME\.ssh\app-server.key" /inheritance:r /grant:r "${env:USERNAME}:(R)"
 ```
 
 ---
@@ -3622,43 +3786,124 @@ ssh app-server
 
 Now that you're on fresh servers, verify SELinux is enforcing — this is the first thing you'd check in any federal environment:
 
+📍 **VM Terminal (bastion)** then **VM Terminal (app-server)**
+
 ```bash
-# On both bastion and app-server:
+# Run on BOTH bastion and app-server:
 getenforce
 # Expected: Enforcing — NEVER set this to Permissive or Disabled in production
 ```
 
-When you deploy FedTracker to this new app server, you may encounter SELinux denials. The app directory (`/opt/fedtracker`) has a default file context that may not allow uvicorn to read/execute files.
-
-```bash
-# Check the current SELinux context of the app directory
-ls -Zd /opt/fedtracker/
-# Expected: unconfined_u:object_r:usr_t:s0 (default — may not work for all operations)
-
-# If the app fails to start, set the proper context for a web application:
-sudo semanage fcontext -a -t httpd_sys_content_t "/opt/fedtracker(/.*)?"
-sudo restorecon -Rv /opt/fedtracker/
-# -R = recursive, -v = verbose (shows what changed)
-```
-
-> **🧠 ELI5 — `semanage fcontext` + `restorecon`:** `semanage fcontext` defines a rule: "files in `/opt/fedtracker/` should have the `httpd_sys_content_t` type." `restorecon` applies that rule to existing files. This is a two-step process — define the policy, then apply it. If you only use `chcon` (the quick-and-dirty approach), the context reverts on `restorecon` or filesystem relabeling.
-
-```bash
-# If the app still fails, check for SELinux denials:
-sudo ausearch -m avc -ts recent
-# Look for: denied { read } or denied { open } involving your app files
-# Fix: generate a custom policy module
-# sudo ausearch -m avc -ts recent | audit2allow -M fedtracker-custom
-# sudo semodule -i fedtracker-custom.pp
-```
-
-> **Interview tip:** "If an app fails to start on a new server but worked on the old one, my first three checks are: (1) `getenforce` — is SELinux blocking it? (2) `ausearch -m avc` — what's being denied? (3) Apply proper file contexts with `semanage fcontext` + `restorecon`. I never disable SELinux."
+> **Interview tip:** "Is SELinux enforcing?" is the first question a federal auditor asks. The answer must always be "Yes." When you deploy FedTracker to the new app-server (Phase 9), you may need to set SELinux file contexts — that's covered there.
 
 ---
 
-## PHASE 9: ORACLE AUTONOMOUS DATABASE (1.5 hrs)
+### Step 8.10 — Prepare the App Server
+📍 **VM Terminal (app-server)**
 
-> SQLite was fine for Day 1, but it's a single file on one server — no redundancy, no backups, no multi-user access. Oracle Autonomous Database is a managed database service that runs in its own infrastructure with automatic backups, patching, and scaling. Moving from SQLite to Oracle DB is the kind of migration you'll do in production. The app code barely changes — you swap the database connection string and the queries stay the same.
+> The app-server is a fresh VM — it doesn't have `clouduser`, Python 3.11, or any of the Day 1 setup from the legacy server. Before Phase 9, you need to replicate that setup. A helper script automates this.
+
+```bash
+# SSH to the app-server
+ssh app-server
+```
+
+Run the setup script (or copy-paste the commands below):
+
+```bash
+# Option A: If you have the repo cloned or copied the script
+bash app-server-setup.sh
+
+# Option B: Run the commands directly
+# --- Create clouduser ---
+sudo useradd -m clouduser
+sudo usermod -aG wheel clouduser
+sudo chage -M 90 -m 7 -W 14 clouduser
+
+# --- Sudoers (NOPASSWD for lab — tighten with Ansible on Day 3) ---
+echo 'clouduser ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/clouduser > /dev/null
+sudo chmod 440 /etc/sudoers.d/clouduser
+sudo visudo -c
+
+# --- Service account ---
+sudo useradd -r -s /sbin/nologin -M svc-fedtracker
+
+# --- Python 3.11 ---
+sudo dnf install -y python3.11 python3.11-pip python3.11-devel
+
+# --- Python packages (legacy-style global install — Day 3 uses venv) ---
+sudo python3.11 -m pip install fastapi uvicorn pydantic oracledb
+
+# --- App and wallet directories ---
+sudo mkdir -p /opt/fedtracker
+sudo chown clouduser:clouduser /opt/fedtracker
+sudo mkdir -p /opt/oracle/wallet
+sudo chown clouduser:clouduser /opt/oracle/wallet
+
+# --- OCI CLI config for clouduser (needed by oci_reporter.py and cost_reporter.py) ---
+sudo mkdir -p /home/clouduser/.oci
+sudo chown clouduser:clouduser /home/clouduser/.oci
+```
+
+Now copy your API key and config to the app-server:
+
+📍 **Local Terminal**
+
+```bash
+# Copy the API key from your local machine to the app-server (via bastion)
+scp -o ProxyJump=opc@<BASTION_PUBLIC_IP> ~/.oci/oci_api_key.pem opc@<APP_SERVER_PRIVATE_IP>:/home/opc/
+```
+
+📍 **VM Terminal** (app-server as opc)
+
+```bash
+# Move the key to clouduser's .oci directory
+sudo cp /home/opc/oci_api_key.pem /home/clouduser/.oci/oci_api_key.pem
+sudo chown clouduser:clouduser /home/clouduser/.oci/oci_api_key.pem
+sudo chmod 600 /home/clouduser/.oci/oci_api_key.pem
+
+# Create the OCI config file for clouduser
+# Paste the same config you used on the legacy-server (or from ~/.oci/config locally)
+sudo su - clouduser
+cat > ~/.oci/config << 'OCIEOF'
+[DEFAULT]
+user=ocid1.user.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+fingerprint=xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx
+tenancy=ocid1.tenancy.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+region=us-ashburn-1
+key_file=~/.oci/oci_api_key.pem
+OCIEOF
+
+chmod 600 ~/.oci/config
+```
+
+> **Replace** the placeholder OCIDs and fingerprint with your actual values from the OCI Console (Profile → My profile → API keys).
+
+> ⚠️ **Why repeat the Day 1 setup?** The legacy server had all of this configured manually during Day 1. These new VMs are fresh OL9 instances with only the `opc` user. In production, you'd use Ansible to provision servers consistently — that's exactly what Day 3 automates. For now, we're doing it by hand (or script) one more time.
+
+**Verify:**
+
+```bash
+id clouduser
+# Expected: uid=1001(clouduser) gid=1001(clouduser) groups=1001(clouduser),10(wheel)
+
+python3.11 --version
+# Expected: Python 3.11.x
+
+python3.11 -c "import fastapi, uvicorn, pydantic, oracledb; print('All packages OK')"
+# Expected: All packages OK
+
+ls -la /opt/fedtracker
+# Expected: drwxr-xr-x. 2 clouduser clouduser ... /opt/fedtracker
+```
+
+> **🧠 Interview framing:** "When I stand up new servers, my first step is provisioning: users, permissions, packages, directories. On Day 1, I did this manually to learn each command. By Day 3, I'll have an Ansible playbook that does it in one run — idempotent, version-controlled, and auditable. The script approach is the bridge between manual and fully automated."
+
+---
+
+## PHASE 9: ORACLE AUTONOMOUS AI DATABASE (1.5 hrs)
+
+> SQLite was fine for Day 1, but it's a single file on one server — no redundancy, no backups, no multi-user access. Oracle Autonomous AI Database is a managed database service that runs in its own infrastructure with automatic backups, patching, and scaling. Moving from SQLite to Oracle DB is the kind of migration you'll do in production. The app code barely changes — you swap the database connection string and the queries stay the same.
 >
 > 📍 **Where work happens:** OCI Console, VM Terminal (app-server via bastion).
 >
@@ -3666,31 +3911,30 @@ sudo ausearch -m avc -ts recent
 
 ---
 
-### Step 9.1 — Create Oracle Autonomous Database
+### Step 9.1 — Create Oracle Autonomous AI Database
 📍 **OCI Console**
 
-> **🧠 ELI5 — Oracle Autonomous Database:** A fully managed database that handles backups, patching, security, and performance tuning automatically. You don't manage the server it runs on — Oracle does. The "Always Free" version gives you 20 GB of storage and 1 OCPU forever. It's like hiring a DBA (database administrator) who works 24/7 for free.
+> **🧠 ELI5 — Oracle Autonomous AI Database:** A fully managed database that handles backups, patching, security, and performance tuning automatically. You don't manage the server it runs on — Oracle does. The "Always Free" version gives you a fixed amount of ECPU and storage forever. It's like hiring a DBA (database administrator) who works 24/7 for free.
 
-1. Navigate to **Oracle Database** → **Autonomous Database**
+1. Navigate to **Oracle AI Database** → **Autonomous AI Database**
 2. Make sure `fedtracker-lab` compartment is selected
-3. Click **Create Autonomous Database**
+3. Click **Create Autonomous AI Database**
 4. Fill in:
    - **Display name:** `fedtracker-db`
    - **Database name:** `fedtrackerdb`
    - **Workload type:** Transaction Processing
-   - **Deployment type:** Shared Infrastructure
-   - **Always Free:** Toggle ON (this is critical — it makes it free forever)
+   - **Always Free:** Toggle ON (this is critical — it makes it free forever). The ECPU count and storage fields disappear — Always Free locks these to fixed defaults.
    - **Database version:** 19c (or latest available)
-   - **OCPU count:** 1 (Always Free limit)
-   - **Storage:** 20 GB (Always Free limit)
    - **Admin password:** Set a strong password (you'll need this later)
    - **Network access:** Secure access from everywhere (for now — Day 3 restricts this)
-   - **License type:** License Included
-5. Click **Create Autonomous Database**
+
+> ⚠️ **Don't select "Developer"** — that's a paid low-cost option for dev/test, not the free tier. Make sure **Always Free** is toggled ON.
+
+5. Click **Create Autonomous AI Database**
 
 Wait 2-3 minutes for the database to show **Available** status.
 
-> **Cost check:** Autonomous Database with Always Free = $0.00/month. 1 OCPU + 20 GB storage included. Verify at: [oracle.com/cloud/free](https://www.oracle.com/cloud/free/)
+> **Cost check:** Autonomous AI Database with Always Free = $0.00/month. ECPU + storage included at fixed Always Free limits. Verify at: [oracle.com/cloud/free](https://www.oracle.com/cloud/free/)
 
 ---
 
@@ -3732,8 +3976,8 @@ sudo chmod 600 /opt/oracle/wallet/*
 📍 **VM Terminal** (app-server)
 
 ```bash
-# Install the Oracle instant client and Python driver
-sudo pip3.11 install oracledb
+# Install the Oracle DB Python driver (skip if you already installed oracledb in Step 8.10)
+sudo python3.11 -m pip install oracledb
 ```
 
 > **Why `oracledb` not `cx_Oracle`?** `oracledb` is the new name for the Python Oracle DB driver (formerly cx_Oracle). It can run in "thin mode" — pure Python, no Oracle Instant Client libraries needed. This simplifies deployment significantly.
@@ -3742,7 +3986,7 @@ sudo pip3.11 install oracledb
 # Test the connection
 sudo su - clouduser
 
-python3 << 'PYEOF'
+python3.11 << 'PYEOF'
 import oracledb
 
 # Thin mode connection using wallet
@@ -3781,7 +4025,7 @@ Connection closed successfully
 📍 **VM Terminal** (app-server)
 
 ```bash
-python3 << 'PYEOF'
+python3.11 << 'PYEOF'
 import oracledb
 
 connection = oracledb.connect(
@@ -3866,16 +4110,32 @@ Audit log entries: 1
 
 > You need to update the `get_db()` function in `main.py` to support Oracle DB connections. The rest of the app stays the same — the endpoints don't care whether the data comes from SQLite or Oracle.
 
-First, copy the app from the legacy server to the app server (or rebuild it):
+First, get the Day 1 app code onto this server from your GitHub repo:
 
 ```bash
-# If you haven't already set up the app on this server:
-sudo mkdir -p /opt/fedtracker
-sudo chown clouduser:clouduser /opt/fedtracker
+# Switch to clouduser (if you're logged in as opc):
+sudo su - clouduser
 
-# Copy from legacy server (if you still have it) or just recreate
-# For now, let's recreate the key files. The main.py from Day 1 is in git.
+cd /opt/fedtracker
+
+# Option A: Clone from your GitHub repo (recommended)
+git clone --depth 1 https://github.com/<YOUR_GITHUB_USERNAME>/oci-federal-lab.git /tmp/repo
+cp /tmp/repo/app/main.py .
+cp /tmp/repo/app/health_check.sh .
+cp /tmp/repo/app/oci_reporter.py .
+rm -rf /tmp/repo
+
+# Option B: Fast-track script (if you didn't push to git in Step 6.2)
+# This script recreates all Day 1 files + applies the Oracle DB patch in one shot:
+# bash <(curl -s https://raw.githubusercontent.com/<YOUR_GITHUB_USERNAME>/oci-federal-lab/master/tools/fast-track-day2.sh)
+# If you use Option B, skip ahead to the "Verify" section below — the script handles everything.
+
+# Verify the files are there
+ls -la /opt/fedtracker/
+# Expected: main.py  health_check.sh  oci_reporter.py
 ```
+
+> **Why clone from GitHub?** The legacy server from Day 1 has been terminated. Your app code was pushed to GitHub in Step 6.2. Now you're retrieving it on the new app-server. This is exactly how real migrations work — code lives in version control, not on servers.
 
 Update the `get_db()` function to support Oracle DB. Edit `/opt/fedtracker/main.py` and find the `get_db()` function:
 
@@ -3932,7 +4192,7 @@ User=clouduser
 Group=clouduser
 WorkingDirectory=/opt/fedtracker
 EnvironmentFile=/etc/fedtracker/env
-ExecStart=/usr/local/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -3958,13 +4218,43 @@ curl http://localhost:8000/personnel
 # Expected: JSON with the 5 seed records from Oracle DB
 ```
 
+**If the app fails to start — check SELinux first:**
+
+The app directory (`/opt/fedtracker`) has a default SELinux file context that may not allow uvicorn to read/execute files on the new server.
+
+```bash
+# Check the current SELinux context of the app directory
+ls -Zd /opt/fedtracker/
+# Expected: unconfined_u:object_r:usr_t:s0 (default — may not work for all operations)
+
+# If the app fails to start, set the proper context for a web application:
+sudo semanage fcontext -a -t httpd_sys_content_t "/opt/fedtracker(/.*)?"
+sudo restorecon -Rv /opt/fedtracker/
+# -R = recursive, -v = verbose (shows what changed)
+```
+
+> **🧠 ELI5 — `semanage fcontext` + `restorecon`:** Think of SELinux labels like wristbands at a concert. Every file gets a wristband (label) that says what it's allowed to do. `semanage fcontext` creates a rule: "every file in `/opt/fedtracker/` gets a 'web content' wristband." `restorecon` walks through the directory and actually puts the wristbands on. Without the right wristband, SELinux blocks access — even if normal Linux permissions (`chmod`) say it's fine. This is *mandatory* access control on top of *discretionary* access control.
+
+```bash
+# If the app still fails, check for SELinux denials:
+sudo ausearch -m avc -ts recent
+# -m avc = Access Vector Cache (SELinux denial records)
+# -ts recent = only look at recent events
+
+# Common pattern you'll see:
+# type=AVC msg=audit(...): avc:  denied  { read } for  pid=... name="main.py" ...
+# This tells you: SELinux blocked a read on main.py. The fix: set the right file context (above).
+```
+
+> **Interview tip:** "If an app fails to start on a new server but worked on the old one, my first three checks are: (1) `getenforce` — is SELinux blocking it? (2) `ausearch -m avc` — what's being denied? (3) Apply proper file contexts with `semanage fcontext` + `restorecon`. I never disable SELinux."
+
 <sub><em style="color: #999; font-size: 0.65em;">
 
 💡🖥️ Commands used:
 
 | Command | Flag(s) | What It Does |
 |---------|---------|-------------|
-| `pip3.11 install` | `oracledb` | Install Oracle DB Python driver (thin mode, no native client needed) |
+| `python3.11 -m pip install` | `oracledb` | Install Oracle DB Python driver (thin mode, no native client needed) |
 | `unzip` | `-d <dir>` | Extract zip file. `-d` = target directory |
 | `systemctl daemon-reload` | | Reload service definitions after editing .service files |
 | `systemctl restart` | | Stop then start a service |
@@ -3981,7 +4271,7 @@ curl http://localhost:8000/personnel
 | Python `oracledb.connect()` works | Connected message | Check: (1) wallet is in correct directory, (2) wallet password is correct, (3) admin password is correct, (4) DSN matches the wallet's tnsnames.ora entries |
 | `curl /health` shows `"type": "oracle"` | Oracle DB connected | Check `DB_TYPE=oracle` in service file. Check `journalctl -u fedtracker` for connection errors |
 | `curl /personnel` returns records | JSON with 5 records | Schema may not be created. Run the schema script again |
-| Connection timeout | Should connect quickly | Private subnet may not be able to reach Autonomous DB. Check security list egress rules. The DB may need to be on the same VCN or have proper network config |
+| Connection hangs / timeout | Should connect in 1-2 seconds | **Most likely:** Service Gateway missing or route rule not added. Check: (1) `fedtracker-sgw` exists in VCN → Gateways tab → Service Gateways, (2) `private-rt` has a route rule with Target Type: Service Gateway and Destination: All IAD Services In Oracle Services Network. The NAT Gateway handles internet traffic but Oracle ADB uses the Oracle Services Network — a Service Gateway is required. |
 
 ---
 
@@ -4193,7 +4483,7 @@ For each resource (VMs, VCN, DB), go to its details page → **Tags** → **Add 
 # Run the OCI reporter script to check tagging
 ssh app-server
 sudo su - clouduser
-python3 /opt/fedtracker/oci_reporter.py
+python3.11 /opt/fedtracker/oci_reporter.py
 # Expected: All resources now show tags instead of "⚠ NONE"
 ```
 
@@ -4217,7 +4507,7 @@ python3 /opt/fedtracker/oci_reporter.py
 
 **What you built:**
 - Proper VCN architecture with public/private subnets, bastion, NAT gateway
-- Oracle Autonomous Database (Always Free) with FedTracker schema
+- Oracle Autonomous AI Database (Always Free) with FedTracker schema
 - Migrated FedTracker from SQLite to Oracle DB
 - SSH hardening (key-only, no root, legal banner)
 - auditd monitoring on critical files
@@ -4284,9 +4574,10 @@ terraform --version
 📍 **Local Terminal**
 
 ```bash
-mkdir -p ~/oci-federal-lab/terraform
 cd ~/oci-federal-lab/terraform
 ```
+
+> **Note:** Your repo scaffold has `terraform/` and `terraform/environments/prod/` directories for future use. For this lab, we keep all `.tf` files in `terraform/` (root level) for simplicity. In a production setup, you'd separate configurations by environment — each environment directory would have its own `.tf` files with different variable values.
 
 ---
 
@@ -4463,7 +4754,7 @@ variable "ssh_public_key_path" {
 }
 
 variable "oracle_linux_image_id" {
-  description = "OCID of the Oracle Linux 8 image (region-specific)"
+  description = "OCID of the Oracle Linux image (region-specific, use OL9 for A1 Flex)"
   type        = string
 }
 ```
@@ -4500,6 +4791,33 @@ grep -c "variable" terraform/variables.tf
 
 > ⚠️ **This file contains credentials. Add it to .gitignore immediately.**
 
+> **Before filling this out, verify you have these three things locally:**
+>
+> 1. **OCI API key** (`~/.oci/oci_api_key.pem`): If you generated this on the legacy-server (Day 1 Step 6.1) and it was destroyed, generate a new one: OCI Console → Profile → My profile → API keys → Add API key. Download the private key to `~/.oci/oci_api_key.pem`.
+>
+> 2. **SSH public key**: Terraform injects this into new VMs so you can SSH in. You can reuse your existing bastion public key — it's already on your machine and works fine for a lab:
+>    ```bash
+>    # Find your bastion public key
+>    ls ~/.ssh/*bastion*.pub
+>    # Use that path for ssh_public_key_path below
+>    ```
+>    In production, you'd generate a dedicated key per environment. For this lab, reusing the bastion key avoids unnecessary key management.
+>
+> 3. **Oracle Linux image OCID**: This is the OS image Terraform uses when creating VMs — NOT an image of a Terraform server (Terraform runs on your laptop).
+>
+>    **Option A — OCI Console:**
+>    1. Go to **Compute** → **Images**
+>    2. Filter: Image source = "Platform images", Operating system = "Oracle Linux", OS version = "9"
+>    3. Find the **aarch64** image (for A1 Flex shape) — click the image name
+>    4. Copy the OCID from the image details page
+>
+>    **Option B — OCI CLI** (Cloud Shell or local):
+>    ```bash
+>    oci compute image list --compartment-id <COMPARTMENT_OCID> --operating-system "Oracle Linux" --operating-system-version "9" --shape "VM.Standard.A1.Flex" --query "data[0].id" --raw-output
+>    ```
+>
+>    Image OCIDs are **region-specific**. If you're in `us-ashburn-1`, the OCID starts with `ocid1.image.oc1.iad.`. A different region will have a different OCID.
+
 ```hcl
 # terraform/terraform.tfvars
 # NEVER commit this file to git — it contains credentials
@@ -4510,11 +4828,11 @@ fingerprint       = "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
 private_key_path  = "~/.oci/oci_api_key.pem"
 region            = "us-ashburn-1"
 compartment_ocid  = "ocid1.compartment.oc1..xxxxxxxxxxxxx"
-ssh_public_key_path    = "~/.ssh/fedtracker.pub"
+ssh_public_key_path    = "~/.ssh/<YOUR_BASTION_PUBLIC_KEY>.pub"
 oracle_linux_image_id  = "ocid1.image.oc1.iad.xxxxxxxxxxxxx"
 ```
 
-> **Important:** Replace every value with your actual OCI credentials and IDs. Get the image OCID from the OCI Console: Compute → Images → Oracle Linux 8 → copy the OCID.
+> **Important:** Replace every value with your actual OCI credentials and IDs. See the guidance above for how to find each value.
 
 ```bash
 # Add to .gitignore
@@ -4812,7 +5130,7 @@ grep -n "resource" terraform/compute.tf
 ### Step 11.8 — Create outputs.tf
 📍 **Editor** (build by hand)
 
-> **🧠 ELI5 — Terraform Outputs:** Outputs are values that Terraform prints after `terraform apply` — they give you the information you need to connect to your infrastructure. Instead of searching the OCI Console for your bastion's IP, Terraform tells you directly.
+> **🧠 ELI5 — Terraform Outputs:** Outputs are values that Terraform prints after `terraform apply` or `terraform output` — they give you the information you need to connect to your infrastructure. Instead of searching the OCI Console for your bastion's IP, Terraform tells you directly. After importing existing resources (Step 11.10), outputs will pull values from the imported state.
 
 ```hcl
 # --- Outputs ---
@@ -4844,7 +5162,7 @@ output "ssh_command_app_server" {
 
 ---
 
-### Step 11.9 — Initialize, Plan, and Apply
+### Step 11.9 — Initialize and Validate
 📍 **Local Terminal**
 
 ```bash
@@ -4860,29 +5178,109 @@ terraform init
 ```bash
 # Plan — preview what Terraform will create (dry run)
 terraform plan
-# Expected: "Plan: X to add, 0 to change, 0 to destroy"
+# Expected: "Plan: 11 to add, 0 to change, 0 to destroy"
 # Review each resource — you should see the VCN, subnets, gateways, route tables, security lists, and both VMs
 ```
 
 > **Why plan before apply?** `terraform plan` is a dry run — it shows you what will happen without actually making changes. This is your chance to catch mistakes: wrong CIDR, wrong shape, missing tags. In production, plan output is reviewed by peers before anyone runs apply.
 
-```bash
-# Apply — create all resources in OCI
-terraform apply
-# Type "yes" when prompted
-# Expected: Takes 3-5 minutes. Ends with "Apply complete! Resources: X added"
-```
-
 > **Note:** Terraform automatically loads `terraform.tfvars` if present in the working directory. Use `-var-file` only for non-default filenames like `prod.tfvars`.
 
-**Verify:**
+---
+
+### Step 11.10 — Import Existing Infrastructure (Modernization)
+📍 **Local Terminal**
+
+> **🧠 ELI5 — Why import instead of apply?** You already built the VCN, subnets, gateways, and VMs manually in Steps 8-9. Running `terraform apply` now would try to create a **second** set of everything — duplicates. Instead, we use `terraform import` to tell Terraform: "this resource in my code is **that** resource that already exists in OCI." After importing, Terraform manages the existing infrastructure instead of creating new infrastructure. This is exactly how real modernization works — you inherit a manually-provisioned environment and bring it under Infrastructure as Code management.
+
+> **Interview talking point:** "I manually provisioned the environment first, then wrote Terraform to codify it, then used `terraform import` to adopt the existing resources into IaC management — the same workflow you'd use to modernize a legacy on-prem-to-cloud migration where infrastructure was originally built by hand."
+
+**Step 1:** Gather all resource OCIDs from OCI. Paste this entire block into **OCI Cloud Shell**:
+
+```bash
+COMP="<YOUR_COMPARTMENT_OCID>"
+
+echo "=== VCN ==="
+oci network vcn list --compartment-id $COMP --query "data[].{name:\"display-name\",id:id}" --output table
+
+echo "=== Internet Gateway ==="
+oci network internet-gateway list --compartment-id $COMP --query "data[].{name:\"display-name\",id:id}" --output table
+
+echo "=== NAT Gateway ==="
+oci network nat-gateway list --compartment-id $COMP --query "data[].{name:\"display-name\",id:id}" --output table
+
+echo "=== Route Tables ==="
+oci network route-table list --compartment-id $COMP --query "data[].{name:\"display-name\",id:id}" --output table
+
+echo "=== Security Lists ==="
+oci network security-list list --compartment-id $COMP --query "data[].{name:\"display-name\",id:id}" --output table
+
+echo "=== Subnets ==="
+oci network subnet list --compartment-id $COMP --query "data[].{name:\"display-name\",id:id}" --output table
+
+echo "=== Compute Instances ==="
+oci compute instance list --compartment-id $COMP --query "data[?\"lifecycle-state\"=='RUNNING'].{name:\"display-name\",id:id}" --output table
+```
+
+> Replace `<YOUR_COMPARTMENT_OCID>` with your compartment OCID from `terraform.tfvars`. This prints a table for each resource type showing the display name and OCID. Copy these OCIDs — you need them for the import commands below.
+
+**Step 2:** Import each resource. Run these from your **Local Terminal** in the `terraform/` directory. Replace each `<OCID_FROM_CLOUD_SHELL>` with the actual OCID from the output above:
+
+```bash
+cd ~/oci-federal-lab/terraform
+
+# --- Network resources ---
+terraform import oci_core_vcn.main <VCN_OCID>
+terraform import oci_core_internet_gateway.main <IGW_OCID>
+terraform import oci_core_nat_gateway.main <NATGW_OCID>
+terraform import oci_core_route_table.public <PUBLIC_RT_OCID>
+terraform import oci_core_route_table.private <PRIVATE_RT_OCID>
+terraform import oci_core_security_list.public <PUBLIC_SL_OCID>
+terraform import oci_core_security_list.private <PRIVATE_SL_OCID>
+terraform import oci_core_subnet.public <PUBLIC_SUBNET_OCID>
+terraform import oci_core_subnet.private <PRIVATE_SUBNET_OCID>
+
+# --- Compute resources ---
+terraform import oci_core_instance.bastion <BASTION_OCID>
+terraform import oci_core_instance.app_server <APP_SERVER_OCID>
+```
+
+> Each command should print: `Import successful!` If you get "Resource already managed by Terraform," you've already imported it — that's fine, move on.
+
+**Step 3:** Check for drift — differences between your `.tf` files and reality:
+
+```bash
+terraform plan
+# Expected: "Plan: 0 to add, X to change, 0 to destroy"
+# Terraform will show what's different between your code and the actual resources
+```
+
+> **Expected drift:** Your `.tf` files describe the infrastructure as you want it. The manually-created resources may have slightly different names, tags, or settings. `terraform plan` shows these differences. Review each one:
+>
+> - **Display name differences** (e.g., your `.tf` says `bastion` but OCI has `p1-bastion`) — update your `.tf` to match what's in OCI, or leave it to let Terraform rename the resource on the next apply.
+> - **Missing resources** (e.g., you created a service gateway manually but it's not in `network.tf`) — add it to your `.tf` files.
+> - **Tag differences** — update `terraform.tfvars` tags or accept the change.
+>
+> For each difference, decide: update your code to match reality, or let Terraform update reality to match your code.
+
+**Step 4:** Fix drift and verify:
+
+```bash
+# After editing .tf files to resolve drift:
+terraform plan
+# Goal: "No changes. Your infrastructure matches the configuration."
+```
+
+> When `terraform plan` shows no changes, your Terraform code is a perfect mirror of your live infrastructure. From this point forward, all changes go through Terraform — no more OCI Console clicks.
+
+**Verify — view outputs and test connectivity:**
 
 ```bash
 # View the outputs
 terraform output
 # Expected: bastion_public_ip, app_server_private_ip, SSH commands
 
-# Test SSH to bastion
+# Test SSH to bastion using Terraform's output
 ssh -i ~/.ssh/fedtracker opc@$(terraform output -raw bastion_public_ip)
 # Expected: Shell prompt on bastion
 
@@ -4899,7 +5297,7 @@ ssh -i ~/.ssh/fedtracker -J opc@$(terraform output -raw bastion_public_ip) opc@$
 |---------|---------|-------------|
 | `terraform init` | | Initialize working directory, download providers |
 | `terraform plan` | | Preview changes without applying. Auto-loads `terraform.tfvars` |
-| `terraform apply` | | Create/update resources. Prompts for confirmation. Auto-loads `terraform.tfvars` |
+| `terraform import` | `<resource> <ocid>` | Adopt an existing resource into Terraform state — links your code to a real resource |
 | `terraform output` | | Display output values |
 | `terraform output` | `-raw <name>` | Output a single value without quotes (useful in scripts) |
 
@@ -4912,9 +5310,11 @@ ssh -i ~/.ssh/fedtracker -J opc@$(terraform output -raw bastion_public_ip) opc@$
 | Check | Expected | If It Fails |
 |-------|----------|-------------|
 | `terraform init` | "Successfully initialized" | Check internet connectivity. Check `required_providers` block syntax |
-| `terraform plan` | Shows resources to add | Check variable values in `terraform.tfvars`. Common: wrong OCID format, missing required variable |
-| `terraform apply` | Resources created | Check OCI service limits (A1 Flex may have capacity issues in some regions). Check IAM permissions |
-| `terraform output` shows IPs | Public and private IPs | Resources may still be provisioning — wait 1-2 minutes and retry |
+| `terraform plan` (first) | Shows resources to add | Check variable values in `terraform.tfvars`. Common: wrong OCID format, missing required variable |
+| `terraform import` | "Import successful!" | Check the OCID is correct (copy from Cloud Shell output, no extra spaces). Check the resource address matches your `.tf` file (e.g., `oci_core_vcn.main` must exist in your code) |
+| `terraform plan` (after import) | Shows drift (changes, not adds) | This is expected — drift means your `.tf` doesn't perfectly match reality yet. Fix `.tf` files and re-plan |
+| `terraform plan` (final) | "No changes" | If changes remain, read the diff carefully — update your `.tf` or `terraform.tfvars` to match |
+| `terraform output` shows IPs | Public and private IPs | Outputs depend on imported resources being in state. Run `terraform state list` to confirm all 11 resources are imported |
 | SSH to bastion | Shell prompt | Check public security list allows SSH, bastion has public IP assigned |
 | SSH to app-server through bastion | Shell prompt | Check private security list allows SSH from public subnet CIDR |
 
@@ -4940,12 +5340,19 @@ ssh -i ~/.ssh/fedtracker -J opc@$(terraform output -raw bastion_public_ip) opc@$
 brew install ansible
 
 # Linux
-pip3.11 install ansible
+python3.11 -m pip install ansible
 
 # Verify
 ansible --version
 # Expected: ansible [core 2.x.x]
 ```
+
+> **Windows users:** Ansible does **not** run natively on Windows. You need a Linux environment on your Windows machine. Two options:
+>
+> - **WSL2 (recommended):** Install Windows Subsystem for Linux — `wsl --install` in PowerShell (admin). This gives you a full Ubuntu environment. Install Ansible inside WSL2 with `pip install ansible`. All Ansible commands in this guide should be run from WSL2.
+> - **Git Bash + pip:** `pip install ansible` may partially work in Git Bash, but Ansible relies on Linux-specific modules and SSH behaviors that can break on Windows. WSL2 is more reliable.
+>
+> After installing WSL2, your workflow is: edit files in VS Code (Windows), run Terraform from PowerShell or Git Bash (Windows), run Ansible from WSL2 (Linux). VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code.
 
 ---
 
@@ -4953,10 +5360,14 @@ ansible --version
 📍 **Editor** (build by hand)
 
 ```bash
-mkdir -p ~/oci-federal-lab/ansible
+# Your repo already has ansible/inventory/ and ansible/playbooks/ from the initial scaffold.
+# If they don't exist, create them:
+mkdir -p ~/oci-federal-lab/ansible/inventory
+mkdir -p ~/oci-federal-lab/ansible/playbooks
+cd ~/oci-federal-lab/ansible
 ```
 
-**Build `ansible/inventory.ini`:**
+**Build `ansible/inventory/inventory.ini`:**
 
 ```ini
 # Ansible Inventory — defines which servers to manage
@@ -4981,7 +5392,7 @@ ansible_ssh_common_args='-o ProxyJump=opc@<BASTION_PUBLIC_IP>'
 
 ```bash
 # Test connectivity
-ansible all -i ansible/inventory.ini -m ping
+ansible all -i ansible/inventory/inventory.ini -m ping
 # Expected: bastion | SUCCESS and app-server | SUCCESS
 ```
 
@@ -4989,10 +5400,6 @@ ansible all -i ansible/inventory.ini -m ping
 
 ### Step 12.3 — Create Hardening Playbook
 📍 **Editor** (build by hand)
-
-```bash
-mkdir -p ~/oci-federal-lab/ansible/playbooks
-```
 
 **Build `ansible/playbooks/harden.yml` section by section:**
 
@@ -5002,7 +5409,7 @@ mkdir -p ~/oci-federal-lab/ansible/playbooks
 ---
 # Hardening Playbook — applies CIS-aligned security settings
 # Targets: app server (and optionally bastion)
-# Run: ansible-playbook -i ansible/inventory.ini ansible/playbooks/harden.yml
+# Run: ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
 
 - name: Harden Oracle Linux 8 servers
   hosts: app
@@ -5178,7 +5585,7 @@ mkdir -p ~/oci-federal-lab/ansible/playbooks
 
 ```bash
 # Check YAML syntax
-ansible-playbook --syntax-check -i ansible/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
 # Expected: "playbook: ansible/playbooks/harden.yml" (no errors)
 ```
 
@@ -5192,7 +5599,7 @@ ansible-playbook --syntax-check -i ansible/inventory.ini ansible/playbooks/harde
 ```yaml
 ---
 # Deploy Playbook — installs and configures FedTracker on app server
-# Run: ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_app.yml
+# Run: ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
 
 - name: Deploy FedTracker application
   hosts: app
@@ -5235,7 +5642,7 @@ ansible-playbook --syntax-check -i ansible/inventory.ini ansible/playbooks/harde
           - uvicorn
           - pydantic
           - oracledb
-        executable: pip3.11
+        executable: /usr/bin/python3.11 -m pip
 
     # --- Application Directory ---
     - name: Create application directory
@@ -5288,6 +5695,7 @@ ansible-playbook --syntax-check -i ansible/inventory.ini ansible/playbooks/harde
 Create the service template:
 
 ```bash
+# templates/ isn't in the scaffold — create it:
 mkdir -p ~/oci-federal-lab/ansible/templates
 ```
 
@@ -5304,7 +5712,7 @@ Group={{ app_user }}
 WorkingDirectory={{ app_dir }}
 Environment=DB_TYPE=sqlite
 Environment=SQLITE_PATH={{ app_dir }}/fedtracker.db
-ExecStart=/usr/local/bin/uvicorn main:app --host 0.0.0.0 --port {{ app_port }}
+ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port {{ app_port }}
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -5327,7 +5735,7 @@ WantedBy=multi-user.target
 **Verify:**
 
 ```bash
-ansible-playbook --syntax-check -i ansible/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
 # Expected: No errors
 ```
 
@@ -5340,21 +5748,21 @@ ansible-playbook --syntax-check -i ansible/inventory.ini ansible/playbooks/deplo
 cd ~/oci-federal-lab
 
 # Run hardening first
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
 # Expected: All tasks show "changed" or "ok"
 
 # Then deploy the app
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
 # Expected: All tasks show "changed" or "ok"
 ```
 
 **Verify idempotency — run again:**
 
 ```bash
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
 # Expected: All tasks show "ok" (nothing changed — idempotent!)
 
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
 # Expected: All tasks show "ok" (nothing changed — idempotent!)
 ```
 
@@ -5450,7 +5858,7 @@ echo "Bastion: $BASTION_IP"
 echo "App Server: $APP_IP"
 ```
 
-Update `ansible/inventory.ini` with these new IPs.
+Update `ansible/inventory/inventory.ini` with these new IPs.
 
 ---
 
@@ -5464,10 +5872,10 @@ cd ~/oci-federal-lab
 sleep 60
 
 # Harden first
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
 
 # Deploy the app
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
 ```
 
 ---
@@ -5519,6 +5927,8 @@ git commit -m "Day 3: Terraform IaC + Ansible automation + destroy/rebuild proof
 - Ansible: inventory, hardening playbook (SSH, firewall, auditd), deploy playbook (FastAPI + systemd)
 - Destroy/rebuild verified: zero to healthy app in ~15 minutes
 - All resources tagged for cost compliance"
+
+git push
 ```
 
 ---
@@ -5557,15 +5967,17 @@ git commit -m "Day 3: Terraform IaC + Ansible automation + destroy/rebuild proof
 
 **Skills practiced:** Terraform (deep), Ansible (deep), IaC patterns, configuration management, destroy/rebuild, idempotency
 
-**Next:** Day 4 — "Containerize & Secure" — you'll containerize FedTracker with Podman and Docker, run CIS compliance scans with OpenSCAP, and build an AI-powered evidence collector with Ollama.
+**Next:** Day 4 — "Containerize & Secure" — you'll containerize FedTracker with Podman and Docker, run CIS compliance scans with OpenSCAP, and build a FedRAMP readiness agent with Ollama.
 
 ---
 
-## PHASE 14: PODMAN & DOCKER CONTAINERS (2.5 hrs)
+## PHASE 14: CONTAINERS & CLOUD MIGRATION (3.5 hrs)
 
-> Containers package your application and all its dependencies into a single, portable unit. Instead of installing Python, FastAPI, and uvicorn on the server, you build a container image that includes everything. The image runs identically on your laptop, in CI/CD, and in production. Today you learn Podman first (Oracle Linux's native container tool), then Docker for comparison, then Docker Compose for multi-container setups.
+> Containers package your application and all its dependencies into a single, portable unit. Instead of installing Python, FastAPI, and uvicorn on the server, you build a container image that includes everything. The image runs identically on your laptop, in CI/CD, and in production.
 >
-> 📍 **Where work happens:** VM Terminal (app-server via bastion).
+> **Migration simulation:** You'll build the FedTracker container locally on your Windows machine (simulating an on-prem developer workstation), push it to OCI Container Registry (OCIR), then deploy it on your OCI compute instance with Podman. This is the same workflow used in real legacy-to-cloud migrations — containerize the app, push to a private registry, deploy on cloud infrastructure.
+>
+> 📍 **Where work happens:** Local Terminal (Windows) → OCI Console → VM Terminal (app-server).
 >
 > 🛠️ **Build approach:** Dockerfile and docker-compose.yml are built by hand, section by section. Container commands are typed manually.
 
@@ -5591,351 +6003,295 @@ git commit -m "Day 3: Terraform IaC + Ansible automation + destroy/rebuild proof
 
 ---
 
-### Step 14.2 — Build with Podman
-📍 **VM Terminal** (app-server)
+### Step 14.2 — Build FedTracker Container Locally
+📍 **Local Terminal** (Windows — Docker Desktop)
+
+> **🧠 ELI5 — Migration Simulation:** In a real federal environment, legacy apps run on on-premises servers. The first step to cloud migration is containerizing the app so it's portable. You're simulating this by building the container on your Windows workstation (the "on-prem" machine), then migrating it to OCI. This is the same workflow every cloud engineer follows.
+
+> **Prerequisite:** Docker Desktop must be installed on your Windows machine. Download from https://www.docker.com/products/docker-desktop/ if you don't have it. Verify with `docker --version` in Git Bash or PowerShell.
+
+First, create a local project directory and copy the FedTracker application files:
 
 ```bash
-# Podman is pre-installed on Oracle Linux 8
-podman --version
-# Expected: podman version 4.x.x
+# In Git Bash on your Windows machine
+mkdir -p ~/fedtracker-migration
+cd ~/fedtracker-migration
+
+# Copy your main.py from the repo (or recreate it)
+# If you have the app code in your repo:
+# Adjust path to your local repo clone
+cp ~/Desktop/github/oci-federal-lab/app/main.py . 2>/dev/null || echo "Create main.py manually — copy from Phase 3 guide steps"
+
+# Create requirements.txt
+cat > requirements.txt << 'EOF'
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+EOF
 ```
 
 **Build the Dockerfile section by section:**
 
-📍 **VM Terminal** (build by hand)
-
-**Step 1:** Base image and metadata
-
 ```bash
-sudo su - clouduser
-
-cat > /opt/fedtracker/Dockerfile << 'DOCKEOF'
-# --- Stage 1: Build stage ---
-# Use Oracle Linux 8 as base (matches our server OS)
+cat > Dockerfile << 'DOCKEOF'
+# Use Oracle Linux 8 as base (matches our OCI server OS)
 FROM oraclelinux:8-slim AS builder
 
-# Metadata labels
-LABEL maintainer="<YOUR_NAME>" \
-      description="FedTracker Federal Personnel Tracking API" \
-      version="1.0.0"
-DOCKEOF
-```
+LABEL maintainer="lab-operator" \
+      app="fedtracker" \
+      version="1.0"
 
-> **Why Oracle Linux as base?** Using the same OS as your server avoids compatibility issues. In federal environments, consistency matters — your container should match the host OS family when possible.
-
-**Step 2:** Install dependencies
-
-```bash
-cat >> /opt/fedtracker/Dockerfile << 'DOCKEOF'
-
-# Install Python and pip
-RUN microdnf install -y python3 python3-pip && \
+# Install Python 3.11
+RUN microdnf install -y python3.11 python3.11-pip && \
     microdnf clean all
 
-# Install Python dependencies
-COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
-DOCKEOF
-```
+# Install dependencies
+WORKDIR /app
+COPY requirements.txt .
+RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
-> **Why `--no-cache-dir`?** pip normally caches downloaded packages for faster reinstalls. Inside a container, you'll never reinstall — the cache wastes space. `--no-cache-dir` keeps the image smaller.
-
-> **Why `microdnf clean all`?** Same reason — removes package manager cache to reduce image size. Every layer in a Dockerfile adds to the final image size.
-
-Create the requirements file:
-
-```bash
-cat > /opt/fedtracker/requirements.txt << 'EOF'
-fastapi>=0.100.0
-uvicorn>=0.23.0
-pydantic>=2.0.0
-oracledb>=1.0.0
-EOF
-```
-
-**Step 3:** Application code and configuration
-
-```bash
-cat >> /opt/fedtracker/Dockerfile << 'DOCKEOF'
+# Copy application
+COPY main.py .
 
 # Create non-root user (security: never run containers as root)
 RUN useradd -r -s /bin/false appuser
-
-# Set working directory
-WORKDIR /app
-
-# Copy application code
-COPY main.py /app/main.py
-
-# Own files by non-root user
-RUN chown -R appuser:appuser /app
-
-# Switch to non-root user
 USER appuser
 
-# Expose the port (documentation — doesn't actually open the port)
+# Expose the application port
 EXPOSE 8000
 
-# Health check — container orchestrators use this
+# Health check for orchestrator integration
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD curl -sf http://localhost:8000/health || exit 1
+  CMD python3.11 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# Start command
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application
+CMD ["python3.11", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 DOCKEOF
 ```
 
-> **Why `USER appuser`?** Running containers as root is a security risk — if an attacker escapes the container, they're root on the host. `USER appuser` switches to a non-root user. This is a CIS benchmark requirement and a federal best practice.
+> **Why Oracle Linux as base?** Using the same OS as your OCI server avoids compatibility issues. In federal environments, consistency matters — your container should match the host OS family when possible.
 
-> **Why `HEALTHCHECK`?** This tells container orchestrators (Docker, Podman, Kubernetes) how to check if the container is healthy. If the health check fails 3 times, the orchestrator can restart the container automatically.
+> **Why `USER appuser`?** Running containers as root is a security risk — if an attacker escapes the container, they're root on the host. This is a CIS benchmark requirement and a federal best practice.
 
-> **🧠 Putting it together:** The Dockerfile says: "Start with Oracle Linux 8, install Python and FastAPI, copy the application code, create a non-root user, switch to that user, and run uvicorn on port 8000." Every step builds on the previous one, creating layers in the final image.
+**Build and test locally:**
 
-**Build and run with Podman:**
+> **⚠️ ARM cross-compilation:** Your Windows machine is x86 (AMD/Intel) but the OCI VM is ARM (Ampere A1.Flex). You MUST build for ARM or the image will crash on the VM with `exec format error`. Docker Desktop's `buildx` handles this automatically with the `--platform` flag.
 
 ```bash
-cd /opt/fedtracker
+# Build the container image for ARM (matches your OCI VM architecture)
+docker buildx build --platform linux/arm64 -t fedtracker:1.0 .
+# Expected: Successfully built, image tagged
+# Note: First ARM build may take longer as Docker downloads ARM base layers
 
-# Build the image
-podman build -t fedtracker:1.0 .
-# Expected: Successfully tagged localhost/fedtracker:1.0
+# Run it locally to verify (Docker Desktop can run ARM images on x86 via emulation)
+docker run -d --name fedtracker-local -p 8000:8000 -e DB_TYPE=sqlite fedtracker:1.0
 
-# List images
-podman images
-# Expected: fedtracker image, ~200-300 MB
+# Test it
+curl http://localhost:8000/health
+# Expected: {"status": "healthy", ...}
+
+curl http://localhost:8000/personnel
+# Expected: JSON list of personnel records
+
+# Check logs
+docker logs fedtracker-local
+
+# Stop and remove when verified
+docker stop fedtracker-local
+docker rm fedtracker-local
+```
+
+> **What just happened?** You containerized a legacy application on your "on-prem" workstation. The app runs identically whether it's on your Windows machine, a Linux server, or in the cloud. This portability is the entire point of containers.
+
+---
+
+### Step 14.3 — Push to OCI Container Registry (OCIR)
+📍 **OCI Console** + **Local Terminal** (Windows)
+
+> **🧠 ELI5 — OCIR:** OCI Container Registry is like Docker Hub but private and inside your OCI tenancy. You push container images to it, and your OCI compute instances can pull from it. It's the bridge between your local development and cloud deployment. OCIR is included in the Always Free tier (500 MB storage).
+
+**Step 1:** Generate an Auth Token in OCI Console
+
+1. Go to OCI Console → **Profile menu** (top right) → **User Settings**
+2. Under **Resources** (left sidebar), click **Auth Tokens**
+3. Click **Generate Token**
+4. Description: `fedtracker-ocir-token`
+5. **Copy the token immediately** — you won't see it again!
+6. Save it somewhere safe (password manager, not a text file in your repo)
+
+**Step 2:** Find your tenancy namespace
+
+```bash
+# In OCI Cloud Shell or local terminal with OCI CLI configured
+oci os ns get
+# Expected: {"data": "your-namespace-here"}
+# Example: "mytenancy"
+```
+
+**Step 3:** Log in to OCIR from your Windows machine
+
+```bash
+# In Git Bash on Windows
+# Format: docker login <region>.ocir.io
+# Username: <namespace>/<username> (or <namespace>/oracleidentitycloudservice/<username> for IDCS)
+docker login iad.ocir.io
+# Username: <YOUR_NAMESPACE>/<YOUR_USERNAME>
+# Password: <paste the Auth Token from Step 1>
+# Expected: Login Succeeded
+```
+
+> **Common gotcha:** The password is the **Auth Token**, NOT your OCI console password. If login fails, regenerate the token and try again.
+
+**Step 4:** Tag and push the image
+
+```bash
+# Tag the image for OCIR
+# Format: <region>.ocir.io/<namespace>/<repo-name>:<tag>
+docker tag fedtracker:1.0 iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
+
+# Push to OCIR
+docker push iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
+# Expected: Layers push successfully, image manifest written
+```
+
+> **What happened?** The repository `fedtracker-lab/fedtracker` is created automatically on first push (defaults to private). Your container image now lives in OCI's cloud registry, accessible to any compute instance in your tenancy.
+
+**Verify in OCI Console:**
+
+1. Navigate to **Developer Services** → **Container Registry**
+2. Compartment: `fedtracker-lab`
+3. You should see `fedtracker-lab/fedtracker` with tag `1.0`
+
+---
+
+### Step 14.4 — Deploy on OCI with Podman (Migration Lands)
+📍 **VM Terminal** (app-server via bastion)
+
+> This is the migration completing — your "on-prem" container image is now in the cloud registry, and you're pulling it onto your OCI compute instance. This is exactly how a real migration works: containerize → push to registry → pull and deploy in the cloud.
+
+```bash
+# SSH into your app server (via bastion — see ~/.ssh/config)
+ssh app-server
+
+# Podman is pre-installed on Oracle Linux 8/9
+podman --version
+# Expected: podman version 4.x.x
+
+# Log in to OCIR from the VM
+podman login iad.ocir.io
+# Username: <YOUR_NAMESPACE>/<YOUR_USERNAME>
+# Password: <Auth Token>
+
+# Pull the image you pushed from your Windows machine
+podman pull iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
 
 # Run the container
 podman run -d --name fedtracker-app \
   -p 8000:8000 \
   -e DB_TYPE=sqlite \
-  -e SQLITE_PATH=/app/fedtracker.db \
-  fedtracker:1.0
-```
+  --restart=always \
+  iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
 
-> **What do the flags mean?** `-d` = detached (run in background). `--name` = give it a name (easier than container IDs). `-p 8000:8000` = map host port 8000 to container port 8000. `-e` = set environment variable.
-
-```bash
-# Check the container is running
+# Verify it's running
 podman ps
-# Expected: fedtracker-app running, port 8000 mapped
+# Expected: fedtracker-app container running, port 8000 mapped
 
-# Test the health endpoint
+# Test it
 curl http://localhost:8000/health
 # Expected: {"status": "healthy", ...}
+```
+
+> **Why `--restart=always`?** This tells Podman to restart the container if it crashes or if the VM reboots. Without this, you'd have to manually start it every time. In production, you'd use a systemd unit for containers or Kubernetes.
+
+**Open the port for external access:**
+
+```bash
+# Open port 8000 in the OS firewall
+sudo firewall-cmd --add-port=8000/tcp --permanent
+sudo firewall-cmd --reload
+```
+
+Then open port 8000 in the **OCI Security List**:
+
+1. OCI Console → **Networking** → **Virtual Cloud Networks** → `legacy-vcn`
+2. Click on your **Public Subnet** → **Security Lists** → **Default Security List**
+3. **Add Ingress Rule:**
+   - Source CIDR: `<YOUR_IP>/32` (use https://whatismyip.com — restrict to YOUR IP only, not 0.0.0.0/0)
+   - Destination Port: `8000`
+   - Description: `FedTracker app access`
+
+> **⚠️ Security:** Never open port 8000 to `0.0.0.0/0` (the entire internet). Always restrict to your IP address. In production, you'd use a load balancer or API Gateway in front of the app.
+
+**Verify from your Windows machine:**
+
+```bash
+# From Git Bash on Windows
+curl http://<VM_PUBLIC_IP>:8000/health
+# Expected: {"status": "healthy", ...}
+```
+
+> **🎉 Migration Complete!** You just completed a real container migration: built on your local workstation → pushed to a private cloud registry → deployed on OCI compute with Podman. This is the exact pattern used in federal legacy-to-cloud migrations.
+
+> **💼 Interview Insight — Container Migration:** "I containerized a legacy application on a developer workstation, pushed the image to OCI Container Registry, and deployed it on OCI compute using Podman. Podman is daemonless and rootless by default — it has a smaller attack surface than Docker, which matters for FedRAMP compliance. The same Dockerfile works with both runtimes because they use the same OCI image format. I restricted network access to my IP only in the security list, not 0.0.0.0/0, because boundary protection is a NIST 800-53 SC-7 requirement."
+
+---
+
+### Step 14.5 — Podman vs Docker Quick Reference
+📍 **VM Terminal** (app-server)
+
+> You just used **Docker** (on Windows, to build) and **Podman** (on the VM, to deploy). Same Dockerfile, same OCI image format, interchangeable commands. Here's what you need to know:
+
+> **🧠 Podman vs Docker — The Key Difference:**
+> | | Podman | Docker |
+> |---|---|---|
+> | Daemon | **None** — each container is its own process | Runs `dockerd` daemon (always on, uses ~140MB RAM) |
+> | Root | **Rootless by default** | Requires root or docker group (effectively root) |
+> | CLI | `podman build`, `podman run` | `docker build`, `docker run` — identical syntax |
+> | Federal preference | **Preferred** — smaller attack surface | Common but Podman is the RHEL/OL default |
+>
+> **Bottom line:** Use Podman on Oracle Linux (it's pre-installed). Use Docker on Windows/Mac for local builds. Same images work with both.
+
+> **💼 Interview Insight — Podman vs Docker:** "On Oracle Linux, I used Podman because it's the RHEL-native container runtime — daemonless and rootless by default, which aligns with federal security requirements. The same Dockerfile and OCI image format work with both. I used Docker Desktop on my workstation for the initial build and Podman on the server for deployment."
+
+**Useful container debugging commands (reference):**
+
+```bash
+# Check running containers
+podman ps
 
 # View container logs
 podman logs fedtracker-app
-# Expected: Uvicorn startup messages
 
-# Stop and remove the container
-podman stop fedtracker-app
-podman rm fedtracker-app
+# Exec into a running container for debugging
+podman exec -it fedtracker-app /bin/bash
+
+# Inspect container network config
+podman inspect --format '{{.NetworkSettings.IPAddress}}' fedtracker-app
+
+# Check port bindings from the host
+ss -tlnp | grep 8000
 ```
 
-<sub><em style="color: #999; font-size: 0.65em;">
+**SELinux and containers — the `:Z` volume mount flag:**
 
-💡🖥️ Commands used:
-
-| Command | Flag(s) | What It Does |
-|---------|---------|-------------|
-| `podman build` | `-t name:tag .` | Build image from Dockerfile in current directory |
-| `podman run` | `-d --name -p -e` | Run container. `-d`=detach, `-p`=port, `-e`=env var |
-| `podman ps` | | List running containers |
-| `podman logs` | | View container stdout/stderr |
-| `podman stop` | | Stop a running container |
-| `podman rm` | | Remove a stopped container |
-| `podman images` | | List downloaded/built images |
-
-</em></sub>
-
----
-
-### Step 14.3 — Docker Comparison
-📍 **VM Terminal** (app-server)
-
-> Now build and run the same image with Docker to see the difference.
-
-```bash
-# Install Docker CE on Oracle Linux 8
-sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-sudo dnf install -y docker-ce docker-ce-cli containerd.io
-sudo systemctl enable --now docker
-sudo usermod -aG docker clouduser
-```
-
-> **Note:** You need to log out and back in (or `newgrp docker`) for the group change to take effect.
-
-```bash
-# Log out and back in to pick up docker group
-exit
-sudo su - clouduser
-
-# Build with Docker — same Dockerfile, same result
-cd /opt/fedtracker
-docker build -t fedtracker:1.0 .
-# Expected: Same build output as Podman
-
-# Run with Docker
-docker run -d --name fedtracker-docker \
-  -p 8000:8000 \
-  -e DB_TYPE=sqlite \
-  fedtracker:1.0
-
-# Test
-curl http://localhost:8000/health
-# Expected: Same healthy response
-
-# Clean up
-docker stop fedtracker-docker
-docker rm fedtracker-docker
-```
-
-> **Key difference observed:** Same Dockerfile, same image, same commands (just replace `podman` with `docker`). Under the hood, Docker uses `containerd` + `runc` with a daemon, while Podman uses `conmon` + `runc` without a daemon. For your day-to-day work, they're interchangeable.
-
-> **💼 Interview Insight — Podman vs Docker:** "On Oracle Linux, I used Podman because that's what RHEL-based systems ship natively. It's daemonless and rootless by default, which aligns with federal security requirements. The same Dockerfile works with both — Podman and Docker use the same OCI image format. For multi-container orchestration, I used Docker Compose because its ecosystem is more mature, but for single containers, Podman is my default."
-
----
-
-### Step 14.4 — Docker Compose
-📍 **VM Terminal** (build by hand)
-
-> **🧠 ELI5 — Docker Compose:** Docker Compose manages multiple containers as a single application. Instead of running separate `docker run` commands for your app, database, and monitoring sidecar, you define them all in a `docker-compose.yml` file and start everything with `docker compose up`. It handles networking between containers automatically.
-
-```bash
-# Install Docker Compose plugin (if not included with Docker CE)
-sudo dnf install -y docker-compose-plugin
-# Or: docker compose version (it's built into Docker CE v2+)
-```
-
-**Build `docker-compose.yml` section by section:**
-
-**Step 1:** Service definition
-
-```bash
-cat > /opt/fedtracker/docker-compose.yml << 'COMPEOF'
-# Docker Compose file for FedTracker
-# Run: docker compose up -d
-# Stop: docker compose down
-
-version: "3.8"
-
-services:
-  # FedTracker API service
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fedtracker-app
-    ports:
-      - "8000:8000"
-    environment:
-      - DB_TYPE=sqlite
-      - SQLITE_PATH=/app/data/fedtracker.db
-    volumes:
-      - app-data:/app/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-volumes:
-  app-data:
-    driver: local
-COMPEOF
-```
-
-> **Why `volumes: app-data`?** Without a volume, the SQLite database lives inside the container — when the container is destroyed, the data is gone. A volume persists data outside the container. `app-data:/app/data` maps a named volume to `/app/data` inside the container. Even if you destroy and recreate the container, the volume (and your data) survives.
-
-> **Why `restart: unless-stopped`?** Like `Restart=always` in systemd — Docker restarts the container if it crashes. `unless-stopped` means it restarts on crash but NOT if you manually stopped it with `docker compose stop`.
-
-**Run with Docker Compose:**
-
-```bash
-cd /opt/fedtracker
-
-# Build and start
-docker compose up -d
-# Expected: Container starts successfully
-
-# Check status
-docker compose ps
-# Expected: fedtracker-app running, port 8000 mapped
-
-# View logs
-docker compose logs -f app
-# Expected: Uvicorn startup messages (Ctrl+C to stop following)
-
-# Test
-curl http://localhost:8000/health
-# Expected: Healthy response
-
-# Stop everything
-docker compose down
-# Expected: Container stopped and removed (volume preserved)
-```
-
-<sub><em style="color: #999; font-size: 0.65em;">
-
-💡🖥️ Commands used:
-
-| Command | Flag(s) | What It Does |
-|---------|---------|-------------|
-| `docker compose up` | `-d` | Build and start all services. `-d` = detached |
-| `docker compose ps` | | List running services |
-| `docker compose logs` | `-f app` | Follow logs for a service |
-| `docker compose down` | | Stop and remove containers (volumes preserved) |
-| `docker compose down` | `-v` | Stop and remove containers AND volumes (data lost!) |
-
-</em></sub>
-
----
+> When mounting host directories into containers on SELinux-enforcing systems, add `:Z` to the volume mount. Without it, SELinux blocks the container from reading host files — even if Unix permissions look correct.
+>
+> ```bash
+> # Without :Z — SELinux denies access
+> podman run -v /opt/fedtracker/data:/data fedtracker:1.0
+> # Fix: add :Z for private label
+> podman run -v /opt/fedtracker/data:/data:Z fedtracker:1.0
+> ```
 
 ### Phase 14 Troubleshooting
 
 | Check | Expected | If It Fails |
 |-------|----------|-------------|
-| `podman build` succeeds | Image created | Check Dockerfile syntax. Common: wrong COPY path, missing requirements.txt |
-| `podman run` starts container | Container running, port mapped | Port already in use? Stop the systemd service first: `sudo systemctl stop fedtracker` |
-| `docker build` succeeds | Same image as Podman | Docker not installed? Check `docker --version`. Docker service running? `sudo systemctl status docker` |
-| `docker compose up` starts | Service running | Check docker-compose.yml syntax. Common: indentation errors in YAML |
-| `curl localhost:8000/health` | Healthy response | Container crashed? Check `docker compose logs app`. Common: missing env var, wrong port |
-| Container image too large | Should be ~200-300 MB | Use slim base image. Add `.dockerignore` to exclude unnecessary files |
-
-**SELinux and containers — the `:Z` volume mount flag:**
-
-When mounting host directories into containers on an SELinux-enforcing system, the container process may be denied access — even if Unix permissions look correct. SELinux labels on the host files don't match what the container expects.
-
-```bash
-# This will FAIL on an SELinux-enforcing system if /data has the wrong label:
-podman run -v /opt/fedtracker/data:/data fedtracker:1.0
-# Error: Permission denied (SELinux denial, not Unix permissions)
-
-# Fix: use the :Z flag to automatically relabel the volume
-podman run -v /opt/fedtracker/data:/data:Z fedtracker:1.0
-# :Z = private label (only this container can access the files)
-# :z = shared label (multiple containers can access the files)
-```
-
-> **🧠 ELI5 — The `:Z` flag:** SELinux labels every file with a security context. When you mount a host directory into a container, the file labels say "I belong to the host" and the container says "I need files labeled for me." The `:Z` flag tells Podman to relabel the files so the container can access them. Use `:Z` (uppercase) for single-container access and `:z` (lowercase) if multiple containers share the volume.
-
-**Container networking debugging:**
-
-```bash
-# Inspect a running container's network configuration
-podman inspect --format '{{.NetworkSettings.IPAddress}}' fedtracker-app
-# Shows the container's internal IP address
-
-# Verify container port bindings from the host
-ss -tlnp | grep 8000
-# Should show the port mapped to the container process
-
-# Debug: exec into a running container
-podman exec -it fedtracker-app /bin/bash
-# Now you're inside the container — run diagnostic commands
-# Exit with: exit
-```
+| `docker buildx build --platform linux/arm64` succeeds | Image created for ARM | Docker Desktop not running? Buildx not enabled? Check `docker buildx version` |
+| `docker push` to OCIR succeeds | Layers uploaded | Auth token wrong? Re-generate in OCI Console. Wrong namespace? Check `oci os ns get` |
+| `podman pull` from OCIR succeeds | Image downloaded on VM | Auth token expired? Wrong region in URL? Try `podman login iad.ocir.io` again |
+| `podman run` starts container | Running, port 8000 mapped | Port in use? `sudo systemctl stop fedtracker`. ARM mismatch? Check `podman inspect --format '{{.Architecture}}'` |
+| `curl localhost:8000/health` | Healthy response | Container crashed? `podman logs fedtracker-app`. Common: missing env var, wrong port |
 
 ---
 
@@ -6116,20 +6472,24 @@ sudo /opt/fedtracker/cis_scan.sh
 
 ---
 
-## PHASE 16: OLLAMA AI EVIDENCE COLLECTOR (1.5 hrs)
+## PHASE 16: FEDRAMP READINESS AGENT WITH OLLAMA (2 hrs)
 
-> Federal compliance requires evidence packages — documents proving that security controls are in place. Normally, a human reads through scan results, firewall rules, and config files, then writes a narrative summary. Ollama is a local LLM that can read this evidence and generate human-readable summaries. This is the AI pillar for Phase 1 — local inference, no cloud API needed, air-gap capable.
+> FedRAMP (Federal Risk and Authorization Management Program) is the US government's standardized approach to security assessment for cloud services. Every cloud system used by a federal agency must demonstrate compliance with NIST SP 800-53 controls. In this section, you build a lightweight readiness agent that automatically checks your OCI environment against key FedRAMP controls and uses Ollama (a local LLM) to generate a human-readable readiness report. This is the AI pillar for Phase 1 — local inference, no cloud API needed, air-gap capable.
 >
 > 📍 **Where work happens:** VM Terminal (app-server).
 >
-> 🛠️ **Build approach:** Python script built by hand. Ollama installed and configured.
+> 🛠️ **Build approach:** Python script + JSON checklist built by hand. Ollama installed and configured.
+
+> **🧠 ELI5 — FedRAMP and NIST 800-53:** NIST 800-53 is a catalog of ~1,000+ security controls organized into families like Access Control (AC), Audit (AU), and System Integrity (SI). FedRAMP picks a subset of these controls based on risk level — Low (~125 controls), Moderate (~325), or High (~421). Our agent checks ~20 key controls from the Moderate baseline. This is educational, not a substitute for a real 3PAO (Third Party Assessment Organization) assessment.
+
+> **⚠️ Disclaimer:** This is a readiness assessment tool for learning and interview demonstration. It is not a substitute for formal FedRAMP authorization or a 3PAO assessment.
 
 ---
 
 ### Step 16.1 — Install Ollama
 📍 **VM Terminal** (app-server)
 
-> **🧠 ELI5 — Ollama:** Ollama is a tool that runs large language models (LLMs) locally on your server — no internet connection needed, no API keys, no cloud costs. You download a model once, and it runs entirely on your machine. This is important for federal environments where data cannot leave the network (air-gapped systems). In production, you'd use OCI Generative AI Service for better models and scalability. For the lab, Ollama is free and demonstrates the same concept.
+> **🧠 ELI5 — Ollama:** Ollama runs large language models (LLMs) locally on your server — no internet, no API keys, no cloud costs. You download a model once and it runs entirely on your machine. This matters for federal environments where data cannot leave the network (air-gapped systems). In production, you'd use OCI Generative AI Service. For the lab, Ollama is free and demonstrates the same concept.
 
 ```bash
 # Install Ollama
@@ -6142,31 +6502,255 @@ sudo systemctl enable --now ollama
 ollama pull tinyllama
 
 # Verify it works
-ollama run tinyllama "What is CIS in cybersecurity? Reply in 2 sentences."
-# Expected: A brief explanation of CIS benchmarks
+ollama run tinyllama "What is FedRAMP in 2 sentences?"
+# Expected: A brief explanation of FedRAMP
 # Press Ctrl+D to exit the interactive session
 ```
 
-> **Why `tinyllama`?** On Always Free ARM instances with limited RAM, use smaller models. TinyLlama (1.1B params) fits comfortably in the available memory. In production or with more resources, you'd use mistral:7b or llama3:8b for higher quality outputs. In production with OCI Generative AI, you'd use much larger models.
+> **Why `tinyllama`?** On Always Free ARM instances with limited RAM, use smaller models. TinyLlama (1.1B params) fits comfortably in the available memory. In production or with more resources, you'd use mistral:7b or llama3:8b for higher quality outputs.
 
 ---
 
-### Step 16.2 — Build the Evidence Collector Script
-📍 **VM Terminal** (build by hand)
+### Step 16.2 — Create the FedRAMP Checklist
+📍 **VM Terminal (app-server)** (build by hand)
+
+> The checklist defines what the agent checks. Each entry maps to a NIST 800-53 Rev 5 control from the FedRAMP Moderate baseline. The checks are simple — shell commands that return evidence, with a pass condition evaluated programmatically.
 
 ```bash
 sudo su - clouduser
 
-cat > /opt/fedtracker/evidence_collector.py << 'PYEOF'
+mkdir -p /opt/fedtracker/compliance/reports
+
+cat > /opt/fedtracker/compliance/checklist.json << 'JSONEOF'
+[
+  {
+    "id": "AC-2.1",
+    "nist_control": "AC-2",
+    "family": "Access Control",
+    "title": "No shared UID-0 accounts",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "awk -F: '$3==0 {print $1}' /etc/passwd",
+    "pass_condition": "line_count_lte_1",
+    "remediation": "Remove or disable shared root accounts. Only 'root' should have UID 0 (AC-2)."
+  },
+  {
+    "id": "AC-3.1",
+    "nist_control": "AC-3",
+    "family": "Access Control",
+    "title": "Sudo via sudoers.d (least privilege)",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "ls /etc/sudoers.d/ 2>/dev/null | wc -l",
+    "pass_condition": "output_gte_1",
+    "remediation": "Configure sudo access via /etc/sudoers.d/ drop-in files, not by editing /etc/sudoers directly (AC-3)."
+  },
+  {
+    "id": "AC-7.1",
+    "nist_control": "AC-7",
+    "family": "Access Control",
+    "title": "Failed login lockout configured",
+    "severity": "MEDIUM",
+    "weight": 5,
+    "check_command": "grep -r 'pam_faillock\\|deny=' /etc/pam.d/ 2>/dev/null | head -5",
+    "pass_condition": "output_not_empty",
+    "remediation": "Configure PAM faillock to lock accounts after repeated failed attempts (AC-7)."
+  },
+  {
+    "id": "AC-17.1",
+    "nist_control": "AC-17",
+    "family": "Access Control",
+    "title": "SSH: PermitRootLogin disabled",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "grep -i '^PermitRootLogin' /etc/ssh/sshd_config 2>/dev/null || echo 'not_set'",
+    "pass_condition": "contains_no",
+    "remediation": "Set PermitRootLogin no in /etc/ssh/sshd_config and restart sshd (AC-17)."
+  },
+  {
+    "id": "AC-17.2",
+    "nist_control": "AC-17",
+    "family": "Access Control",
+    "title": "SSH: Password authentication disabled",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "grep -i '^PasswordAuthentication' /etc/ssh/sshd_config 2>/dev/null || echo 'not_set'",
+    "pass_condition": "contains_no",
+    "remediation": "Set PasswordAuthentication no in /etc/ssh/sshd_config. Use SSH keys only (AC-17)."
+  },
+  {
+    "id": "AU-2.1",
+    "nist_control": "AU-2",
+    "family": "Audit and Accountability",
+    "title": "Auditd service running",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "systemctl is-active auditd 2>/dev/null",
+    "pass_condition": "equals_active",
+    "remediation": "Enable auditd: sudo systemctl enable --now auditd (AU-2)."
+  },
+  {
+    "id": "AU-3.1",
+    "nist_control": "AU-3",
+    "family": "Audit and Accountability",
+    "title": "Audit rules configured",
+    "severity": "MEDIUM",
+    "weight": 5,
+    "check_command": "sudo auditctl -l 2>/dev/null | wc -l",
+    "pass_condition": "output_gte_1",
+    "remediation": "Add audit rules to track security-relevant events. See /etc/audit/rules.d/ (AU-3)."
+  },
+  {
+    "id": "AU-9.1",
+    "nist_control": "AU-9",
+    "family": "Audit and Accountability",
+    "title": "Audit log file permissions restricted",
+    "severity": "MEDIUM",
+    "weight": 5,
+    "check_command": "stat -c '%a' /var/log/audit/audit.log 2>/dev/null || echo '999'",
+    "pass_condition": "output_lte_640",
+    "remediation": "Set audit log permissions to 640 or stricter: chmod 640 /var/log/audit/audit.log (AU-9)."
+  },
+  {
+    "id": "CM-6.1",
+    "nist_control": "CM-6",
+    "family": "Configuration Management",
+    "title": "SELinux enforcing",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "getenforce 2>/dev/null || echo 'disabled'",
+    "pass_condition": "equals_enforcing",
+    "remediation": "Set SELinux to enforcing: sudo setenforce 1 and edit /etc/selinux/config (CM-6)."
+  },
+  {
+    "id": "CM-7.1",
+    "nist_control": "CM-7",
+    "family": "Configuration Management",
+    "title": "Minimal unnecessary services",
+    "severity": "MEDIUM",
+    "weight": 5,
+    "check_command": "systemctl list-unit-files --state=enabled --type=service --no-pager 2>/dev/null | grep -c enabled",
+    "pass_condition": "output_lte_30",
+    "remediation": "Disable unnecessary services. Review enabled services and disable those not required (CM-7)."
+  },
+  {
+    "id": "IA-5.1",
+    "nist_control": "IA-5",
+    "family": "Identification and Authentication",
+    "title": "Password aging configured",
+    "severity": "MEDIUM",
+    "weight": 5,
+    "check_command": "grep '^PASS_MAX_DAYS' /etc/login.defs 2>/dev/null | awk '{print $2}'",
+    "pass_condition": "output_lte_90",
+    "remediation": "Set PASS_MAX_DAYS to 90 or less in /etc/login.defs (IA-5)."
+  },
+  {
+    "id": "IA-5.2",
+    "nist_control": "IA-5",
+    "family": "Identification and Authentication",
+    "title": "Password complexity enforced",
+    "severity": "MEDIUM",
+    "weight": 5,
+    "check_command": "grep -r 'pam_pwquality\\|minlen' /etc/pam.d/ /etc/security/pwquality.conf 2>/dev/null | head -3",
+    "pass_condition": "output_not_empty",
+    "remediation": "Configure pam_pwquality with minlen=14, dcredit=-1, ucredit=-1 in /etc/security/pwquality.conf (IA-5)."
+  },
+  {
+    "id": "SC-7.1",
+    "nist_control": "SC-7",
+    "family": "System and Communications Protection",
+    "title": "Firewall active",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "systemctl is-active firewalld 2>/dev/null",
+    "pass_condition": "equals_active",
+    "remediation": "Enable firewalld: sudo systemctl enable --now firewalld (SC-7)."
+  },
+  {
+    "id": "SC-7.2",
+    "nist_control": "SC-7",
+    "family": "System and Communications Protection",
+    "title": "Only required ports open",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "sudo firewall-cmd --list-ports 2>/dev/null || echo 'firewalld_not_running'",
+    "pass_condition": "output_not_empty",
+    "remediation": "Review open ports with firewall-cmd --list-all. Remove unnecessary ports (SC-7)."
+  },
+  {
+    "id": "SC-8.1",
+    "nist_control": "SC-8",
+    "family": "System and Communications Protection",
+    "title": "SSH protocol 2 only",
+    "severity": "LOW",
+    "weight": 3,
+    "check_command": "grep -i '^Protocol' /etc/ssh/sshd_config 2>/dev/null || echo 'default_2'",
+    "pass_condition": "contains_2_or_default",
+    "remediation": "SSH protocol 2 is the default on modern systems. Verify no Protocol 1 is configured (SC-8)."
+  },
+  {
+    "id": "SI-2.1",
+    "nist_control": "SI-2",
+    "family": "System and Information Integrity",
+    "title": "No critical pending patches",
+    "severity": "HIGH",
+    "weight": 8,
+    "check_command": "dnf check-update --security --quiet 2>/dev/null | wc -l",
+    "pass_condition": "output_lte_5",
+    "remediation": "Apply security patches: sudo dnf update --security -y (SI-2)."
+  },
+  {
+    "id": "SI-3.1",
+    "nist_control": "SI-3",
+    "family": "System and Information Integrity",
+    "title": "File integrity monitoring installed",
+    "severity": "MEDIUM",
+    "weight": 5,
+    "check_command": "rpm -q aide 2>/dev/null || echo 'not_installed'",
+    "pass_condition": "output_not_contains_not_installed",
+    "remediation": "Install AIDE for file integrity monitoring: sudo dnf install -y aide && sudo aide --init (SI-3)."
+  },
+  {
+    "id": "SI-7.1",
+    "nist_control": "SI-7",
+    "family": "System and Information Integrity",
+    "title": "Critical file permissions correct",
+    "severity": "MEDIUM",
+    "weight": 5,
+    "check_command": "stat -c '%a' /etc/passwd /etc/shadow 2>/dev/null",
+    "pass_condition": "passwd_644_shadow_000",
+    "remediation": "Set /etc/passwd to 644 and /etc/shadow to 000: chmod 644 /etc/passwd && chmod 000 /etc/shadow (SI-7)."
+  }
+]
+JSONEOF
+```
+
+> **Why only 18 checks?** FedRAMP Moderate has ~325 controls. We curated 18 that are (1) automatable with a single shell command, (2) cover 6 of the most critical NIST 800-53 families, and (3) don't overlap with the OpenSCAP CIS checks you already ran. This is a learning tool — demonstrating the pattern matters more than exhaustive coverage.
+
+---
+
+### Step 16.3 — Build the FedRAMP Readiness Agent
+📍 **VM Terminal (app-server)** (build by hand)
+
+> The agent loads the checklist, runs each check, evaluates pass/fail, calculates a weighted score, then feeds results to Ollama for a narrative report. Architecture inspired by Lynis (scoring model) and Prowler (metadata/logic separation).
+
+```bash
+cat > /opt/fedtracker/compliance/fedramp_agent.py << 'PYEOF'
 #!/usr/bin/env python3
 """
-AI-Powered Compliance Evidence Collector
-Collects system evidence (configs, scan results, service status)
-and uses Ollama to generate narrative summaries per control family.
+FedRAMP Readiness Agent
+Checks OCI environment against key NIST 800-53 Rev 5 controls
+from the FedRAMP Moderate baseline. Uses Ollama for narrative report.
 
-Usage: python3 evidence_collector.py
-Output: Markdown evidence package
+Usage: python3.11 fedramp_agent.py
+Output: Markdown readiness report in compliance/reports/
 Requires: Ollama running with tinyllama model
+
+Security notes:
+- subprocess uses list form (no shell=True) where possible
+- Evidence truncated to 500 chars before LLM context
+- No eval/exec — conditions evaluated via simple comparisons
+- No hardcoded credentials — OCI CLI uses config file auth
 """
 
 import subprocess
@@ -6175,181 +6759,325 @@ import os
 from datetime import datetime, timezone
 
 
-def run_cmd(cmd):
-    """Run a shell command and return the output."""
+CHECKLIST_PATH = os.path.join(os.path.dirname(__file__), "checklist.json")
+REPORT_DIR = os.path.join(os.path.dirname(__file__), "reports")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "tinyllama")
+
+
+def run_check_command(command):
+    """Run a check command and return stdout. Uses shell=True because
+    commands include pipes and redirects from the checklist."""
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, timeout=30
+        )
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
-        return "[Command timed out]"
+        return "[TIMEOUT]"
     except Exception as e:
-        return f"[Error: {str(e)}]"
+        return f"[ERROR: {e}]"
 
 
-def query_ollama(prompt, model="tinyllama"):
+def evaluate_condition(output, condition):
+    """Evaluate a pass condition against command output.
+    Returns True if the check passes."""
+    output = output.strip()
+
+    if condition == "line_count_lte_1":
+        return len([l for l in output.splitlines() if l.strip()]) <= 1
+    elif condition == "output_gte_1":
+        try:
+            return int(output) >= 1
+        except ValueError:
+            return False
+    elif condition == "output_not_empty":
+        return len(output) > 0 and output not in ("[TIMEOUT]", "")
+    elif condition == "contains_no":
+        return "no" in output.lower()
+    elif condition == "equals_active":
+        return output.strip() == "active"
+    elif condition == "equals_enforcing":
+        return output.strip().lower() == "enforcing"
+    elif condition == "output_lte_30":
+        try:
+            return int(output) <= 30
+        except ValueError:
+            return False
+    elif condition == "output_lte_90":
+        try:
+            return int(output) <= 90
+        except ValueError:
+            return False
+    elif condition == "output_lte_640":
+        try:
+            return int(output) <= 640
+        except ValueError:
+            return False
+    elif condition == "output_lte_5":
+        try:
+            return int(output) <= 5
+        except ValueError:
+            return False
+    elif condition == "contains_2_or_default":
+        return "1" not in output
+    elif condition == "output_not_contains_not_installed":
+        return "not_installed" not in output and "not installed" not in output
+    elif condition == "passwd_644_shadow_000":
+        lines = output.strip().splitlines()
+        return len(lines) >= 2 and lines[0] == "644" and lines[1] == "0"
+    else:
+        return False
+
+
+def query_ollama(prompt, model=None):
     """Send a prompt to Ollama and return the response."""
+    model = model or OLLAMA_MODEL
     try:
         import requests
         response = requests.post(
             "http://localhost:11434/api/generate",
             json={"model": model, "prompt": prompt, "stream": False},
-            timeout=120
+            timeout=180
         )
         return response.json().get("response", "[No response]")
     except Exception as e:
-        return f"[Ollama error: {str(e)}]"
+        return f"[Ollama error: {e}]"
 
 
-def collect_evidence():
-    """Collect system evidence from various sources."""
-    print("[Evidence Collector] Gathering system evidence...")
-
-    evidence = {}
-
-    # Access Control (AC)
-    evidence["AC - SSH Configuration"] = run_cmd("grep -E '^(PermitRootLogin|PasswordAuthentication|MaxAuthTries)' /etc/ssh/sshd_config")
-    evidence["AC - User Accounts"] = run_cmd("awk -F: '$3 >= 1000 {print $1, $3, $7}' /etc/passwd")
-    evidence["AC - Sudo Configuration"] = run_cmd("grep -v '^#' /etc/sudoers.d/* 2>/dev/null || echo 'Default sudoers only'")
-
-    # Audit & Accountability (AU)
-    evidence["AU - Audit Rules"] = run_cmd("sudo auditctl -l 2>/dev/null || echo 'auditd not running'")
-    evidence["AU - Recent Audit Events"] = run_cmd("sudo ausearch -ts recent -m USER_LOGIN 2>/dev/null | tail -20 || echo 'No recent events'")
-
-    # System & Communications Protection (SC)
-    evidence["SC - Firewall Rules"] = run_cmd("sudo firewall-cmd --list-all 2>/dev/null || echo 'firewalld not running'")
-    evidence["SC - Listening Ports"] = run_cmd("ss -tlnp")
-
-    # System & Information Integrity (SI)
-    evidence["SI - CIS Scan Summary"] = run_cmd("ls -la /tmp/cis-results-*.xml 2>/dev/null | tail -1 || echo 'No CIS scan results found'")
-    evidence["SI - Package Updates"] = run_cmd("dnf check-update --quiet 2>/dev/null | head -10 || echo 'All packages up to date'")
-
-    # Configuration Management (CM)
-    evidence["CM - Running Services"] = run_cmd("systemctl list-units --type=service --state=running --no-pager | head -20")
-    evidence["CM - FedTracker Service"] = run_cmd("systemctl status fedtracker 2>/dev/null || echo 'FedTracker not running as service'")
-
-    return evidence
+def run_all_checks(checklist):
+    """Run all checks and return findings."""
+    findings = []
+    for check in checklist:
+        print(f"  [{check['severity']:6s}] {check['id']} — {check['title']}...", end=" ")
+        output = run_check_command(check["check_command"])
+        passed = evaluate_condition(output, check["pass_condition"])
+        status = "PASS" if passed else "FAIL"
+        print(f"{'PASS' if passed else '** FAIL **'}")
+        findings.append({
+            "id": check["id"],
+            "nist_control": check["nist_control"],
+            "family": check["family"],
+            "title": check["title"],
+            "severity": check["severity"],
+            "weight": check["weight"],
+            "status": status,
+            "evidence": output[:500],
+            "remediation": check["remediation"] if not passed else None
+        })
+    return findings
 
 
-def generate_evidence_package(evidence):
-    """Generate a Markdown evidence package with AI-generated summaries."""
+def calculate_score(findings):
+    """Calculate readiness score using Lynis-style earned/possible model."""
+    earned, possible = 0, 0
+    for f in findings:
+        possible += f["weight"]
+        if f["status"] == "PASS":
+            earned += f["weight"]
+    score = int((earned / possible) * 100) if possible > 0 else 0
+    return score, earned, possible
+
+
+def generate_report(findings, score, earned, possible):
+    """Generate Markdown readiness report with Ollama narrative."""
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    output_path = f"/opt/fedtracker/evidence-package-{datetime.now(timezone.utc).strftime('%Y%m%d')}.md"
+    os.makedirs(REPORT_DIR, exist_ok=True)
+    report_file = os.path.join(
+        REPORT_DIR,
+        f"fedramp-readiness-{datetime.now(timezone.utc).strftime('%Y%m%d')}.md"
+    )
+
+    pass_count = sum(1 for f in findings if f["status"] == "PASS")
+    fail_count = sum(1 for f in findings if f["status"] == "FAIL")
 
     lines = [
-        f"# Compliance Evidence Package",
+        "# FedRAMP Readiness Report",
         f"## FedTracker Application — Phase 1",
-        f"",
+        "",
         f"**Generated:** {timestamp}",
-        f"**System:** {run_cmd('hostname')}",
-        f"**OS:** {run_cmd('cat /etc/oracle-release')}",
-        f"**Method:** Automated collection with AI-assisted narrative (Ollama tinyllama)",
-        f"",
-        f"---",
-        f""
+        f"**Baseline:** FedRAMP Moderate (NIST 800-53 Rev 5 subset)",
+        f"**Checks:** {len(findings)} controls across 6 families",
+        f"**Score:** {score}/100 ({earned}/{possible} points)",
+        f"**Result:** {pass_count} PASS | {fail_count} FAIL",
+        "",
+        "---",
+        ""
     ]
 
-    control_families = {
-        "Access Control (AC)": ["AC - SSH Configuration", "AC - User Accounts", "AC - Sudo Configuration"],
-        "Audit & Accountability (AU)": ["AU - Audit Rules", "AU - Recent Audit Events"],
-        "System & Communications Protection (SC)": ["SC - Firewall Rules", "SC - Listening Ports"],
-        "System & Information Integrity (SI)": ["SI - CIS Scan Summary", "SI - Package Updates"],
-        "Configuration Management (CM)": ["CM - Running Services", "CM - FedTracker Service"],
-    }
+    # Group findings by family
+    families = {}
+    for f in findings:
+        families.setdefault(f["family"], []).append(f)
 
-    for family, controls in control_families.items():
-        print(f"[Evidence Collector] Processing: {family}")
-        lines.append(f"## {family}")
-        lines.append(f"")
+    for family, family_findings in families.items():
+        family_pass = sum(1 for f in family_findings if f["status"] == "PASS")
+        family_total = len(family_findings)
+        lines.append(f"## {family} ({family_pass}/{family_total} passed)")
+        lines.append("")
 
-        # Collect evidence for this family
-        family_evidence = ""
-        for ctrl in controls:
-            if ctrl in evidence:
-                lines.append(f"### {ctrl}")
-                lines.append(f"```")
-                lines.append(evidence[ctrl])
-                lines.append(f"```")
-                lines.append(f"")
-                family_evidence += f"{ctrl}:\n{evidence[ctrl]}\n\n"
+        for f in family_findings:
+            icon = "PASS" if f["status"] == "PASS" else "FAIL"
+            lines.append(f"### [{icon}] {f['id']} — {f['title']} ({f['severity']})")
+            lines.append(f"```")
+            lines.append(f"{f['evidence']}")
+            lines.append(f"```")
+            if f["remediation"]:
+                lines.append(f"**Remediation:** {f['remediation']}")
+            lines.append("")
 
-        # Generate AI narrative summary
-        prompt = f"""You are a federal cybersecurity compliance analyst.
-Review the following evidence for the {family} control family and write a brief (3-4 sentence)
-assessment. Note any findings that comply with NIST 800-171 / CMMC and any gaps that need remediation.
-Be specific about what you observe in the evidence.
+        lines.append("---")
+        lines.append("")
 
-Evidence:
-{family_evidence}
+    # Generate AI narrative summary
+    print("\n[FedRAMP Agent] Generating AI readiness narrative with Ollama...")
+    findings_summary = "\n".join(
+        f"- {f['id']} {f['title']}: {f['status']} ({f['severity']})"
+        for f in findings
+    )
+    prompt = f"""You are a FedRAMP compliance assessor reviewing a federal cloud environment.
+The automated readiness scan scored {score}/100 with {pass_count} controls passing and {fail_count} failing.
 
-Assessment:"""
+Findings:
+{findings_summary}
 
-        print(f"[Evidence Collector] Generating AI summary for {family}...")
-        ai_summary = query_ollama(prompt)
-        lines.append(f"**AI Assessment:**")
-        lines.append(f"> {ai_summary}")
-        lines.append(f"")
-        lines.append(f"---")
-        lines.append(f"")
+Write a 3-paragraph FedRAMP Readiness Assessment:
+1. Executive summary with overall posture assessment
+2. Critical gaps that must be addressed (HIGH severity failures)
+3. Recommendations for achieving FedRAMP Moderate readiness
 
-    # Write the package
-    with open(output_path, "w") as f:
+Be specific about which controls passed and failed. Reference NIST 800-53 control IDs."""
+
+    ai_narrative = query_ollama(prompt)
+    lines.append("## AI Readiness Assessment")
+    lines.append("")
+    lines.append(ai_narrative)
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append("*Report generated by FedRAMP Readiness Agent v1.0*")
+    lines.append("*Ollama model: " + OLLAMA_MODEL + " (local inference, air-gapped capable)*")
+    lines.append("*This is an educational assessment tool, not a formal FedRAMP authorization.*")
+
+    with open(report_file, "w") as f:
         f.write("\n".join(lines))
 
-    print(f"\n[Evidence Collector] Evidence package written to: {output_path}")
-    return output_path
+    return report_file
 
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  AI-Powered Compliance Evidence Collector")
+    print("  FedRAMP Readiness Agent v1.0")
+    print(f"  Baseline: FedRAMP Moderate (NIST 800-53 Rev 5)")
     print(f"  Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
     print("=" * 60)
 
-    # Check Ollama is available
+    # Check Ollama
     try:
         import requests
         r = requests.get("http://localhost:11434/api/tags", timeout=5)
         models = [m["name"] for m in r.json().get("models", [])]
-        print(f"  Ollama models available: {models}")
+        print(f"  Ollama models: {models}")
     except Exception:
-        print("  WARNING: Ollama not reachable. AI summaries will fail.")
+        print("  WARNING: Ollama not reachable. AI narrative will fail.")
         print("  Fix: sudo systemctl start ollama && ollama pull tinyllama")
 
-    print("")
+    # Load checklist
+    with open(CHECKLIST_PATH) as f:
+        checklist = json.load(f)
+    print(f"  Loaded {len(checklist)} checks from checklist.json")
+    print("=" * 60)
+    print()
 
-    evidence = collect_evidence()
-    output = generate_evidence_package(evidence)
+    # Run checks
+    print("[FedRAMP Agent] Running compliance checks...\n")
+    findings = run_all_checks(checklist)
 
+    # Score
+    score, earned, possible = calculate_score(findings)
     print(f"\n{'=' * 60}")
-    print(f"  Evidence package complete: {output}")
-    print(f"  View it: cat {output}")
+    print(f"  FedRAMP Readiness Score: {score}/100 ({earned}/{possible} points)")
+    print(f"{'=' * 60}")
+
+    # Generate report
+    report_path = generate_report(findings, score, earned, possible)
+    print(f"\n  Report written to: {report_path}")
+    print(f"  View it: cat {report_path}")
     print(f"{'=' * 60}")
 PYEOF
-
-# Install requests library (needed for Ollama API calls)
-pip3.11 install requests --user
 ```
+
+> **Security notes for the agent code:**
+> - `subprocess` uses `shell=True` only because checklist commands include pipes/redirects. In production, you'd use parameterized commands.
+> - Evidence is truncated to 500 characters before being fed to Ollama (prevents context overflow).
+> - No `eval()` or `exec()` — pass conditions are evaluated via explicit string comparisons.
+> - No hardcoded credentials — the agent reads local system state, no API keys needed.
+
+---
+
+### Step 16.4 — Run the FedRAMP Agent
+📍 **VM Terminal (app-server)**
 
 ```bash
-# Run the evidence collector
-python3 /opt/fedtracker/evidence_collector.py
+# Install requests library (needed for Ollama API calls)
+python3.11 -m pip install requests --user
+
+# Run the FedRAMP readiness agent
+python3.11 /opt/fedtracker/compliance/fedramp_agent.py
 ```
 
-> The script takes 3-5 minutes — it queries Ollama for each control family. The output is a Markdown file with raw evidence and AI-generated assessment narratives.
+> The script runs each check and prints PASS/FAIL in real time, then calls Ollama to generate a narrative assessment. Total time: 2-3 minutes.
 
 **Verify:**
 
 ```bash
-# Check the evidence package was created
-ls -la /opt/fedtracker/evidence-package-*.md
-# Expected: File exists, non-zero size
+# Check the report was created
+ls -la /opt/fedtracker/compliance/reports/
+# Expected: fedramp-readiness-YYYYMMDD.md exists, non-zero size
 
-# View the first 50 lines
-head -50 /opt/fedtracker/evidence-package-*.md
-# Expected: Markdown with control families, evidence blocks, and AI assessments
+# View the score and summary
+head -12 /opt/fedtracker/compliance/reports/fedramp-readiness-*.md
+# Expected: Score line, PASS/FAIL counts
+
+# View the full report
+cat /opt/fedtracker/compliance/reports/fedramp-readiness-*.md
+# Expected: Per-family findings with evidence, AI narrative at the end
 ```
 
-> **🧠 Interview framing:** "I built an AI-powered compliance evidence collector using Ollama running locally on the server. It collects system evidence — SSH configuration, audit rules, firewall state, CIS scan results — and feeds it to a local LLM that generates narrative assessments per NIST 800-171 control family. In production, I'd use OCI Generative AI Service for better model quality, but Ollama demonstrates the same pattern and works air-gapped."
+> **🧠 What to expect:** Your score will likely be 40-70% on first run — many hardening steps haven't been applied yet. That's the point: the agent shows you exactly what to fix. After remediation, re-run the agent and watch the score improve. This is the compliance feedback loop.
+
+> **💼 Interview Insight — FedRAMP Readiness Agent:** "I built a FedRAMP readiness agent that automatically checks 18 NIST 800-53 controls across six control families — Access Control, Audit, Configuration Management, Identification and Authentication, System Protection, and System Integrity. It uses a weighted scoring model inspired by Lynis, with check definitions separated from logic in a JSON checklist. The agent feeds results to Ollama running locally for air-gapped AI inference — the same pattern you'd use in classified environments where data can't leave the boundary. In production, I'd use OCI Generative AI Service for higher quality models and OCI Cloud Guard for native compliance monitoring."
+
+---
+
+### Step 16.5 — Prove Air-Gap Capability (Optional but impressive)
+📍 **VM Terminal** (app-server)
+
+> **🧠 ELI5 — Air-Gapped AI:** In classified federal environments (SCIFs, air-gapped networks), systems have zero internet connectivity. AI models must be pre-loaded — you can't call OpenAI or cloud APIs. Ollama is perfect for this because it runs entirely locally. But claiming "air-gapped capable" is stronger when you actually prove it by cutting the network.
+
+> Your VM is already in a **private subnet** with only NAT gateway egress (no direct internet). To fully simulate air-gap, we disconnect the NAT and prove the agent still works.
+
+**Approach 1 — Quick proof with `--network=none` (recommended):**
+
+```bash
+# First, verify Ollama works normally
+ollama run tinyllama "Say hello" 2>/dev/null && echo "Ollama working"
+
+# Now prove the agent works with no network access
+# We'll run the agent in a subshell with iptables blocking outbound traffic
+sudo iptables -A OUTPUT -p tcp --dport 443 -j DROP
+sudo iptables -A OUTPUT -p tcp --dport 80 -j DROP
+
+# Run the agent — it should still work because Ollama is localhost
+python3.11 /opt/fedtracker/compliance/fedramp_agent.py
+
+# Restore network access
+sudo iptables -D OUTPUT -p tcp --dport 443 -j DROP
+sudo iptables -D OUTPUT -p tcp --dport 80 -j DROP
+```
+
+> **What this proves:** The FedRAMP agent and Ollama communicate entirely over localhost (127.0.0.1:11434). Even with all outbound internet traffic blocked, the agent runs, checks complete, and Ollama generates the narrative. Zero data leaves the instance. This is the same operational model used in classified environments where the model is pre-loaded via sneakernet (USB/physical media).
+
+> **💼 Interview Insight — Air-Gap Demo:** "I didn't just claim air-gap capability — I proved it. I blocked all outbound traffic with iptables, ran the FedRAMP agent, and it completed successfully because Ollama runs entirely on localhost. In a real SCIF, the model would be pre-loaded during provisioning. The compliance data never leaves the instance boundary."
 
 ---
 
@@ -6360,8 +7088,10 @@ head -50 /opt/fedtracker/evidence-package-*.md
 | `ollama --version` | Version printed | Ollama not installed. Re-run the install script |
 | `ollama pull tinyllama` | Model downloaded | Not enough disk space? Try a smaller quantized variant |
 | `ollama run tinyllama "test"` | Text response | Model not loaded? Wait 30 seconds after pull. Check RAM: `free -h` (need ~1 GB available for tinyllama) |
-| Evidence collector runs | Markdown file created | `requests` not installed? `pip3.11 install requests --user`. Ollama not running? `sudo systemctl start ollama` |
-| AI summaries are "[Ollama error]" | Should be narrative text | Ollama service down or model not pulled. Check `curl http://localhost:11434/api/tags` |
+| `python3.11 fedramp_agent.py` runs | Score printed + report file | `requests` not installed? `python3.11 -m pip install requests --user`. Checklist not found? Check path to `checklist.json` |
+| AI narrative is "[Ollama error]" | Should be narrative text | Ollama service down or model not pulled. Check `curl http://localhost:11434/api/tags` |
+| Score seems wrong | Review individual PASS/FAIL | Check commands match your OS version. Some commands differ between OL8 and OL9 |
+| Memory error from Ollama | Model loads successfully | 8GB RAM shared with FedTracker container. Stop the container first: `podman stop fedtracker-app`, run agent, restart container |
 
 ---
 
@@ -6370,27 +7100,30 @@ head -50 /opt/fedtracker/evidence-package-*.md
 ### Day 4 Complete
 
 **What you built:**
-- Dockerfile for FedTracker (non-root user, health check, multi-stage)
+- Container migration: built FedTracker locally on Docker Desktop, pushed to OCIR, deployed on OCI with Podman
+- Dockerfile for FedTracker (non-root user, health check, Oracle Linux base)
 - Built and ran containers with both Podman and Docker
 - docker-compose.yml with persistent volumes
 - OpenSCAP CIS benchmark scan script with automated scoring
 - Remediated top CIS failures to improve compliance score
-- AI-powered compliance evidence collector using Ollama
+- FedRAMP readiness agent (~270 lines) with Ollama AI narrative generation
+- Proved air-gap capability with network-blocked Ollama inference
 
 **What's running:**
-- FedTracker can run as container (Podman or Docker) or systemd service
+- FedTracker container pulled from OCIR (migration complete)
+- FedTracker can also run as container (local Podman build) or systemd service
 - OpenSCAP scan reports available as HTML
 - Ollama LLM running locally for air-gapped AI inference
-- Evidence package generated with AI-assisted narratives
+- FedRAMP readiness report generated with per-family NIST 800-53 findings
 
 **What you can now talk about in interviews:**
-- "I containerized the application with both Podman and Docker — same Dockerfile works with both. On Oracle Linux, I default to Podman because it's daemonless and rootless"
+- "I containerized a legacy application locally, pushed to OCI Container Registry, and deployed on OCI compute with Podman — a real container migration workflow"
 - "I run containers as non-root users with HEALTHCHECK directives for orchestrator integration"
 - "I used Docker Compose for multi-container management with persistent volumes to survive container restarts"
 - "I ran CIS Level 1 benchmarks with OpenSCAP, achieved X% compliance, and remediated the top failures"
-- "I built an AI-powered evidence collector using Ollama for local LLM inference — it generates compliance narratives per NIST 800-171 control family from collected system evidence"
+- "I built a FedRAMP readiness agent that checks 18 NIST 800-53 controls with a weighted scoring model and uses Ollama for air-gapped narrative generation"
 
-**Skills practiced:** Podman (new), Docker, Docker Compose, OpenSCAP CIS compliance, Ollama/AI, Python, security compliance
+**Skills practiced:** Podman (new), Docker, Docker Compose, OpenSCAP CIS compliance, FedRAMP/NIST 800-53 (new), Ollama/AI, Python, security compliance
 
 **Next:** Day 5 — "Pipeline & Operations" — you'll build OCI Functions (serverless), a Jenkins pipeline, run DR drills, and tear everything down cleanly.
 
@@ -6974,7 +7707,7 @@ Similarly, add the `terraform.tfvars` as a secret file credential for the Terraf
 | Jenkins UI loads | Login page at :8080 | Check: (1) Jenkins service running: `systemctl status jenkins`, (2) firewall port 8080 open, (3) OCI security list has 8080 ingress |
 | Initial password works | Unlock Jenkins screen | Run `sudo cat /var/lib/jenkins/secrets/initialAdminPassword` again |
 | Pipeline Terraform stage | Green/passed | Terraform not installed on Jenkins agent? Install on bastion |
-| Pipeline Ansible stage | Green/passed | Ansible not installed? `pip3.11 install ansible` on bastion |
+| Pipeline Ansible stage | Green/passed | Ansible not installed? `python3.11 -m pip install ansible` on bastion |
 | Pipeline Deploy stage | Green/passed | SSH credential not configured? Add SSH key in Jenkins credentials |
 | Smoke test passes | Health endpoint returns 200 | App not responding after deploy. Check `journalctl -u fedtracker` on app server |
 
@@ -7058,15 +7791,15 @@ NEW_APP_IP=$(terraform output -raw app_server_private_ip)
 echo "New app server IP: $NEW_APP_IP"
 
 # Update inventory (manual for now — could be automated)
-# Edit ansible/inventory.ini with the new IP
+# Edit ansible/inventory/inventory.ini with the new IP
 
 # Wait for VM to boot
 sleep 60
 
 # Harden and deploy
 cd ~/oci-federal-lab
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/harden.yml
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
 ```
 
 **Step 6: Verify recovery**
@@ -7158,13 +7891,13 @@ terraform apply
 ### Step 3: Update Ansible Inventory
 ```bash
 NEW_IP=$(terraform output -raw app_server_private_ip)
-# Update ansible/inventory.ini with new IP
+# Update ansible/inventory/inventory.ini with new IP
 ```
 
 ### Step 4: Configure and Deploy
 ```bash
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/harden.yml
-ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
 ```
 
 ### Step 5: Verify
@@ -7189,7 +7922,7 @@ DREOF
 ---
 
 ### Step 19.4 — Cost Reporting Script
-📍 **VM Terminal** (build by hand)
+📍 **VM Terminal (app-server)** (build by hand)
 
 ```bash
 ssh app-server
@@ -7201,8 +7934,8 @@ cat > /opt/fedtracker/cost_reporter.py << 'PYEOF'
 OCI Cost and Compliance Reporter
 Reports on resource costs, tagging compliance, and free tier usage.
 
-Usage: python3 cost_reporter.py
-Requires: pip3.11 install oci
+Usage: python3.11 cost_reporter.py
+Requires: python3.11 -m pip install oci
 """
 
 import oci
@@ -7294,7 +8027,7 @@ PYEOF
 ```
 
 ```bash
-python3 /opt/fedtracker/cost_reporter.py
+python3.11 /opt/fedtracker/cost_reporter.py
 ```
 
 ---
@@ -7319,7 +8052,7 @@ terraform destroy
 📍 **OCI Console**
 
 Manually verify and clean up resources that Terraform doesn't manage:
-1. **Oracle Database** → **Autonomous Database** → terminate `fedtracker-db`
+1. **Oracle AI Database** → **Autonomous AI Database** → terminate `fedtracker-db`
 2. **Object Storage** → delete any buckets
 3. **Functions** → delete `fedtracker-functions` application
 4. **Identity** → review policies (optional to delete)
@@ -7334,6 +8067,13 @@ Manually verify and clean up resources that Terraform doesn't manage:
 ### Step 19.6 — Final Git Commit
 📍 **Local Terminal**
 
+First, copy the `cost_reporter.py` script from the app-server to your local repo (same pattern as Step 6.2):
+
+```bash
+# Copy cost_reporter.py from app-server via bastion
+scp -o ProxyJump=opc@<BASTION_PUBLIC_IP> opc@<APP_SERVER_PRIVATE_IP>:/opt/fedtracker/cost_reporter.py ~/oci-federal-lab/app/
+```
+
 ```bash
 cd ~/oci-federal-lab
 
@@ -7346,6 +8086,8 @@ git commit -m "Day 5: OCI Functions, Jenkins pipeline, DR drill, cost reporting,
 - DR runbook documented
 - Cost reporter: free tier usage tracking + tagging compliance
 - All resources torn down cleanly"
+
+git push
 ```
 
 ---
@@ -7365,6 +8107,16 @@ git commit -m "Day 5: OCI Functions, Jenkins pipeline, DR drill, cost reporting,
 
 ## DAY 5 RECAP — PHASE 1 COMPLETE
 
+### Portfolio Screenshot
+
+Take one screenshot now and save it to `docs/screenshots/` in your repo:
+
+**Swagger UI + curl in split terminal:** Open `http://<PUBLIC_IP>:8000/docs` in your browser (the auto-generated API documentation) alongside a terminal showing a successful `curl http://<PUBLIC_IP>:8000/health` response. This single frame proves: "I built a real REST API, it's running on OCI, and it has proper documentation." Name it `phase-1-swagger-and-health.png`.
+
+> **Why this screenshot?** A hiring manager scanning your repo sees an interactive API surface with typed endpoints, request/response schemas, and a live health check — all in one glance. It's more compelling than terminal-only output because Swagger is visually self-explanatory.
+
+---
+
 ### What You Built Over 5 Days
 
 | Day | What You Did | Skills Practiced |
@@ -7372,7 +8124,7 @@ git commit -m "Day 5: OCI Functions, Jenkins pipeline, DR drill, cost reporting,
 | Day 1 | Manual VM setup, Linux admin, FastAPI REST API (built from scratch), systemd, Bash/Python scripts | Oracle Linux, OCI basics, FastAPI, REST APIs, Bash, Python, systemd |
 | Day 2 | Proper architecture: VCN, subnets, bastion, Oracle DB, security hardening, IAM, cost tagging | OCI networking, Oracle DB, security, cost management, IAM |
 | Day 3 | Terraform + Ansible automation, destroy/rebuild proof | Terraform, Ansible, IaC, configuration management |
-| Day 4 | Podman, Docker, Docker Compose, OpenSCAP CIS, Ollama AI evidence collector | Containers, compliance scanning, AI/LLM integration |
+| Day 4 | Podman, Docker, Docker Compose, OpenSCAP CIS, FedRAMP readiness agent (Ollama) | Containers, compliance scanning, FedRAMP/AI integration |
 | Day 5 | OCI Functions, Jenkins pipeline, DR drill, cost reporting, teardown | Serverless, CI/CD, disaster recovery, FinOps |
 
 ### What You Can Now Talk About in Interviews
@@ -7382,7 +8134,7 @@ git commit -m "Day 5: OCI Functions, Jenkins pipeline, DR drill, cost reporting,
 - "I automated infrastructure provisioning with Terraform and server hardening with Ansible"
 - "I containerized the application with Podman (Oracle Linux native) and Docker, using non-root containers with health checks"
 - "I ran CIS Level 1 benchmarks with OpenSCAP, remediated failures, and tracked compliance score improvement"
-- "I built an AI-powered compliance evidence collector using Ollama for air-gapped LLM inference"
+- "I built a FedRAMP readiness agent that checks 18 NIST 800-53 controls with a weighted scoring model and uses Ollama for air-gapped narrative generation"
 - "I implemented serverless event processing with OCI Functions for audit file validation and health check automation"
 - "I built a Jenkins CI/CD pipeline that validates Terraform, lints Ansible, builds containers, deploys to the app server, and runs smoke tests"
 - "I conducted a disaster recovery drill — destroyed the app server, recovered via Terraform and Ansible in 15 minutes, and documented the runbook with measured RTO and RPO"
@@ -7426,7 +8178,10 @@ oci-federal-lab/
 │   ├── oci_reporter.py     # OCI resource/tag reporter
 │   ├── cost_reporter.py    # Cost and free tier reporter
 │   ├── cis_scan.sh         # OpenSCAP CIS benchmark scanner
-│   └── evidence_collector.py  # AI compliance evidence generator
+│   └── compliance/
+│       ├── fedramp_agent.py   # FedRAMP readiness agent
+│       ├── checklist.json     # NIST 800-53 control checks
+│       └── reports/           # Generated readiness reports
 ├── docs/                   # Documentation
 │   ├── phase-1-implementation-guide.md  # This guide
 │   └── dr-runbook.md       # Disaster recovery procedures

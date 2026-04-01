@@ -932,7 +932,7 @@ resource "oci_core_instance" "bastion" {
       #!/bin/bash
       # Install OCI CLI on first boot — needed for Vault secret retrieval
       dnf install -y python3-pip
-      pip3 install oci-cli
+      python3 -m pip install oci-cli
       USERDATA
     )
   }
@@ -1207,7 +1207,7 @@ db_wallet_password  = "WalletP@ssw0rd1!"
 ```
 
 > **Finding your values:**
-> - **tenancy_ocid / user_ocid / fingerprint:** OCI Console → top-right profile icon → "User Settings" → "API Keys"
+> - **tenancy_ocid / user_ocid / fingerprint:** OCI Console → top-right profile icon → "My profile" → "Tokens and keys" tab → "API keys" (older tenancies: "User Settings" → scroll to "API Keys")
 > - **availability_domain:** OCI Console → Governance & Administration → Limits, Quotas and Usage → filter "Availability Domain"
 > - **image_ocid:** OCI Console → Compute → Images → Platform Images → filter "Oracle Linux 8" + "aarch64" → copy OCID for your region
 > - **compartment_ocid:** OCI Console → Identity & Security → Compartments → click your compartment → copy OCID
@@ -1379,7 +1379,11 @@ ansible_python_interpreter=/usr/bin/python3
     - name: Install OCI CLI (needed for Vault access)
       pip:
         name: oci-cli
-        executable: pip3
+        executable: /usr/bin/python3 -m pip
+
+    - name: Verify OCI CLI importable
+      command: python3 -c "import oci; print('oci OK')"
+      changed_when: false
 
   handlers:
     - name: Restart sshd
@@ -1402,7 +1406,7 @@ ansible all -i ansible/inventory.ini -m ping
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/harden.yml
 
 # Verify SSH lockdown on node-1
-ssh -J opc@BASTION_IP opc@NODE1_IP "sudo sshd -T | grep permitrootlogin"
+ssh -J opc@<BASTION_PUBLIC_IP> opc@<NODE1_PRIVATE_IP> "sudo sshd -T | grep permitrootlogin"
 # Expected: permitrootlogin no
 ```
 
@@ -1495,7 +1499,7 @@ Statements:
 
 ```bash
 # SSH into bastion
-ssh -i ~/.ssh/id_rsa opc@YOUR_BASTION_IP
+ssh -i ~/.ssh/<YOUR_BASTION_KEY> opc@<BASTION_PUBLIC_IP>
 
 # Test that the instance principal can authenticate to OCI CLI
 oci iam region list --auth instance_principal
@@ -1537,7 +1541,13 @@ oci secrets secret-bundle get \
 
 📍 **Local Terminal**
 
+> **Prerequisite:** Ansible must be installed on your local machine. If you installed it in Phase 1 or 2, skip the install. **Windows users:** Run all Ansible commands from WSL2 (not PowerShell or Git Bash) — Ansible does not run natively on Windows. See Phase 1 Step 12.1 for WSL2 setup instructions.
+
 ```bash
+# Install Ansible if not already installed:
+# pip install ansible   (WSL2/Linux)
+# brew install ansible  (macOS)
+
 # Install the OCI Ansible collection (includes the oci_secret lookup plugin)
 ansible-galaxy collection install oracle.oci
 
@@ -1641,7 +1651,11 @@ This playbook retrieves secrets from OCI Vault at runtime and uses them to confi
     - name: Install Python dependencies
       pip:
         requirements: "{{ app_dir }}/app/requirements.txt"
-        executable: pip3
+        executable: /usr/bin/python3 -m pip
+
+    - name: Verify Python dependencies are importable
+      command: python3 -c "import fastapi; import uvicorn; print('deps OK')"
+      changed_when: false
 
     - name: Write .env file with secrets from OCI Vault
       template:
@@ -3024,10 +3038,12 @@ kubectl get nodes
 
 ```bash
 # Copy kubeconfig from node-1
-scp opc@NODE1_PRIVATE_IP:/etc/rancher/k3s/k3s.yaml ~/.kube/config
+# Replace <NODE1_PRIVATE_IP> with your actual node-1 private IP
+# Find it with: terraform output -raw k3s_node1_private_ip
+scp opc@<NODE1_PRIVATE_IP>:/etc/rancher/k3s/k3s.yaml ~/.kube/config
 
 # Point kubeconfig at node-1's real IP (default is 127.0.0.1)
-sed -i "s/127.0.0.1/NODE1_PRIVATE_IP/g" ~/.kube/config
+sed -i "s/127.0.0.1/<NODE1_PRIVATE_IP>/g" ~/.kube/config
 
 # Install kubectl (ARM binary)
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
@@ -3138,8 +3154,8 @@ git push origin main
 | Compute creates before network finishes — VMs fail to attach to subnet | Missing `depends_on` in compute module call | Add `depends_on = [module.network]` inside both the `module "compute"` and `module "database"` blocks in `environments/lab/main.tf` |
 | App fails to start; systemd logs show `Authorization failed or requested resource not found` | Vault IAM policy does not grant the VM's instance principal read access | Console → Identity & Security → Policies → `fedcompliance-vault-read-policy` → verify the statement says `read secret-family in compartment YOUR_COMPARTMENT_NAME` (exact name, not OCID). Verify the dynamic group rule matches the compartment OCID where the VMs live |
 | `oci secrets secret-bundle get` returns 404 from bastion | Secret OCID in the command is wrong, or secret is in a different compartment | Console → Vault → Secrets → click the secret → copy OCID from the detail panel. Re-run the command with the copied OCID |
-| `oci iam region list --auth instance_principal` fails | Instance principal not enabled, or OCI CLI version too old | Run `pip3 install --upgrade oci-cli` on bastion. Verify the bastion VM is in the dynamic group: Console → Identity → Dynamic Groups → view matching rules |
-| Ansible `lookup('oracle.oci.oci_secret')` fails: `ModuleNotFoundError: No module named 'oci'` | OCI Python SDK missing from Ansible's Python environment | Run `pip3 install oci` on the Ansible control node. Verify: `python3 -c "import oci; print(oci.__version__)"` |
+| `oci iam region list --auth instance_principal` fails | Instance principal not enabled, or OCI CLI version too old | Run `python3 -m pip install --upgrade oci-cli` on bastion. Verify the bastion VM is in the dynamic group: Console → Identity → Dynamic Groups → view matching rules |
+| Ansible `lookup('oracle.oci.oci_secret')` fails: `ModuleNotFoundError: No module named 'oci'` | OCI Python SDK missing from Ansible's Python environment | Run `python3 -m pip install oci` on the Ansible control node. Verify: `python3 -c "import oci; print(oci.__version__)"` |
 | FedCompliance `/health` returns `database: connection refused` | ADB wallet not installed or `DATABASE_URL` malformed in `.env` | Verify wallet was extracted to the wallet directory. Check `/opt/fedcompliance/.env` — the connection string must use the tnsnames format, not a simple host:port |
 | k3s node-2 shows `NotReady` | Flannel VXLAN UDP 8472 blocked by OCI private security list | In `modules/network/main.tf`, verify the private security list has `protocol = "17"` (UDP) ingress rule for port 8472. Run `terraform apply` to push the update |
 
@@ -3958,7 +3974,7 @@ print(len(d.get('packages', [])))
     stage('Ansible Lint') {
       steps {
         script {
-          sh 'ansible-lint --version || pip3 install ansible-lint'
+          sh 'ansible-lint --version || python3 -m pip install ansible-lint'
           sh 'ansible-lint -p ansible/*.yml || true'
         }
       }
@@ -4100,7 +4116,7 @@ print(len(d.get('packages', [])))
           script {
             // Copy to a stable path and lock down permissions
             sh "cp \${KUBECONFIG_FILE} ${KUBECONFIG_PATH}"
-            sh "chmod 600 ${KUBECONFIG_PATH}"
+            sh "chmod 600 ${KUBECONFIG_PATH}"  // Note: chmod works on Linux Jenkins agents only
 
             // withEnv sets KUBECONFIG for all kubectl commands in this block
             withEnv(["KUBECONFIG=${KUBECONFIG_PATH}"]) {
@@ -4161,7 +4177,8 @@ print(len(d.get('packages', [])))
     stage('Smoke Test') {
       steps {
         script {
-          // Replace with the actual private IP of your k3s server node
+          // Replace <K3S_SERVER_PRIVATE_IP> with the actual private IP of your k3s server node
+          // Find it with: terraform output -raw k3s_node1_private_ip
           // The bastion VM can reach k3s nodes via the VCN private subnet
           def K3S_NODE_IP = '<K3S_SERVER_PRIVATE_IP>'
 
@@ -4696,6 +4713,7 @@ def call(Map config) {
 }
 TEMPLATEEOF
 
+git init
 git add .
 git commit -m "Add federalPipeline template — enforced security stages"
 ```
@@ -4882,6 +4900,8 @@ VALIDATEEOF
 chmod +x scripts/validate-pipelines.sh
 git add scripts/validate-pipelines.sh
 git commit -m "Add pipeline governance validation script"
+
+git push origin main
 ```
 
 > **Interview talking point:** "I built a governance layer around Jenkins pipelines. The shared library enforces that every pipeline runs Trivy scanning and SBOM generation. A validation script checks that all Jenkinsfiles in the repo use the approved template. Non-compliant pipelines are flagged. This is compliance-as-code for CI/CD — it ties into the compliance-as-code evidence collector we build later in Phase 25."
@@ -5130,8 +5150,8 @@ type: application       # "application" = runnable workload; "library" = reusabl
 version: 0.1.0          # Chart version — increment when chart structure changes
 appVersion: "1.0.0"     # Application version — informational; image tag controls actual version
 maintainers:
-  - name: <YOUR_NAME>
-    email: <YOUR_EMAIL>
+  - name: <YOUR_NAME>       # e.g., "Kyne Atekwana"
+    email: <YOUR_EMAIL>      # e.g., "you@example.com"
 EOF
 ```
 
@@ -5799,7 +5819,8 @@ git remote -v
 
 ```bash
 # Option A: Register with HTTPS + Personal Access Token
-# Replace YOUR_GITHUB_USERNAME and YOUR_PAT with real values
+# First, set your username variable:
+# YOUR_GITHUB_USERNAME="your-actual-github-username"
 argocd repo add https://github.com/YOUR_GITHUB_USERNAME/fedcompliance.git \
   --username YOUR_GITHUB_USERNAME \
   --password YOUR_PAT \
@@ -6196,6 +6217,7 @@ Trivy:     PASSED (no CRITICAL/HIGH CVEs)
 SBOM:      fedcompliance-sbom-${BUILD_NUMBER}.spdx.json
 ArgoCD:    will auto-sync this commit to the fedcompliance namespace"
 
+                        // NOTE: YOUR_GITHUB_USERNAME below is replaced by the sed command in Step 24.12
                         git remote set-url origin https://${GH_PAT}@github.com/YOUR_GITHUB_USERNAME/fedcompliance.git
                         git push origin ${GIT_BRANCH}
                         echo "Pushed to git. ArgoCD will detect and sync."
@@ -6261,9 +6283,9 @@ Add the two new Jenkins credentials this pipeline requires:
 #    Secret: <ARGOCD_PASSWORD from Step 24.9>
 ```
 
-Update placeholder values in the Jenkinsfile:
+Update placeholder values in the Jenkinsfile (replace with your actual values):
 ```bash
-YOUR_GITHUB_USERNAME="your-actual-username"
+YOUR_GITHUB_USERNAME="your-actual-username"  # <-- replace this
 YOUR_K3S_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
 YOUR_ARGOCD_PORT=$(kubectl get svc argocd-server -n argocd \
   -o jsonpath='{.spec.ports[?(@.port==80)].nodePort}')
@@ -6913,7 +6935,11 @@ if __name__ == "__main__":
 **Install dependencies:**
 
 ```bash
-pip3 install scikit-learn numpy oci --user
+# Linux/macOS/WSL2:
+python3 -m pip install scikit-learn numpy oci --user
+
+# Windows (if python3 not found, use python):
+# python -m pip install scikit-learn numpy oci --user
 ```
 
 **Run and verify:**
@@ -7386,7 +7412,9 @@ Object Storage (app_logs bucket)
 
 ```bash
 # Install both tools
-pip3 install pre-commit detect-secrets --user
+# Linux/macOS/WSL2:
+python3 -m pip install pre-commit detect-secrets --user
+# Windows: use "python" instead of "python3" if python3 is not in your PATH
 
 # Verify
 pre-commit --version
@@ -7903,6 +7931,16 @@ echo "Teardown completed: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 - Pipeline architecture documented: `docs/pipeline-architecture.md` with stage table, control mapping table, artifact package list
 - Teardown script (`teardown.sh`) written from scratch with ordered destruction: ArgoCD App -> Helm release -> ArgoCD installation -> k3s -> Jenkins -> Terraform
 - All OCI infrastructure destroyed via `terraform destroy` with plan review step
+
+---
+
+### Portfolio Screenshot
+
+Take one screenshot now and save it to `docs/screenshots/` in your repo:
+
+**Jenkins pipeline with all green stages:** Open the Jenkins Blue Ocean UI (or classic pipeline view) showing all stages passed: Terraform validate, Trivy scan, SBOM generation, Ansible lint, build + push, Helm deploy. Name it `phase-3-jenkins-pipeline.png`.
+
+> **Why this screenshot?** A green Jenkins pipeline is universally recognized by engineering managers — they immediately understand the scope. It shows security scanning (Trivy + SBOM for EO 14028), infrastructure validation (Terraform), and automated deployment in one frame.
 
 ---
 

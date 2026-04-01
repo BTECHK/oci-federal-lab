@@ -137,6 +137,9 @@ Before starting Phase 2, verify all Phase 1 resources are terminated to stay wit
 
 ```bash
 # Check current compute usage
+# First, set your compartment OCID (find it in OCI Console → Identity → Compartments)
+export COMPARTMENT_ID="<YOUR_COMPARTMENT_OCID>"
+
 oci compute instance list --compartment-id $COMPARTMENT_ID --lifecycle-state RUNNING --query 'data[].{Name:"display-name", Shape:shape, OCPUs:"shape-config".ocpus, Memory:"shape-config"."memory-in-gbs"}' --output table
 
 # You should see NO running instances. If Phase 1 instances exist:
@@ -769,7 +772,28 @@ terraform state list
 
 ---
 
-### Step 21.1 — Create Ansible Inventory
+### Step 21.1 — Install Ansible (if not already installed)
+📍 **Local Terminal**
+
+> **Prerequisite:** Ansible must be installed on your local machine (the "control node"). If you installed it in Phase 1, skip to Step 21.2.
+
+```bash
+# macOS
+brew install ansible
+
+# Linux
+python3 -m pip install ansible
+
+# Verify
+ansible --version
+# Expected: ansible [core 2.x.x]
+```
+
+> **Windows users:** Ansible does **not** run natively on Windows. Install WSL2 first (`wsl --install` in PowerShell as admin), then install Ansible inside WSL2 with `pip install ansible`. Run all `ansible-playbook` commands from WSL2, not PowerShell or Git Bash. VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code.
+
+---
+
+### Step 21.2 — Create Ansible Inventory
 📍 **Editor** (build by hand — returning, abbreviated)
 
 ```bash
@@ -1541,7 +1565,7 @@ WorkingDirectory=/opt/fedanalytics
 Environment="DB_TYPE={{ db_type | default('sqlite') }}"
 Environment="SQLITE_PATH=/opt/fedanalytics/fedanalytics.db"
 Environment="WEBHOOK_SECRET={{ webhook_secret | default('lab-secret-change-in-prod') }}"
-ExecStart=/usr/local/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=5
 
@@ -1613,8 +1637,12 @@ cat > ~/oci-federal-lab-phase2/ansible/playbooks/deploy_app.yml << 'EOF'
     - name: Install Python dependencies
       pip:
         requirements: "{{ app_dir }}/requirements.txt"
-        executable: pip3
+        executable: /usr/bin/python3 -m pip
         state: present
+
+    - name: Verify Python dependencies are importable
+      command: python3 -c "import fastapi; import uvicorn; print('deps OK')"
+      changed_when: false
 
     # --- systemd service ---
     - name: Deploy systemd service file
@@ -1864,6 +1892,8 @@ git commit -m "Phase 2 Day 1: Terraform infra + Ansible deploy + FedAnalytics ap
 - FedAnalytics: FastAPI app with 6 endpoints (ingest, webhook, logs, metrics, health, ingest/status)
 - Webhook endpoint with HMAC-SHA256 signature validation (Phase 2 API Pillar)
 - systemd service management"
+
+git push
 ```
 
 ---
@@ -2271,6 +2301,7 @@ mkdir -p jenkins/casc
 cp /var/lib/jenkins/casc_configs/jenkins.yaml jenkins/casc/
 git add jenkins/casc/jenkins.yaml
 git commit -m "Add Jenkins CasC configuration — GitOps for Jenkins"
+git push
 ```
 
 #### 3. Audit Trail (15 min)
@@ -2328,7 +2359,9 @@ pipeline {
                     # List recent backups in Object Storage
                     # Replace <YOUR_TENANCY_NAMESPACE> with your actual namespace
                     # Find it in OCI Console → Tenancy Details → Object Storage Namespace
-                    OCI_NAMESPACE="<YOUR_TENANCY_NAMESPACE>"
+                    # Get your namespace: OCI Console → Tenancy Details → Object Storage Namespace
+# Or via CLI: oci os ns get --query 'data' --raw-output
+OCI_NAMESPACE="<YOUR_TENANCY_NAMESPACE>"
                     oci os object list \
                       --bucket-name fedanalytics-backups \
                       --namespace-name $OCI_NAMESPACE \
@@ -2345,7 +2378,9 @@ pipeline {
                 sh '''
                     # Ensure most recent backup is less than 24 hours old
                     echo "Checking backup freshness..."
-                    OCI_NAMESPACE="<YOUR_TENANCY_NAMESPACE>"
+                    # Get your namespace: OCI Console → Tenancy Details → Object Storage Namespace
+# Or via CLI: oci os ns get --query 'data' --raw-output
+OCI_NAMESPACE="<YOUR_TENANCY_NAMESPACE>"
                     LATEST=$(oci os object list \
                       --bucket-name fedanalytics-backups \
                       --namespace-name $OCI_NAMESPACE \
@@ -2418,6 +2453,7 @@ EOF
 
 git add docs/jenkins-vs-cloudbees-comparison.md
 git commit -m "Add Jenkins vs CloudBees CI comparison from migration exercise"
+git push
 ```
 
 #### Practice the 30-Second Interview Answer
@@ -2438,6 +2474,16 @@ Read this aloud 3 times:
 | Role Strategy not working | Authorization strategy not switched | Manage Jenkins → Security → select "Role-Based Strategy" |
 | Trial license expired | 30-day limit | Switch back to open-source WAR: `sudo cp /usr/share/java/jenkins.war.opensource.bak /usr/share/java/jenkins.war` |
 | Audit log not writing | Directory permissions | `sudo chown jenkins:jenkins /var/log/jenkins` |
+
+---
+
+### Portfolio Screenshot
+
+Take one screenshot now and save it to `docs/screenshots/` in your repo:
+
+**kubectl + AIDE output in split terminal:** Show `kubectl get pods -o wide` with all pods in Running state alongside an AIDE integrity check report showing files monitored. Name it `phase-2-k3s-and-aide.png`.
+
+> **Why this screenshot?** A hiring manager sees two federal-relevant skills in one frame: "I run Kubernetes" and "I monitor for file tampering." AIDE is a direct NIST 800-53 SI-7 control — mentioning that in an interview is a differentiator.
 
 ---
 
