@@ -1884,7 +1884,7 @@ ssh app-server-p2 "curl -s http://localhost:8000/metrics" | python3 -m json.tool
 ```bash
 cd ~/oci-federal-lab-phase2
 
-git add terraform/ ansible/ app/ .gitignore
+git add phases/phase-2-fedanalytics-dr/ .gitignore
 git commit -m "Phase 2 Day 1: Terraform infra + Ansible deploy + FedAnalytics app
 
 - Terraform: VCN, subnets, bastion, app-server, Autonomous DB
@@ -2297,9 +2297,9 @@ sleep 30
 ```bash
 # Version-control the CasC config
 cd ~/oci-federal-lab-phase2  # your Phase 2 project repo
-mkdir -p jenkins/casc
-cp /var/lib/jenkins/casc_configs/jenkins.yaml jenkins/casc/
-git add jenkins/casc/jenkins.yaml
+mkdir -p phases/phase-2-fedanalytics-dr/jenkins/casc
+cp /var/lib/jenkins/casc_configs/jenkins.yaml phases/phase-2-fedanalytics-dr/jenkins/casc/
+git add phases/phase-2-fedanalytics-dr/jenkins/casc/jenkins.yaml
 git commit -m "Add Jenkins CasC configuration — GitOps for Jenkins"
 git push
 ```

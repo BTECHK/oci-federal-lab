@@ -3057,11 +3057,11 @@ mkdir -p ~/Desktop/github/oci-federal-lab/app
 # Copy the three app files from the VM to your local repo
 scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/main.py ~/Desktop/github/oci-federal-lab/app/
 scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/health_check.sh ~/Desktop/github/oci-federal-lab/app/
-scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/oci_reporter.py ~/Desktop/github/oci-federal-lab/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/oci_reporter.py ~/Desktop/github/oci-federal-lab/phases/phase-1-fedtracker-migration/app/
 
 # Commit and push
 cd ~/Desktop/github/oci-federal-lab
-git add app/
+git add phases/phase-1-fedtracker-migration/app/
 git commit -m "Day 1: FedTracker app code (main.py, health_check.sh, oci_reporter.py)"
 git push
 ```
@@ -3108,7 +3108,7 @@ docker --version
 cd ~/Desktop/github/oci-federal-lab
 
 # Create requirements.txt — lists the Python packages the app needs
-cat > docker/requirements.txt << 'EOF'
+cat > phases/phase-1-fedtracker-migration/docker/requirements.txt << 'EOF'
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
@@ -3120,7 +3120,7 @@ EOF
 **Build the Dockerfile section by section:**
 
 ```bash
-cat > docker/Dockerfile << 'DOCKEOF'
+cat > phases/phase-1-fedtracker-migration/docker/Dockerfile << 'DOCKEOF'
 # Use Oracle Linux 9 as base (matches our OCI server OS)
 FROM oraclelinux:9-slim AS builder
 
@@ -3160,7 +3160,7 @@ DOCKEOF
 
 > **Why `USER appuser`?** Running containers as root is a security risk — if an attacker escapes the container, they're root on the host. This is a CIS benchmark requirement and a federal best practice.
 
-> **Windows CRLF note:** If `docker build` fails with "exec format error" or `/bin/sh: not found`, your files may have Windows line endings (CRLF instead of LF). Fix with: `dos2unix docker/Dockerfile docker/requirements.txt` — or set Git to handle this automatically: `git config --global core.autocrlf input`.
+> **Windows CRLF note:** If `docker build` fails with "exec format error" or `/bin/sh: not found`, your files may have Windows line endings (CRLF instead of LF). Fix with: `dos2unix phases/phase-1-fedtracker-migration/docker/Dockerfile phases/phase-1-fedtracker-migration/docker/requirements.txt` — or set Git to handle this automatically: `git config --global core.autocrlf input`.
 
 ---
 
@@ -3173,9 +3173,9 @@ cd ~/Desktop/github/oci-federal-lab
 # Build the container image
 # The build context is the docker/ directory, but main.py is in app/
 # Copy main.py into the docker build context first
-cp app/main.py docker/main.py
+cp phases/phase-1-fedtracker-migration/app/main.py phases/phase-1-fedtracker-migration/docker/main.py
 
-docker build -t fedtracker:1.0 docker/
+docker build -t fedtracker:1.0 phases/phase-1-fedtracker-migration/docker/
 # Expected: Successfully built, image tagged fedtracker:1.0
 ```
 
@@ -3242,7 +3242,7 @@ docker images | grep fedtracker
 
 ```bash
 cd ~/Desktop/github/oci-federal-lab
-git add docker/Dockerfile docker/requirements.txt
+git add phases/phase-1-fedtracker-migration/docker/
 git commit -m "Day 1: Add Dockerfile and requirements.txt for FedTracker container
 
 - Oracle Linux 9 slim base image (matches OCI server)
@@ -6208,7 +6208,7 @@ git push
 cd ~/Desktop/github/oci-federal-lab
 
 # Rebuild for ARM (matches your OCI VM architecture)
-docker buildx build --platform linux/arm64 -t fedtracker:1.0-arm64 docker/
+docker buildx build --platform linux/arm64 -t fedtracker:1.0-arm64 phases/phase-1-fedtracker-migration/docker/
 # Expected: Successfully built, image tagged
 # Note: First ARM build may take longer as Docker downloads ARM base layers
 ```
@@ -8189,7 +8189,7 @@ scp -o ProxyJump=opc@<BASTION_PUBLIC_IP> opc@<APP_SERVER_PRIVATE_IP>:/opt/fedtra
 ```bash
 cd ~/oci-federal-lab
 
-git add functions/ jenkins/ docs/ app/
+git add phases/phase-1-fedtracker-migration/
 git commit -m "Day 5: OCI Functions, Jenkins pipeline, DR drill, cost reporting, teardown
 
 - OCI Functions: audit file processor + health checker (serverless)

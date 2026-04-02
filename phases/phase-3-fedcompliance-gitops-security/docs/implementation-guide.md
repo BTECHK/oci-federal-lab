@@ -3122,13 +3122,7 @@ ssh -L 8000:NODE1_PRIVATE_IP:8000 -J opc@BASTION_IP opc@NODE1_PRIVATE_IP -N &
 ```bash
 cd ~/oci-federal-lab-phase3
 
-git add terraform/modules/
-git add terraform/environments/lab/provider.tf
-git add terraform/environments/lab/variables.tf
-git add terraform/environments/lab/main.tf
-git add terraform/environments/lab/outputs.tf
-git add ansible/
-git add app/fedcompliance/
+git add phases/phase-3-fedcompliance-gitops-security/
 git add .gitignore
 
 git commit -m "Phase 22: Terraform modules, OCI Vault secrets, FedCompliance app
@@ -4797,7 +4791,7 @@ In Phase 2, you created a CasC YAML file. Now practice the GitOps workflow: chan
 cd ~/fedcompliance-project  # or your repo directory
 
 # Edit the CasC config — change the system message
-cat > jenkins/casc/jenkins.yaml << 'CASCEOF'
+cat > phases/phase-3-fedcompliance-gitops-security/jenkins/casc/jenkins.yaml << 'CASCEOF'
 jenkins:
   systemMessage: "FedCompliance Lab v3 — Managed by CasC + GitOps (Phase 3)"
   numExecutors: 3
@@ -4835,7 +4829,7 @@ unclassified:
     pattern: ".*/(?:configSubmit|doDelete|postBuildResult|enable|disable|cancelQueue|stop|toggleLogKeep|doWipeOutWorkspace|createItem|createView|toggleOffline|cancelQuietDown|quietDown|restart|exit|safeRestart).*"
 CASCEOF
 
-git add jenkins/casc/jenkins.yaml
+git add phases/phase-3-fedcompliance-gitops-security/jenkins/casc/jenkins.yaml
 git commit -m "CasC v3: add app-deployer user, increase executors to 3"
 ```
 
@@ -4866,7 +4860,7 @@ The shared library from the pipeline template enforces that every pipeline MUST 
 Create a governance check that validates all pipelines use the template:
 
 ```bash
-cat > scripts/validate-pipelines.sh << 'VALIDATEEOF'
+cat > phases/phase-3-fedcompliance-gitops-security/scripts/validate-pipelines.sh << 'VALIDATEEOF'
 #!/bin/bash
 # validate-pipelines.sh — Check that all Jenkinsfiles use the federal template
 # This is compliance-as-code for CI/CD pipelines
@@ -4897,8 +4891,8 @@ echo ""
 echo "All pipelines compliant."
 VALIDATEEOF
 
-chmod +x scripts/validate-pipelines.sh
-git add scripts/validate-pipelines.sh
+chmod +x phases/phase-3-fedcompliance-gitops-security/scripts/validate-pipelines.sh
+git add phases/phase-3-fedcompliance-gitops-security/scripts/validate-pipelines.sh
 git commit -m "Add pipeline governance validation script"
 
 git push origin main
@@ -7525,7 +7519,7 @@ def health():
 
 ```bash
 # Commit and push - pre-commit hooks run here
-git add app/main.py
+git add phases/phase-3-fedcompliance-gitops-security/app/main.py
 git commit -m "feat: add version and phase fields to health endpoint"
 git push origin main
 ```
