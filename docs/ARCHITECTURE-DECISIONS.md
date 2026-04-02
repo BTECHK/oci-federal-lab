@@ -6,6 +6,22 @@ Ongoing record of key decisions, trade-offs, pivots, and lessons learned while b
 
 ---
 
+## ADR-008: Phase-First Repository Structure with Enterprise Naming
+**Date:** 2026-04-02
+**Status:** Accepted
+**Context:** The original repo had flat top-level directories (`terraform/`, `ansible/`, `docker/`, `scripts/`, `tests/`). This worked for Phase 1 alone, but with 3 phases plus a Linux deep dive, files like `harden.yml` and `deploy_app.yml` would collide. The naming was generic — an interviewer browsing the repo couldn't tell which phase or app a file belonged to. Enterprise teams organize by project/service, not by tool type.
+**Decision:** Reorganize into a `phases/` directory with descriptive folder names: `phase-1-fedtracker-migration`, `phase-2-fedanalytics-dr`, `phase-3-fedcompliance-cicd`. Each phase contains its own `terraform/`, `ansible/`, `app/`, `docker/`, and `docs/` subdirectories. Project-wide documentation (ADRs, lessons, known issues, PRD) stays in the root `docs/` folder. Shared utilities stay in `tools/`.
+**Rationale:** Phase-first organization matches how you talk about the project — "let me walk you through Phase 1" — and everything for that story is in one place. The naming convention (number + app name + theme) tells interviewers immediately what skill and what application each phase demonstrates. This pattern is also portable to other cloud projects (AWS, Azure, GCP).
+**Trade-offs:**
+- Ansible/Terraform commands from the repo root are longer (`phases/phase-1-fedtracker-migration/ansible/...`)
+- Implementation guides needed path updates (52+ command references)
+- Phase-specific docs are further from the root README (one more click)
+**Alternatives considered:**
+- Tool-first organization (`terraform/phase-1/`, `ansible/phase-1/`) — rejected because it fragments each phase's story across multiple root directories
+- Flat structure with prefixed filenames (`phase-1-harden.yml`) — rejected because it doesn't scale and doesn't match enterprise patterns
+
+---
+
 ## ADR-007: OCI Managed Services — Build It Yourself First, Then Use the Managed Equivalent
 **Date:** 2026-04-02
 **Status:** Accepted

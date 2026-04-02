@@ -44,9 +44,9 @@ Production-grade delivery: multi-stage Jenkins pipelines with security scanning,
 
 | Phase | Screenshot | What It Proves |
 |-------|-----------|---------------|
-| Phase 1 | ![Swagger UI + Health Check](docs/screenshots/phase-1-swagger-and-health.png) | REST API built from scratch, running on OCI, with auto-generated docs |
-| Phase 2 | ![k3s + AIDE](docs/screenshots/phase-2-k3s-and-aide.png) | Kubernetes cluster running + file integrity monitoring (NIST SI-7) |
-| Phase 3 | ![Jenkins Pipeline](docs/screenshots/phase-3-jenkins-pipeline.png) | Full CI/CD with security scanning (Trivy + SBOM), GitOps delivery |
+| Phase 1 | ![Swagger UI + Health Check](phases/phase-1-fedtracker-migration/docs/screenshots/swagger-and-health.png) | REST API built from scratch, running on OCI, with auto-generated docs |
+| Phase 2 | ![k3s + AIDE](phases/phase-2-fedanalytics-dr/docs/screenshots/k3s-and-aide.png) | Kubernetes cluster running + file integrity monitoring (NIST SI-7) |
+| Phase 3 | ![Jenkins Pipeline](phases/phase-3-fedcompliance-cicd/docs/screenshots/jenkins-pipeline.png) | Full CI/CD with security scanning (Trivy + SBOM), GitOps delivery |
 
 ---
 
@@ -74,27 +74,29 @@ Production-grade delivery: multi-stage Jenkins pipelines with security scanning,
 
 ```
 oci-federal-lab/
-├── terraform/              # IaC — all infrastructure defined here
-│   ├── modules/            # Reusable Terraform modules
-│   └── environments/
-│       ├── dev/            # Dev environment configs
-│       └── prod/           # Prod environment configs
-├── ansible/                # Configuration management
-│   ├── playbooks/          # Ansible playbooks
-│   ├── roles/              # Ansible roles
-│   └── inventory/          # Host inventory files
-├── scripts/                # Bash/Python automation scripts
-├── docker/                 # Dockerfiles, compose files
-├── docs/                   # Documentation
-│   ├── screenshots/        # Evidence of completed work
-│   ├── plans/              # Design documents
-│   ├── PRD.md              # Product Requirements Document
-│   ├── phase-1-implementation-guide.md
-│   ├── phase-2-implementation-guide.md
-│   └── phase-3-implementation-guide.md
-├── tests/                  # Test scripts
-├── .github/workflows/      # GitHub Actions (if needed)
-├── .env.example            # Environment variable template
+├── phases/                                        # Each phase is self-contained
+│   ├── phase-1-fedtracker-migration/              # Legacy-to-Cloud Migration
+│   │   ├── terraform/                             # IaC for Phase 1 infrastructure
+│   │   ├── ansible/                               # Config management (playbooks, inventory, roles)
+│   │   ├── app/                                   # FedTracker application source code
+│   │   ├── docker/                                # Dockerfile, docker-compose
+│   │   └── docs/                                  # Phase 1 guide, deep dive, screenshots
+│   ├── phase-2-fedanalytics-dr/                   # Disaster Recovery & Backup
+│   │   ├── terraform/ ansible/ app/ docker/
+│   │   └── docs/
+│   └── phase-3-fedcompliance-cicd/                # CI/CD Modernization
+│       ├── terraform/ ansible/ app/ docker/
+│       └── docs/
+├── docs/                                          # Project-wide documentation
+│   ├── ARCHITECTURE-DECISIONS.md                  # ADR log — why decisions were made
+│   ├── LESSONS-LEARNED.md                         # Meta-checklist for guide writing
+│   ├── KNOWN-ISSUES.md                            # Errors & patterns reference
+│   ├── PRD.md                                     # Product Requirements Document
+│   ├── DEVOPS-ARCHITECTURE-REFERENCE.md           # Lab-to-production mapping
+│   └── plans/                                     # Design documents
+├── tools/                                         # Shared utilities (cost estimator, helpers)
+├── .github/workflows/                             # GitHub Actions
+├── .env.example                                   # Environment variable template
 ├── .gitignore
 └── README.md
 ```
@@ -103,12 +105,12 @@ oci-federal-lab/
 
 ## How to Use This Repo
 
-This is a **learning lab**, not a deploy-and-forget project. Each phase has a detailed implementation guide in `docs/` that walks through every step:
+This is a **learning lab**, not a deploy-and-forget project. Each phase has a detailed implementation guide in its `docs/` folder that walks through every step:
 
 1. Read the implementation guide for the phase you're working on
 2. Execute each step by hand — typing commands, writing Terraform/Ansible/scripts
 3. Commit your work as you go (each major milestone = a commit)
-4. Capture screenshots of key outputs in `docs/screenshots/`
+4. Capture screenshots of key outputs in each phase's `docs/screenshots/`
 5. Tear down resources when done with a phase (cost management)
 
 ---
@@ -117,9 +119,10 @@ This is a **learning lab**, not a deploy-and-forget project. Each phase has a de
 
 | Phase | Guide | Status |
 |-------|-------|--------|
-| Phase 1: Legacy-to-Cloud Migration | [Implementation Guide](docs/phase-1-implementation-guide.md) | Not started |
-| Phase 2: DR & Backup Architecture | [Implementation Guide](docs/phase-2-implementation-guide.md) | Not started |
-| Phase 3: CI/CD Modernization | [Implementation Guide](docs/phase-3-implementation-guide.md) | Not started |
+| Phase 1: Legacy-to-Cloud Migration | [Implementation Guide](phases/phase-1-fedtracker-migration/docs/implementation-guide.md) | In progress |
+| Phase 1: Linux Admin Deep Dive | [Deep Dive](phases/phase-1-fedtracker-migration/docs/linux-admin-deep-dive.md) | Not started |
+| Phase 2: DR & Backup Architecture | [Implementation Guide](phases/phase-2-fedanalytics-dr/docs/implementation-guide.md) | Not started |
+| Phase 3: CI/CD Modernization | [Implementation Guide](phases/phase-3-fedcompliance-cicd/docs/implementation-guide.md) | Not started |
 
 ---
 
@@ -127,10 +130,11 @@ This is a **learning lab**, not a deploy-and-forget project. Each phase has a de
 
 See the [design document](docs/plans/) for the full rationale behind every technology choice, including:
 - Why Podman on Oracle Linux (RHEL-native, rootless, FIPS-compliant)
-- Why k3s instead of OKE (free-tier compatible, same K8s API)
-- Why Jenkins (JD requirement: CloudBees Jenkins)
+- Why k3s instead of OKE (free-tier compatible, same K8s API — OKE comparison in Phase 3 Appendix B)
+- Why Jenkins (JD requirement: CloudBees Jenkins — OCI DevOps comparison in Phase 3 Appendix D)
 - Why ArgoCD + Helm (production GitOps pattern)
 - Why three independent phases (any single phase covers all JD requirements)
+- OCI managed services explored: Resource Manager, OKE, OCIR scanning, OCI DevOps, OS Management Hub (see Phase 3 Appendices + ADR-007)
 
 ---
 

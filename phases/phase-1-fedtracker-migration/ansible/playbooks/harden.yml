@@ -1,6 +1,6 @@
 # Hardening Playbook — applies CIS-aligned security settings
 # Targets: app server (and optionally bastion)
-# Run: ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+# Run: ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
 
 - name: Harden Oracle Linux 9 servers
   hosts: app

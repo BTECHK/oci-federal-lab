@@ -4773,7 +4773,7 @@ terraform --version
 cd ~/oci-federal-lab/terraform
 ```
 
-> **Note:** Your repo scaffold has `terraform/` and `terraform/environments/prod/` directories for future use. For this lab, we keep all `.tf` files in `terraform/` (root level) for simplicity. In a production setup, you'd separate configurations by environment — each environment directory would have its own `.tf` files with different variable values.
+> **Note:** Your repo uses a phase-first structure. All Phase 1 Terraform files live in `phases/phase-1-fedtracker-migration/terraform/`. The `environments/` subdirectory is there for future use. In a production setup, you'd separate configurations by environment — each environment directory would have its own `.tf` files with different variable values.
 
 ---
 
@@ -4782,7 +4782,7 @@ cd ~/oci-federal-lab/terraform
 
 > **🧠 ELI5 — Terraform Providers:** A provider is a plugin that teaches Terraform how to talk to a specific cloud. The OCI provider knows how to create VCNs, VMs, and databases in Oracle Cloud. The AWS provider knows about EC2, S3, and Lambda. You tell Terraform which provider to use and give it credentials, then it handles the API calls.
 
-**Build `terraform/provider.tf` section by section:**
+**Build `phases/phase-1-fedtracker-migration/terraform/provider.tf` section by section:**
 
 **Step 1:** Required providers block — tells Terraform which provider to download
 
@@ -4820,7 +4820,7 @@ provider "oci" {
 **Verify:**
 
 ```bash
-grep -n "provider" terraform/provider.tf
+grep -n "provider" phases/phase-1-fedtracker-migration/terraform/provider.tf
 # Expected: Lines showing terraform block and provider "oci" block
 ```
 
@@ -4831,7 +4831,7 @@ grep -n "provider" terraform/provider.tf
 
 > **🧠 ELI5 — Terraform Variables:** Variables are placeholders for values that change between environments. Instead of hardcoding `region = "us-ashburn-1"`, you write `region = var.region` and define the variable separately. This means the same Terraform code works for different regions, shapes, or environments — just change the variable values.
 
-**Build `terraform/variables.tf` section by section:**
+**Build `phases/phase-1-fedtracker-migration/terraform/variables.tf` section by section:**
 
 **Step 1:** Authentication variables
 
@@ -4976,7 +4976,7 @@ variable "freeform_tags" {
 **Verify:**
 
 ```bash
-grep -c "variable" terraform/variables.tf
+grep -c "variable" phases/phase-1-fedtracker-migration/terraform/variables.tf
 # Expected: ~13 variables defined
 ```
 
@@ -5015,7 +5015,7 @@ grep -c "variable" terraform/variables.tf
 >    Image OCIDs are **region-specific**. If you're in `us-ashburn-1`, the OCID starts with `ocid1.image.oc1.iad.`. A different region will have a different OCID.
 
 ```hcl
-# terraform/terraform.tfvars
+# phases/phase-1-fedtracker-migration/terraform/terraform.tfvars
 # NEVER commit this file to git — it contains credentials
 
 tenancy_ocid      = "ocid1.tenancy.oc1..xxxxxxxxxxxxx"
@@ -5042,7 +5042,7 @@ echo ".terraform/" >> ~/oci-federal-lab/.gitignore
 ### Step 11.6 — Create network.tf
 📍 **Editor** (build by hand)
 
-**Build `terraform/network.tf` section by section:**
+**Build `phases/phase-1-fedtracker-migration/terraform/network.tf` section by section:**
 
 **Step 1:** VCN
 
@@ -5221,7 +5221,7 @@ resource "oci_core_subnet" "private" {
 **Verify:**
 
 ```bash
-grep -n "resource" terraform/network.tf
+grep -n "resource" phases/phase-1-fedtracker-migration/terraform/network.tf
 # Expected: ~10 resource blocks (vcn, igw, natgw, 2 route tables, 2 security lists, 2 subnets)
 ```
 
@@ -5230,7 +5230,7 @@ grep -n "resource" terraform/network.tf
 ### Step 11.7 — Create compute.tf
 📍 **Editor** (build by hand)
 
-**Build `terraform/compute.tf` section by section:**
+**Build `phases/phase-1-fedtracker-migration/terraform/compute.tf` section by section:**
 
 **Step 1:** Data source to get the latest Oracle Linux image and availability domain
 
@@ -5317,7 +5317,7 @@ resource "oci_core_instance" "app_server" {
 **Verify:**
 
 ```bash
-grep -n "resource" terraform/compute.tf
+grep -n "resource" phases/phase-1-fedtracker-migration/terraform/compute.tf
 # Expected: 2 resource blocks (bastion and app_server)
 ```
 
@@ -5420,7 +5420,7 @@ oci compute instance list --compartment-id $COMP --query "data[?\"lifecycle-stat
 
 > Replace `<YOUR_COMPARTMENT_OCID>` with your compartment OCID from `terraform.tfvars`. This prints a table for each resource type showing the display name and OCID. Copy these OCIDs — you need them for the import commands below.
 
-**Step 2:** Import each resource. Run these from your **Local Terminal** in the `terraform/` directory. Replace each `<OCID_FROM_CLOUD_SHELL>` with the actual OCID from the output above:
+**Step 2:** Import each resource. Run these from your **Local Terminal** in the `phases/phase-1-fedtracker-migration/terraform/` directory. Replace each `<OCID_FROM_CLOUD_SHELL>` with the actual OCID from the output above:
 
 ```bash
 cd ~/oci-federal-lab/terraform
@@ -5562,9 +5562,9 @@ ansible --version
 ### Step 12.2 — Create Inventory File
 📍 **Editor** (build by hand)
 
-> Your repo scaffold already has `ansible/inventory/` and `ansible/playbooks/` directories (with `.gitkeep` placeholder files). No need to create them — just add the inventory file directly.
+> Your repo has `phases/phase-1-fedtracker-migration/ansible/inventory/` and `ansible/playbooks/` directories. Add the inventory file directly.
 
-**Build `ansible/inventory/inventory.ini`:**
+**Build `phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini`:**
 
 ```ini
 # Ansible Inventory — defines which servers to manage
@@ -5593,7 +5593,7 @@ ansible_ssh_common_args='-o ProxyJump=opc@<BASTION_PUBLIC_IP>'
 cd /mnt/c/Users/<YOUR_USERNAME>/oci-federal-lab   # adjust to your actual path
 
 # Test connectivity
-ansible all -i ansible/inventory/inventory.ini -m ping
+ansible all -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini -m ping
 # Expected: bastion | SUCCESS and app-server | SUCCESS
 ```
 
@@ -5602,7 +5602,7 @@ ansible all -i ansible/inventory/inventory.ini -m ping
 ### Step 12.3 — Create Hardening Playbook
 📍 **Editor** (build by hand)
 
-**Build `ansible/playbooks/harden.yml` section by section:**
+**Build `phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml` section by section:**
 
 **Step 1:** Playbook header and host targeting
 
@@ -5610,7 +5610,7 @@ ansible all -i ansible/inventory/inventory.ini -m ping
 ---
 # Hardening Playbook — applies CIS-aligned security settings
 # Targets: app server (and optionally bastion)
-# Run: ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+# Run: ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
 
 - name: Harden Oracle Linux 9 servers
   hosts: app
@@ -5786,7 +5786,7 @@ ansible all -i ansible/inventory/inventory.ini -m ping
 
 ```bash
 # Check YAML syntax
-ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook --syntax-check -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
 # Expected: "playbook: ansible/playbooks/harden.yml" (no errors)
 ```
 
@@ -5795,12 +5795,12 @@ ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playb
 ### Step 12.4 — Create Deploy Playbook
 📍 **Editor** (build by hand)
 
-**Build `ansible/playbooks/deploy_app.yml`:**
+**Build `phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml`:**
 
 ```yaml
 ---
 # Deploy Playbook — installs and configures FedTracker on app server
-# Run: ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
+# Run: ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml
 
 - name: Deploy FedTracker application
   hosts: app
@@ -5895,7 +5895,7 @@ Create the service template:
 mkdir -p ~/oci-federal-lab/ansible/templates
 ```
 
-**Build `ansible/templates/fedtracker.service.j2`:**
+**Build `phases/phase-1-fedtracker-migration/ansible/templates/fedtracker.service.j2`:**
 
 ```ini
 [Unit]
@@ -5931,7 +5931,7 @@ WantedBy=multi-user.target
 **Verify:**
 
 ```bash
-ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook --syntax-check -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml
 # Expected: No errors
 ```
 
@@ -5946,21 +5946,21 @@ ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playb
 cd ~/oci-federal-lab
 
 # Run hardening first
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
 # Expected: All tasks show "changed" or "ok"
 
 # Then deploy the app
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml
 # Expected: All tasks show "changed" or "ok"
 ```
 
 **Verify idempotency — run again:**
 
 ```bash
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
 # Expected: All tasks show "ok" (nothing changed — idempotent!)
 
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml
 # Expected: All tasks show "ok" (nothing changed — idempotent!)
 ```
 
@@ -6056,7 +6056,7 @@ echo "Bastion: $BASTION_IP"
 echo "App Server: $APP_IP"
 ```
 
-Update `ansible/inventory/inventory.ini` with these new IPs.
+Update `phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini` with these new IPs.
 
 ---
 
@@ -6070,10 +6070,10 @@ cd ~/oci-federal-lab
 sleep 60
 
 # Harden first
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
 
 # Deploy the app
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml
 ```
 
 ---
@@ -6118,7 +6118,7 @@ echo "========================"
 
 ```bash
 cd ~/oci-federal-lab
-git add terraform/ ansible/ app/
+git add phases/phase-1-fedtracker-migration/
 git commit -m "Day 3: Terraform IaC + Ansible automation + destroy/rebuild proof
 
 - Terraform: provider, variables, network (VCN, subnets, gateways, security lists), compute (bastion, app server), outputs
@@ -7903,15 +7903,15 @@ NEW_APP_IP=$(terraform output -raw app_server_private_ip)
 echo "New app server IP: $NEW_APP_IP"
 
 # Update inventory (manual for now — could be automated)
-# Edit ansible/inventory/inventory.ini with the new IP
+# Edit phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini with the new IP
 
 # Wait for VM to boot
 sleep 60
 
 # Harden and deploy
 cd ~/oci-federal-lab
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml
 ```
 
 **Step 6: Verify recovery**
@@ -8003,13 +8003,13 @@ terraform apply
 ### Step 3: Update Ansible Inventory
 ```bash
 NEW_IP=$(terraform output -raw app_server_private_ip)
-# Update ansible/inventory/inventory.ini with new IP
+# Update phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini with new IP
 ```
 
 ### Step 4: Configure and Deploy (from WSL2 on Windows)
 ```bash
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
-ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/deploy_app.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
+ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml
 ```
 
 ### Step 5: Verify
@@ -8256,54 +8256,45 @@ Take one screenshot now and save it to `docs/screenshots/` in your repo:
 
 ```
 oci-federal-lab/
-├── terraform/              # Complete OCI infrastructure as code
-│   ├── provider.tf
-│   ├── variables.tf
-│   ├── network.tf
-│   ├── compute.tf
-│   └── outputs.tf
-├── ansible/                # Server hardening + app deployment
-│   ├── inventory.ini
-│   ├── templates/
-│   │   └── fedtracker.service.j2
-│   └── playbooks/
-│       ├── harden.yml
-│       └── deploy_app.yml
-├── app/                    # FedTracker FastAPI application
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── docker-compose.yml
-├── functions/              # OCI Functions (serverless)
-│   ├── audit-processor/
-│   │   ├── func.py
-│   │   ├── func.yaml
-│   │   └── requirements.txt
-│   └── health-checker/
-│       ├── func.py
-│       ├── func.yaml
-│       └── requirements.txt
-├── jenkins/                # CI/CD pipeline
-│   └── Jenkinsfile
-├── scripts/                # Operational scripts
-│   ├── health_check.sh     # Bash health check
-│   ├── oci_reporter.py     # OCI resource/tag reporter
-│   ├── cost_reporter.py    # Cost and free tier reporter
-│   ├── cis_scan.sh         # OpenSCAP CIS benchmark scanner
-│   └── compliance/
-│       ├── fedramp_agent.py   # FedRAMP readiness agent
-│       ├── checklist.json     # NIST 800-53 control checks
-│       └── reports/           # Generated readiness reports
-├── docs/                   # Documentation
-│   ├── phase-1-implementation-guide.md  # This guide
-│   └── dr-runbook.md       # Disaster recovery procedures
+├── phases/
+│   └── phase-1-fedtracker-migration/
+│       ├── terraform/              # Complete OCI infrastructure as code
+│       │   ├── provider.tf
+│       │   ├── variables.tf
+│       │   ├── network.tf
+│       │   ├── compute.tf
+│       │   └── outputs.tf
+│       ├── ansible/                # Server hardening + app deployment
+│       │   ├── inventory/
+│       │   │   └── inventory.ini
+│       │   ├── templates/
+│       │   │   └── fedtracker.service.j2
+│       │   ├── roles/
+│       │   └── playbooks/
+│       │       ├── harden.yml
+│       │       └── deploy_app.yml
+│       ├── app/                    # FedTracker FastAPI application
+│       │   ├── main.py
+│       │   ├── requirements.txt
+│       │   ├── Dockerfile
+│       │   └── docker-compose.yml
+│       ├── docker/                 # Container build files
+│       └── docs/
+│           ├── implementation-guide.md   # This guide
+│           ├── linux-admin-deep-dive.md
+│           └── screenshots/
+├── docs/                           # Project-wide documentation
+│   ├── ARCHITECTURE-DECISIONS.md
+│   ├── LESSONS-LEARNED.md
+│   └── KNOWN-ISSUES.md
+├── tools/                          # Shared utilities
 ├── .gitignore
 └── README.md
 ```
 
 ### Linux Admin Deep Dive — Practice Labs & Reference
 
-The **[Linux Admin Deep Dive](phase-1-linux-admin-deep-dive.md)** companion guide contains additional hands-on practice labs and troubleshooting exercises for the Linux admin skills introduced throughout Days 1-5. Use it for:
+The **[Linux Admin Deep Dive](linux-admin-deep-dive.md)** companion guide contains additional hands-on practice labs and troubleshooting exercises for the Linux admin skills introduced throughout Days 1-5. Use it for:
 - Extra break-fix practice on any topic (SELinux, LVM, systemd, networking, kernel tuning)
 - Interview prep — 8 realistic troubleshooting scenarios with diagnosis steps
 - Command quick-reference table for all Linux admin tools
