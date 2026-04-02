@@ -27,14 +27,14 @@ Last updated: 2026-03-30
 - **Why:** `su - clouduser` fails on cloud-init VMs (no password set) — must use `sudo su - clouduser`. Found 12 occurrences. Works fine on author's machine but fails for every reader.
 - **Check:** Spin up a fresh instance, follow the guide from scratch, note every failure.
 
-**Rule:** Use `python3.11 -m pip install` (not `pip3.11` or `pip3`). Use `python3.11` to run scripts (not `python3`).
+**Rule:** Use `python3 -m pip install` (not bare `pip3`). Use `python3` to run scripts.
 
-- **Why:** `pip3` may install to a different site-packages than `python3` reads. `alternatives --set python3 3.11` breaks system tools (firewall-cmd, semanage) that depend on Python 3.9's `gi` module.
-- **Check:** After every pip install, verify with the SAME interpreter: `python3.11 -c "import <package>"`.
+- **Why:** `pip3` may install to a different site-packages than `python3` reads. On OL9, use the system `python3` directly -- installing a separate python3.11 and using `alternatives` breaks system tools (firewall-cmd, semanage) that depend on Python 3.9's `gi` module.
+- **Check:** After every pip install, verify with the SAME interpreter: `python3 -c "import <package>"`.
 
 **Rule:** Never assume `alternatives --set` works — the alternative must be registered with `--install` first.
 
-- **Why:** `sudo alternatives --set python3 /usr/bin/python3.11` fails with "No such file or directory" if no alternatives entry exists.
+- **Why:** `sudo alternatives --set python3 /usr/bin/python3.11` failed with "No such file or directory" if no alternatives entry existed. (No longer relevant on OL9 since the guide now uses the system python3.)
 - **Check:** Run `alternatives --display python3` before `--set` to verify the option is registered.
 
 ---
@@ -62,7 +62,7 @@ Last updated: 2026-03-30
 
 **Rule:** Before writing "Day N+1", list every artifact Day N created that Day N+1 needs. Document the transfer mechanism.
 
-- **Why:** Day 2 needed clouduser, Python 3.11, pip packages, /opt/fedtracker directory, and three .py files — none of which existed on the new VM. The guide said "copy from legacy server (if you still have it)" but the legacy server was gone.
+- **Why:** Day 2 needed clouduser, Python 3, pip packages, /opt/fedtracker directory, and three .py files -- none of which existed on the new VM. The guide said "copy from legacy server (if you still have it)" but the legacy server was gone.
 - **Check:** Create an explicit "Migration Checkpoint" between phases. Verify-then-destroy, not destroy-then-hope.
 
 **Rule:** If phases are "independent", prove it — don't just claim it.

@@ -3,7 +3,7 @@
 
 **Goal:** Build deep Linux administration skills that directly map to AFS Cloud Engineer / Linux Admin daily work. Every section includes intentional break-fix exercises and interview talking points.
 **Prerequisite:** Phase 1 Days 1-5 complete (FedTracker app deployed, basic hardening done)
-**Environment:** Same Phase 1 Oracle Linux 8 VM (or rebuild via Terraform if torn down)
+**Environment:** Same Phase 1 Oracle Linux 9 VM (or rebuild via Terraform if torn down)
 **Total Cost:** $0.00 (OCI Always Free tier)
 
 ---
@@ -21,6 +21,7 @@ These two days transform you from "I can use Linux" to "I can administer, troubl
 | Kernel Tuning | sysctl, iostat, sar, OOM investigation | "The server ran out of memory — what happened?" |
 | User/Group/PAM | LDAP-style management, sudoers, PAM modules | "How do you manage access for 50 engineers?" |
 | NFS & ACLs | Mount shared storage, POSIX ACLs | "Teams need shared file access with different permissions" |
+| Patch Management | dnf security patches, Ksplice, OCI OS Management Hub | "Walk me through your patching process" |
 | Troubleshooting Labs | 8 break-fix scenarios | "Tell me about a time you debugged a production issue" |
 
 ---
@@ -415,7 +416,7 @@ Group=fedtracker
 WorkingDirectory=/opt/fedtracker
 
 # The actual command to run
-ExecStart=/usr/bin/python3.11 -m celery worker --app=tasks --loglevel=info
+ExecStart=/usr/bin/python3 -m celery worker --app=tasks --loglevel=info
 
 # Restart policy: always restart on failure, wait 5 seconds
 Restart=on-failure
@@ -592,7 +593,7 @@ systemctl list-timers | grep fedtracker
 sudo cp /etc/systemd/system/fedtracker.service /etc/systemd/system/fedtracker.service.bak
 
 # Introduce a subtle error (wrong path)
-sudo sed -i 's|ExecStart=.*|ExecStart=/usr/bin/python3.11 /opt/fedtracker/mian.py|' /etc/systemd/system/fedtracker.service
+sudo sed -i 's|ExecStart=.*|ExecStart=/usr/bin/python3 /opt/fedtracker/mian.py|' /etc/systemd/system/fedtracker.service
 sudo systemctl daemon-reload
 sudo systemctl restart fedtracker
 
@@ -1071,7 +1072,7 @@ echo -500 | sudo tee /proc/$(pgrep -f uvicorn | head -1)/oom_score_adj
 free -h
 
 # Create a process that slowly eats memory
-python3.11 -c "
+python3 -c "
 import time
 data = []
 try:
@@ -1304,7 +1305,7 @@ sudo firewall-cmd --direct --remove-rule ipv4 filter INPUT 0 \
 
 ```bash
 # SETUP: Start a script that slowly leaks memory
-python3.11 -c "
+python3 -c "
 import time, os
 data = []
 while True:
@@ -1384,7 +1385,7 @@ sudo systemctl daemon-reload
 ```bash
 # SETUP: Create a Python script that writes to a protected location
 sudo tee /opt/fedtracker/write_test.py << 'EOF'
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3
 import os
 with open('/etc/fedtracker/runtime_data.json', 'w') as f:
     f.write('{"status": "ok"}')
@@ -1469,6 +1470,283 @@ df -i /tmp     # Inodes freed
 
 ---
 
+### STEP 9: Enterprise Patch Management (90 minutes)
+
+> **🧠 ELI5 — Patching:** Patching is how you fix security vulnerabilities and bugs in your operating system and installed software. Think of it like getting a recall notice for your car — the manufacturer found a problem and released a fix. In federal environments, patching is mandated by NIST SI-2 (Flaw Remediation): you must apply security patches within defined timelines (typically 30 days for critical, 90 days for high). Miss the deadline, that's an audit finding.
+>
+> But patching isn't just running `dnf update`. In enterprise, a security team identifies which patches to apply, tests them in a staging environment, then promotes them to production during a maintenance window. Tools like IBM BigFix, Red Hat Satellite, or OCI OS Management Hub orchestrate this workflow at scale.
+
+#### 9.1 Manual Patching Fundamentals
+
+**[VM TERMINAL]**
+
+Every admin needs to understand what happens on the individual server, regardless of what orchestration tool pushes the patches.
+
+```bash
+# Check what updates are available (doesn't install anything)
+sudo dnf check-update
+# Shows: package name, new version, repository source
+# If nothing shows, your system is fully up to date
+
+# Check only security-related updates (federal standard — you patch security first)
+sudo dnf updateinfo list security
+# Shows: advisory ID (e.g., ELSA-2026-1234), severity, package name
+# ELSA = Enterprise Linux Security Advisory (Oracle's equivalent of RHEL's RHSA)
+
+# View details of a specific advisory
+sudo dnf updateinfo info ELSA-2026-1234
+# Shows: CVE IDs, severity, description, affected packages
+```
+
+> **Interview Insight: "Walk me through your patching process."**
+>
+> **Strong answer:** "I start by reviewing available security advisories with `dnf updateinfo list security`. I categorize by severity — critical patches get priority. Before applying, I verify the patch in a staging environment. On the target server, I apply security-only patches with `dnf update --security`, verify services are still running, then check if any services need restart with `needs-restarting`. I document the change in our change management system and validate with a post-patch scan."
+>
+> **Weak answer:** "I run `dnf update -y` and hope nothing breaks." (Shows no risk awareness or process discipline)
+
+```bash
+# Apply security patches only (not all updates — this is the federal-standard approach)
+sudo dnf update --security -y
+# Only installs packages with security advisories — skips bug fixes, enhancements
+
+# After patching: check which services need to be restarted
+sudo dnf install -y dnf-utils  # provides needs-restarting
+sudo needs-restarting -s
+# Lists services that are running old code and need restart
+# Example output:
+#   sshd.service
+#   fedtracker.service
+
+# Restart affected services (or reboot if kernel was patched)
+sudo needs-restarting -r
+# Exit code 0 = no reboot needed
+# Exit code 1 = reboot required (kernel or core library patched)
+```
+
+> **Why `--security` instead of just `dnf update`?** In federal environments, change control is strict. Every change needs justification. Security patches have CVE numbers — you can point to the vulnerability they fix. General updates (new features, performance improvements) don't have that justification and introduce unnecessary risk. Patch what you must, leave everything else for planned maintenance windows.
+
+```bash
+# View patching history — the audit trail
+dnf history
+# Shows: transaction ID, date, action (install/update/remove), number of packages
+
+# View details of a specific transaction
+dnf history info 5
+# Shows exactly which packages were changed and from which version to which
+
+# ROLLBACK: Undo a bad patch
+sudo dnf history undo 5 -y
+# Reverts all packages changed in transaction 5 to their previous versions
+# This is your emergency button when a patch breaks something
+```
+
+> **🧠 ELI5 — `dnf history undo`:** This is your "undo" button. Every `dnf` operation gets a transaction ID. If a patch breaks your app, you run `dnf history undo <ID>` to revert every package in that transaction to its previous version. It's like restoring from a save point in a video game.
+
+<sub><em style="color: #999; font-size: 0.65em;">
+
+💡🖥️ Commands used:
+
+| Command | Flag(s) | What It Does |
+|---------|---------|-------------|
+| `dnf check-update` | | List available updates without installing |
+| `dnf updateinfo list` | `security` | Show only security-related advisories |
+| `dnf updateinfo info` | `<advisory>` | Show details of a specific security advisory |
+| `dnf update` | `--security -y` | Install only security patches |
+| `needs-restarting` | `-s` | List services that need restart after patching |
+| `needs-restarting` | `-r` | Check if a full reboot is required |
+| `dnf history` | | Show all package transaction history |
+| `dnf history info` | `<ID>` | Show details of a specific transaction |
+| `dnf history undo` | `<ID> -y` | Rollback all changes from a specific transaction |
+
+</em></sub>
+
+#### 9.2 Oracle Ksplice — Zero-Downtime Kernel Patching
+
+> **🧠 ELI5 — Ksplice:** Normally, a kernel patch requires a reboot — the kernel is the core of the OS and can't be replaced while running. Ksplice is Oracle's technology that patches the kernel live, in memory, without rebooting. For servers that can't afford downtime (think: 24/7 compliance monitoring), this is critical. It's like changing the engine on a car while it's driving.
+
+```bash
+# Check if Ksplice is available (pre-installed on OCI Oracle Linux instances)
+sudo ksplice --help 2>/dev/null && echo "Ksplice available" || echo "Ksplice not installed"
+
+# If available, check current kernel patch status
+sudo uptrack-show
+# Shows: list of applied Ksplice patches (CVE fixes applied without reboot)
+
+# Check for new Ksplice updates
+sudo uptrack-upgrade -n
+# -n = dry run (shows what would be applied without applying)
+
+# Apply Ksplice patches (zero downtime)
+sudo uptrack-upgrade -y
+# Patches the running kernel in memory — no reboot needed
+```
+
+> **Federal Reality Check:** Some compliance frameworks (FedRAMP, DISA STIG) require that security patches be applied within specific timelines. Ksplice lets you meet those timelines without scheduling maintenance windows for reboots. In an interview, you can say: "Oracle Ksplice lets me apply critical kernel CVE fixes in minutes without downtime. For non-kernel patches, I use `dnf update --security` and restart only the affected services."
+
+#### 9.3 OCI OS Management Hub — Enterprise Patch Pipeline
+
+> **🧠 ELI5 — OS Management Hub:** If `dnf update` is you fixing one car in your garage, OS Management Hub is a fleet maintenance operation. It's OCI's native patch management service — the cloud-native equivalent of IBM BigFix or Red Hat Satellite. A security team creates a "patch bundle" (list of approved packages), then promotes it through stages: security-review → staging → production. Each stage's servers automatically receive the exact same packages that were tested. You manage the whole thing as Terraform code.
+
+**Enable OS Management Hub on your VMs:**
+
+📍 **OCI Console**
+
+1. Navigate to **Compute** → **Instances** → select your bastion or app-server
+2. Click the **Oracle Cloud Agent** tab
+3. Find **OS Management Hub** plugin → toggle it to **Enabled**
+4. Wait 2-3 minutes for the agent to register
+
+> ⚠️ **OS Management Hub requires an active OCI tenancy (trial credits work). It is not available on Always Free-only accounts.** If the plugin doesn't appear, your tenancy may not have access.
+
+📍 **OCI Console** → **OS Management Hub**
+
+5. Navigate to **Observability & Management** → **OS Management Hub** → **Managed Instances**
+6. Verify your VM appears in the list with status "Online"
+7. Click your instance → review **Installed Packages**, **Available Updates**, and **Applicable Errata**
+
+> **What are Errata?** Errata are security advisories — each one maps to one or more CVE vulnerabilities. OS Management Hub tracks which errata apply to each of your instances, giving you a fleet-wide view of your security posture. This is what auditors want to see.
+
+**Create a 3-stage lifecycle environment:**
+
+This simulates the enterprise workflow: security team approves → staging validates → production receives.
+
+📍 **OCI Console** → **OS Management Hub** → **Lifecycle Environments**
+
+1. Click **Create Lifecycle Environment**
+2. Fill in:
+   - **Name:** `federal-patch-pipeline`
+   - **Description:** 3-stage patch promotion for NIST SI-2 compliance
+   - **OS Family:** Oracle Linux
+   - **Architecture:** aarch64 (matches your A1 Flex VMs)
+   - **Vendor:** Oracle
+3. **Stages** — add 3 stages in order:
+   - Stage 1: `security-review` (rank 1)
+   - Stage 2: `staging` (rank 2)
+   - Stage 3: `production` (rank 3)
+4. Click **Create**
+
+**Or via OCI CLI:**
+
+```bash
+# Create the lifecycle environment (run from your local machine with OCI CLI configured)
+oci os-management-hub lifecycle-environment create \
+  --compartment-id $COMPARTMENT_OCID \
+  --display-name "federal-patch-pipeline" \
+  --arch-type AARCH64 \
+  --os-family ORACLE_LINUX \
+  --vendor-name ORACLE \
+  --stages '[
+    {"displayName":"security-review","rank":1},
+    {"displayName":"staging","rank":2},
+    {"displayName":"production","rank":3}
+  ]'
+```
+
+**Or via Terraform** (recommended — infrastructure as code):
+
+```hcl
+resource "oci_os_management_hub_lifecycle_environment" "patch_pipeline" {
+  compartment_id = var.compartment_id
+  display_name   = "federal-patch-pipeline"
+  description    = "3-stage patch promotion for NIST SI-2 compliance"
+  arch_type      = "AARCH64"
+  os_family      = "ORACLE_LINUX"
+  vendor_name    = "ORACLE"
+
+  stages {
+    display_name = "security-review"
+    rank         = 1
+  }
+  stages {
+    display_name = "staging"
+    rank         = 2
+  }
+  stages {
+    display_name = "production"
+    rank         = 3
+  }
+}
+```
+
+**Simulate the enterprise patch workflow:**
+
+```bash
+# Step 1: Security team creates a versioned patch bundle
+# This is an immutable, frozen snapshot of approved packages
+oci os-management-hub software-source create-versioned-custom-swsrc \
+  --compartment-id $COMPARTMENT_OCID \
+  --display-name "Security-Patch-$(date +%Y-%m)" \
+  --software-source-version "1.0" \
+  --vendor-software-sources '[{"id":"<ol9-baseos-source-ocid>","displayName":"ol9_baseos_latest"}]'
+
+# Step 2: Security analyst promotes to security-review stage
+oci os-management-hub lifecycle-stage promote-software-source \
+  --lifecycle-stage-id $SECURITY_REVIEW_STAGE_OCID \
+  --software-source-id $VERSIONED_SOURCE_OCID
+
+# Step 3: After review — ops admin promotes to staging
+oci os-management-hub lifecycle-stage promote-software-source \
+  --lifecycle-stage-id $STAGING_STAGE_OCID \
+  --software-source-id $VERSIONED_SOURCE_OCID
+
+# Step 4: After staging validation — promote to production
+oci os-management-hub lifecycle-stage promote-software-source \
+  --lifecycle-stage-id $PRODUCTION_STAGE_OCID \
+  --software-source-id $VERSIONED_SOURCE_OCID
+
+# Step 5: Verify compliance
+oci os-management-hub managed-instance list-errata \
+  --managed-instance-id $INSTANCE_OCID
+```
+
+> **Interview Insight: "How do you manage patching at scale?"**
+>
+> **Strong answer:** "I use OCI OS Management Hub to manage patching across our fleet. The security team creates versioned patch bundles — immutable snapshots of approved packages. We promote them through a 3-stage lifecycle: security-review, staging, production. Each stage's instances automatically receive the exact packages that were tested. The lifecycle environment is managed as Terraform code, and compliance is tracked through the OSMH errata dashboard. For critical kernel patches, we use Oracle Ksplice for zero-downtime application."
+>
+> **What this demonstrates:** You understand that patching isn't just `dnf update` — it's a controlled, auditable process with separation of duties (security team approves, ops team promotes, change management tracks).
+
+#### 9.4 Break-Fix Lab: Patch and Rollback
+
+```bash
+# SCENARIO: You applied a security patch and FedTracker stopped working.
+# Walk through diagnosis and rollback.
+
+# Step 1: Apply available security patches
+sudo dnf update --security -y
+# Note the transaction ID from dnf history
+
+# Step 2: Verify FedTracker is still running
+systemctl status fedtracker
+curl -s http://localhost:8000/health | python3 -m json.tool
+
+# Step 3: Check if services need restart
+sudo needs-restarting -s
+
+# Step 4: If FedTracker needs restart, restart it
+sudo systemctl restart fedtracker
+systemctl status fedtracker
+
+# BREAK IT: Simulate a bad patch (we'll use dnf history to rollback)
+# Check your latest transaction ID
+dnf history
+# Note the ID number (e.g., 12)
+
+# Step 5: Rollback the patch
+sudo dnf history undo 12 -y
+
+# Step 6: Verify rollback worked
+dnf history
+# Should show a new transaction undoing the previous one
+
+# Step 7: Restart affected services
+sudo systemctl restart fedtracker
+curl -s http://localhost:8000/health | python3 -m json.tool
+```
+
+> **What you just practiced:** The complete patch-rollback cycle that every federal sysadmin needs: apply → verify → discover breakage → rollback → verify recovery. In a real incident, you'd also file a change management ticket explaining why the rollback was needed and work with the security team on an alternative remediation path.
+
+---
+
 ### DAY 6-7 RECAP — LINUX ADMIN MASTERY
 
 #### What You Can Now Talk About in Interviews
@@ -1480,6 +1758,7 @@ df -i /tmp     # Inodes freed
 - "I tune kernel parameters via `sysctl` for web server workloads — `somaxconn`, TCP buffer sizes, `swappiness`, and security hardening like `tcp_syncookies`."
 - "I've investigated OOM killer events by correlating `dmesg`, `journalctl -k`, and `sar -r` to find the memory trend leading to the kill, then prevented recurrence with `MemoryMax` in systemd and monitoring alerts."
 - "I manage user access with POSIX ACLs for fine-grained permissions, `sudoers.d` drop-in files for team-specific sudo access, and PAM for password complexity and account lockout policies."
+- "I manage patching with a staged approach: review security advisories, apply `--security` patches to staging first, verify services, then promote to production. I use OCI OS Management Hub for fleet-wide orchestration with 3-stage lifecycle environments, and Oracle Ksplice for zero-downtime kernel patching."
 
 #### Command Quick Reference
 
@@ -1505,6 +1784,11 @@ df -i /tmp     # Inodes freed
 | User management | `useradd`, `usermod`, `chage`, `passwd` |
 | ACLs | `setfacl -m u:user:rwx path`, `getfacl path` |
 | Process investigation | `strace -p PID`, `/proc/PID/status`, `lsof -p PID` |
+| Check available patches | `dnf check-update`, `dnf updateinfo list security` |
+| Apply security patches | `sudo dnf update --security -y` |
+| Patch rollback | `dnf history`, `sudo dnf history undo <ID>` |
+| Services needing restart | `sudo needs-restarting -s` (services), `-r` (reboot check) |
+| Zero-downtime kernel patch | `sudo uptrack-upgrade -y` (Oracle Ksplice) |
 
 #### Skills Mapped to AFS Job Description
 
@@ -1516,5 +1800,6 @@ df -i /tmp     # Inodes freed
 | "disaster recovery" | LVM snapshots, backup verification, break-fix exercises |
 | "troubleshooting" | 8 break-fix labs covering network, disk, memory, CPU, SELinux |
 | "cost management" | Understanding resource limits to right-size VMs (cgroups, memory analysis) |
+| "patch management" | Enterprise patching workflow with OCI OS Management Hub, Ksplice, `dnf history` rollback |
 
 ### Next: Phase 2 — Disaster Recovery Drill & Backup Architecture

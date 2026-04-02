@@ -6,6 +6,20 @@ Ongoing record of key decisions, trade-offs, pivots, and lessons learned while b
 
 ---
 
+## ADR-007: OCI Managed Services — Build It Yourself First, Then Use the Managed Equivalent
+**Date:** 2026-04-02
+**Status:** Accepted
+**Context:** Phase 3 builds production-like infrastructure using self-managed tools: k3s for Kubernetes, local `terraform apply` for infrastructure, Jenkins for CI/CD. In production federal environments, teams often use managed equivalents: OKE (managed K8s), OCI Resource Manager (managed Terraform), OCI DevOps (managed CI/CD). The question arose: should we replace the DIY tools with managed services in Phase 3?
+**Decision:** Keep the DIY implementation as primary Phase 3 content. Add appendices exploring managed alternatives (OCI Resource Manager, OKE comparison, OCIR scanning enhancements, OCI DevOps). The Phase 1 Linux admin deep dive covers OCI OS Management Hub for enterprise patch management.
+**Rationale:** The interview story is strongest when you can say "I built it from scratch AND I know the managed alternative." Replacing k3s with OKE would remove the Kubernetes internals learning. Replacing Jenkins with OCI DevOps would remove pipeline-as-code authoring experience. The progression is deliberate: understand the primitives (Phase 1-3), then understand what the managed service abstracts away (appendices).
+**Trade-offs:**
+- OKE control plane costs money (not Always Free) — appendix is comparison-focused with an optional trial-credits lab
+- OCI Resource Manager is free — most practical to demonstrate hands-on
+- OCI OS Management Hub is free on paid tenancies — covered in Linux admin deep dive with lifecycle environments
+**See also:** Phase 3 Appendices A-D for managed services labs; Phase 1 Linux admin deep dive Step 9 for OSMH patching workflow.
+
+---
+
 ## ADR-006: DevOps Tool Layering — Where Everything Runs
 **Date:** 2026-03-31
 **Status:** Accepted

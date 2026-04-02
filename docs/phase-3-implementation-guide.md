@@ -41,7 +41,7 @@ Internet
 │  ┌─────────────────────────────┐                          │
 │  │ Public Subnet (10.0.1.0/24) │                          │
 │  │  Bastion / Jenkins VM       │                          │
-│  │  (Oracle Linux 8)           │                          │
+│  │  (Oracle Linux 9)           │                          │
 │  └──────────────┬──────────────┘                          │
 │                 │ SSH tunnel                               │
 │  ┌──────────────▼──────────────┐                          │
@@ -418,7 +418,7 @@ variable "ssh_public_key" {
 }
 
 variable "image_ocid" {
-  description = "Oracle Linux 8 ARM image OCID for your region"
+  description = "Oracle Linux 9 ARM image OCID for your region"
   type        = string
 }
 
@@ -872,7 +872,7 @@ variable "ssh_public_key" {
 }
 
 variable "image_ocid" {
-  description = "Oracle Linux 8 ARM image OCID"
+  description = "Oracle Linux 9 ARM image OCID"
   type        = string
 }
 
@@ -1201,7 +1201,7 @@ region              = "us-ashburn-1"
 compartment_ocid    = "ocid1.compartment.oc1..YOUR_COMPARTMENT_OCID"
 availability_domain = "YOUR-AD-NAME"   # e.g., "XgvI:US-ASHBURN-AD-1"
 ssh_public_key      = "ssh-rsa AAAA... your-key-here"
-image_ocid          = "ocid1.image.oc1.iad.YOUR_OL8_ARM_IMAGE_OCID"
+image_ocid          = "ocid1.image.oc1.iad.YOUR_OL9_ARM_IMAGE_OCID"
 db_admin_password   = "YourStrongP@ssw0rd1!"
 db_wallet_password  = "WalletP@ssw0rd1!"
 ```
@@ -1209,7 +1209,7 @@ db_wallet_password  = "WalletP@ssw0rd1!"
 > **Finding your values:**
 > - **tenancy_ocid / user_ocid / fingerprint:** OCI Console → top-right profile icon → "My profile" → "Tokens and keys" tab → "API keys" (older tenancies: "User Settings" → scroll to "API Keys")
 > - **availability_domain:** OCI Console → Governance & Administration → Limits, Quotas and Usage → filter "Availability Domain"
-> - **image_ocid:** OCI Console → Compute → Images → Platform Images → filter "Oracle Linux 8" + "aarch64" → copy OCID for your region
+> - **image_ocid:** OCI Console → Compute → Images → Platform Images → filter "Oracle Linux 9" + "aarch64" → copy OCID for your region
 > - **compartment_ocid:** OCI Console → Identity & Security → Compartments → click your compartment → copy OCID
 
 **Initialize and apply:**
@@ -1246,7 +1246,7 @@ terraform output k3s_node2_private_ip
 ```bash
 # Test bastion access
 ssh -i ~/.ssh/id_rsa opc@$(terraform output -raw bastion_public_ip)
-# Expected: Oracle Linux 8 welcome banner, opc@fedcompliance-bastion prompt
+# Expected: Oracle Linux 9 welcome banner, opc@fedcompliance-bastion prompt
 
 # Test k3s node access via bastion jump (from local terminal)
 BASTION_IP=$(terraform output -raw bastion_public_ip)
@@ -3171,7 +3171,7 @@ git push origin main
 - Ansible deploy playbook using the `oracle.oci` lookup plugin to pull secrets from Vault — zero plaintext secrets in code or config files
 - FedCompliance FastAPI application: 6 endpoints covering compliance dashboards, control listing, scan triggering, report generation, API key validation, and health checking
 - Oracle Autonomous DB seeded with 20+ real CMMC Level 2 and NIST SP 800-171 control records
-- 2-node k3s cluster on Oracle Linux 8 ARM, with kubeconfig on bastion for remote management
+- 2-node k3s cluster on Oracle Linux 9 ARM, with kubeconfig on bastion for remote management
 
 **What's running:**
 
@@ -3205,7 +3205,7 @@ Your Laptop (git push)
         │
         ▼
 ┌───────────────────────────────────────────────────────┐
-│  Bastion VM / Jenkins Server (Oracle Linux 8)          │
+│  Bastion VM / Jenkins Server (Oracle Linux 9)          │
 │  Public Subnet — 10.0.1.x                              │
 │                                                         │
 │  ┌─────────────────────────────────────────────────┐   │
@@ -3293,7 +3293,7 @@ sudo systemctl status jenkins
 
 > **Federal Reality Check: SELinux**
 >
-> Oracle Linux 8 ships with SELinux in enforcing mode. If your service fails to start, check SELinux first:
+> Oracle Linux 9 ships with SELinux in enforcing mode. If your service fails to start, check SELinux first:
 > ```bash
 > # Check if SELinux is blocking your service
 > sudo ausearch -m avc -ts recent
@@ -6581,6 +6581,7 @@ mkdir -p ~/oci-fn/log-processor
 cd ~/oci-fn/log-processor
 
 # Initialize a Python function
+# Note: This is the OCI Functions platform runtime, separate from the VM's Python version
 fn init --runtime python3.11 log-processor
 cd log-processor
 ls
@@ -6728,7 +6729,7 @@ oci>=2.126.0
 schema_version: 20180708
 name: log-processor
 version: 0.0.1
-runtime: python3.11
+runtime: python3.11          # Note: This is the OCI Functions platform runtime, separate from the VM's Python version
 build_image: fnproject/python:3.11-dev
 run_image: fnproject/python:3.11
 entrypoint: /python/bin/fdk log_processor.func.handler
@@ -7634,7 +7635,7 @@ reconciliation via ArgoCD.
 
 ## Infrastructure
 
-- Bastion VM: Oracle Linux 8, 1 OCPU, 6 GB RAM (VM.Standard.E4.Flex)
+- Bastion VM: Oracle Linux 9, 1 OCPU, 6 GB RAM (VM.Standard.E4.Flex)
 - k3s cluster: single-node, running on bastion VM
 - OCIR: OCI Container Registry (private repository)
 - Object Storage: app_logs bucket, Standard tier
@@ -7855,8 +7856,8 @@ echo "Teardown completed: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 **DAY 1 - Phase 22: Environment & Secure Foundations**
 
 - OCI tenancy configured: compartment, VCN, public subnet, private subnet, internet gateway, NAT gateway, route tables, security lists - all written as Terraform HCL by hand
-- Bastion VM: Oracle Linux 8, VM.Standard.E4.Flex, provisioned via Terraform, SSH key pair created locally
-- `cloud-init` bootstrap script: installs Docker, k3s, fn CLI, OCI CLI, Jenkins, Python 3.11, pip packages
+- Bastion VM: Oracle Linux 9, VM.Standard.E4.Flex, provisioned via Terraform, SSH key pair created locally
+- `cloud-init` bootstrap script: installs Docker, k3s, fn CLI, OCI CLI, Jenkins, Python 3, pip packages
 - OCI CLI configured with API key authentication; Terraform OCI provider configured
 - k3s single-node cluster running on bastion VM; `kubectl` functional
 - Object Storage bucket `app_logs` created via Terraform with versioning enabled
@@ -7958,8 +7959,258 @@ Take one screenshot now and save it to `docs/screenshots/` in your repo:
 
 **Technologies Used Across Phase 3:**
 
-Oracle Linux 8 - Terraform (OCI provider) - Docker - k3s - Kubernetes (raw manifests) - Helm - ArgoCD - Jenkins (Jenkinsfile) - Trivy - Syft (SPDX) - OCI Functions (Python 3.11, fn CLI) - OCI Object Storage - OCI Container Registry (OCIR) - OCI IAM - OCI KMS - OCI Audit - scikit-learn (IsolationForest) - NumPy - Python OCI SDK - FastAPI - pre-commit - detect-secrets - Bash
+Oracle Linux 9 - Terraform (OCI provider) - Docker - k3s - Kubernetes (raw manifests) - Helm - ArgoCD - Jenkins (Jenkinsfile) - Trivy - Syft (SPDX) - OCI Functions (Python 3.11, fn CLI) - OCI Object Storage - OCI Container Registry (OCIR) - OCI IAM - OCI KMS - OCI Audit - scikit-learn (IsolationForest) - NumPy - Python OCI SDK - FastAPI - pre-commit - detect-secrets - Bash
 
 ---
 
 *Phase 3 implementation guide complete. All phases: 22 - 23 - 24 - 25 - 26*
+
+---
+
+## APPENDICES: OCI Managed Services Exploration
+
+> These appendices explore OCI's managed service equivalents for the tools you built by hand in Phases 1-3. The interview story: "I built it from scratch to understand the primitives. Here's what the managed service replaces and what stays the same."
+>
+> **See also:** ADR-007 in `docs/ARCHITECTURE-DECISIONS.md` for the rationale behind this approach.
+
+---
+
+### Appendix A: OCI Resource Manager — Managed Terraform
+
+> **🧠 ELI5 — Resource Manager:** Throughout this project, you've been running `terraform apply` from your laptop. OCI Resource Manager does the same thing, but Oracle runs it for you — in a managed environment with automatic state storage, audit logging, and git integration. Your `.tf` files don't change at all. It's like going from compiling code on your laptop to using a CI/CD build server: the code is the same, the execution environment is managed.
+
+**What it replaces:**
+- Running `terraform init/plan/apply` from your local machine
+- Managing `terraform.tfstate` manually (Resource Manager stores state automatically)
+- The "inception problem" from ADR-006 — Layer 0 is eliminated because Oracle manages the execution environment
+
+**What stays the same:**
+- Your Terraform modules (`modules/network/`, `modules/compute/`, `modules/database/`)
+- Your variable definitions (`variables.tf`, `terraform.tfvars`)
+- HCL syntax, resource definitions, outputs — all identical
+
+**Lab Exercise: Create a Resource Manager Stack**
+
+📍 **OCI Console** → **Developer Services** → **Resource Manager** → **Stacks**
+
+1. Click **Create Stack**
+2. Choose **Source Code Control** → select your GitHub repo (or upload a zip of your `terraform/environments/lab/` directory)
+3. **Working Directory:** Point to `terraform/environments/lab/` (where your `main.tf` lives)
+4. **Terraform Version:** Select 1.5+ (matches what you've been using locally)
+5. **Variables:** The console auto-detects variables from your `variables.tf` — fill in the same values from your `terraform.tfvars`
+6. Click **Create**
+
+**Run a Plan Job:**
+
+1. From your Stack page, click **Plan**
+2. Review the plan output — it should show the same resources as `terraform plan` on your laptop
+3. Compare: same resource count, same changes, same outputs
+
+**Run an Apply Job (optional — only if you want Resource Manager to take over state):**
+
+1. Click **Apply** → select the plan you just ran
+2. Resource Manager executes `terraform apply` in Oracle's managed environment
+3. State is stored automatically — no more `.tfstate` file on your laptop
+
+> ⚠️ **If you apply via Resource Manager, your local Terraform state will be out of sync.** You'd need to either always use Resource Manager going forward, or import the state back locally. For this lab, running Plan only is the safest demonstration.
+
+**Cost:** Resource Manager itself is free. The infrastructure it provisions costs the same as running Terraform locally.
+
+**Interview talking point:** "I use OCI Resource Manager for managed Terraform execution. My HCL modules are identical — I developed them locally with `terraform plan/apply`, then uploaded them to Resource Manager for managed execution with automatic state storage and audit logging. This eliminates the Layer 0 inception problem: Oracle manages the Terraform execution environment."
+
+---
+
+### Appendix B: OKE — Oracle Kubernetes Engine Comparison
+
+> **🧠 ELI5 — OKE vs k3s:** In Phase 2, you installed k3s on VMs — you managed the Kubernetes control plane yourself (the API server, etcd, scheduler). OKE is Oracle's managed Kubernetes: they handle the control plane, you just add worker nodes. It's like the difference between running your own email server vs. using Gmail: the email protocol (SMTP) is the same, but someone else handles the infrastructure.
+
+**What OKE handles (that you did manually with k3s):**
+| Component | k3s (you manage) | OKE (Oracle manages) |
+|-----------|-------------------|----------------------|
+| API Server | Running on your VM | Managed, HA, auto-patched |
+| etcd (cluster state) | SQLite/embedded on VM | Managed, backed up automatically |
+| Control plane upgrades | Manual `curl -sfL ...` | One-click version upgrade |
+| TLS certificates | Auto-generated, manually renewed | Managed, auto-rotated |
+| Networking (CNI) | Flannel (k3s default) | OCI VCN-Native Pod Networking |
+| Load balancing | NodePort or manual | OCI Load Balancer (integrated) |
+
+**What stays identical:**
+- `kubectl` commands — same API, same syntax
+- Helm charts — your `helm install` commands work unchanged
+- ArgoCD — watches the same git repo, syncs the same manifests
+- RBAC policies — same `Role`, `ClusterRole`, `RoleBinding` YAML
+- Your application manifests — same Deployments, Services, ConfigMaps
+
+**Architecture comparison:**
+
+```
+k3s (Phase 2):                        OKE:
+┌──────────────────────┐               ┌──────────────────────┐
+│ bastion VM           │               │ OKE Managed          │
+│ ├── k3s server       │               │ Control Plane        │
+│ │   ├── API server   │               │ (Oracle manages)     │
+│ │   ├── etcd (SQLite)│               │ ├── API server (HA)  │
+│ │   └── scheduler    │               │ ├── etcd (managed)   │
+│ └── k3s agent        │               │ └── scheduler        │
+├──────────────────────┤               ├──────────────────────┤
+│ app-server VM        │               │ Node Pool            │
+│ └── k3s agent        │               │ ├── A1.Flex node 1   │
+│     └── pods         │               │ │   └── pods         │
+│         ├── app      │               │ └── A1.Flex node 2   │
+│         └── argocd   │               │     └── pods         │
+└──────────────────────┘               └──────────────────────┘
+  You manage everything                  You manage nodes + apps
+                                         Oracle manages control plane
+```
+
+**Cost analysis:**
+- **k3s:** $0 — runs on your existing Always Free VMs
+- **OKE control plane:** Free (Oracle made OKE control plane free in 2024)
+- **OKE worker nodes:** Same cost as regular compute instances (A1 Flex nodes use your Always Free allocation)
+- **OCI Load Balancer:** ~$10/month if you add one (optional)
+
+> **Note:** OKE control plane is now free, but you need a paid tenancy (trial credits work). Always Free-only accounts may not be able to create OKE clusters.
+
+**Optional lab exercise (if trial credits available):**
+
+```bash
+# Create a minimal OKE cluster with 1 A1 Flex node
+# Use the OCI Console: Developer Services → Kubernetes Clusters (OKE) → Create Cluster
+# Select "Quick Create" → Kubernetes version 1.28+ → Node pool: 1 node, VM.Standard.A1.Flex
+# This takes ~10 minutes to provision
+
+# Once ready, download the kubeconfig
+oci ce cluster create-kubeconfig \
+  --cluster-id $OKE_CLUSTER_OCID \
+  --file ~/.kube/oke-config \
+  --region us-ashburn-1
+
+# Set the kubeconfig
+export KUBECONFIG=~/.kube/oke-config
+
+# Verify — same kubectl commands as k3s
+kubectl get nodes
+kubectl get namespaces
+
+# Deploy your existing Helm chart — it works unchanged
+helm install fedtracker ./helm/fedtracker/
+
+# ⚠️ TEARDOWN when done to save credits
+# OCI Console → OKE → your cluster → Delete
+```
+
+**Interview talking point:** "I used k3s in my lab to understand Kubernetes internals — control plane components, etcd state, CNI networking. In production, I'd use OKE so Oracle manages the control plane, patching, and HA. My Helm charts, ArgoCD configs, and kubectl workflows transfer directly — the Kubernetes API is identical. The only difference is who manages the control plane."
+
+---
+
+### Appendix C: OCIR Enhancements — Image Scanning and Signing
+
+> **🧠 ELI5 — Defense in depth for containers:** In Phase 3, you run Trivy in the build pipeline to scan images before pushing to OCIR. That's pipeline-time scanning. OCIR also offers registry-time scanning — it scans images after they're pushed and continuously checks for new CVEs. In production, you want both: Trivy catches issues before code merges, OCIR scanning catches issues discovered after the image was built.
+
+**Enable image scanning on your OCIR repository:**
+
+📍 **OCI Console** → **Developer Services** → **Container Registry**
+
+1. Find your existing OCIR repository (e.g., `fedtracker`)
+2. Click the repository name → **Settings**
+3. Under **Scanning**, toggle **Enable image scanning**
+4. **Scan on push:** Enable — every new image push triggers a scan automatically
+
+**View scan results:**
+
+1. Click any image tag in your OCIR repository
+2. Click **Scan Results** tab
+3. Review: CVE ID, severity (Critical/High/Medium/Low), affected package, fixed version
+
+**Compare with Trivy (already in your pipeline):**
+
+| Aspect | Trivy (Pipeline) | OCIR Scanning (Registry) |
+|--------|-------------------|--------------------------|
+| When it runs | During CI/CD build | After push + continuous |
+| What it catches | Issues known at build time | New CVEs discovered post-push |
+| Integration | Jenkins stage, exit code | OCI Console, API, Events |
+| Cost | Free (open source) | Free for up to 5 images/month |
+| Coverage | OS packages + app dependencies | OS packages only |
+
+**Image signing with OCI Vault (conceptual):**
+
+Your Phase 3 lab already has OCI Vault configured (Day 1, Step 22.9). Container image signing uses Vault's KMS keys to cryptographically sign images, proving they came from your pipeline and haven't been tampered with. This maps to EO 14028 (Executive Order on Improving the Nation's Cybersecurity) supply chain requirements.
+
+```bash
+# Conceptual flow (requires cosign CLI):
+# 1. Generate a signing key in OCI Vault
+# 2. After Trivy scan passes, sign the image:
+#    cosign sign --key oci://vault-key-ocid $OCIR_IMAGE_URL
+# 3. At deploy time, verify the signature:
+#    cosign verify --key oci://vault-key-ocid $OCIR_IMAGE_URL
+# 4. Kubernetes admission controller rejects unsigned images
+```
+
+> **Interview talking point:** "I implement defense-in-depth for container security: Trivy scans during CI/CD for known CVEs at build time, OCIR scanning continuously monitors for newly discovered vulnerabilities post-deployment, and I use Cosign with OCI Vault KMS keys for image signing to verify supply chain integrity per EO 14028."
+
+---
+
+### Appendix D: OCI DevOps — Managed CI/CD Comparison
+
+> **🧠 ELI5 — OCI DevOps vs Jenkins:** Jenkins is the Swiss Army knife of CI/CD — infinitely flexible, runs anywhere, but you manage the server, plugins, and Java runtime. OCI DevOps is Oracle's managed CI/CD service: you define build pipelines and deployment pipelines, Oracle runs them. It's integrated with OCIR, OKE, and OCI Functions out of the box. The trade-off: less flexibility, zero server management.
+
+**Why Jenkins was chosen for this lab:**
+- The target job description (AFS Cloud Engineer) specifies **CloudBees/Jenkins** experience
+- Jenkins teaches pipeline-as-code concepts (Jenkinsfile) that transfer to any CI/CD system
+- Self-managing Jenkins demonstrates Linux admin skills (Java, systemd, plugin management)
+
+**What OCI DevOps replaces:**
+
+| Component | Jenkins (your lab) | OCI DevOps (managed) |
+|-----------|-------------------|----------------------|
+| Build server | VM you provision and maintain | Oracle-managed build runners |
+| Plugin management | You install, update, debug | Built-in integrations, no plugins |
+| Pipeline definition | Jenkinsfile (Groovy DSL) | Build spec YAML |
+| Artifact storage | Local workspace + OCIR push | Integrated with OCIR |
+| Deployment | Pipeline calls kubectl/helm | Deployment pipeline with approval gates |
+| Secrets | Jenkins Credential Store | OCI Vault (native integration) |
+| Cost | VM cost (Always Free A1 Flex) | Free tier: 5000 build minutes/month |
+
+**What stays the same:**
+- Pipeline stages: validate → scan → build → test → deploy
+- Container image workflow: build → tag → push to OCIR → deploy to K8s
+- Security scanning: Trivy/Syft still run as build steps
+- GitOps: ArgoCD can still watch your repo (complementary, not replaced)
+
+**Architecture comparison:**
+
+```
+Jenkins (your lab):                    OCI DevOps:
+┌──────────────────────┐               ┌──────────────────────┐
+│ bastion VM           │               │ OCI DevOps Project   │
+│ ├── Jenkins server   │               │ (Oracle manages)     │
+│ │   ├── Java runtime │               │                      │
+│ │   ├── Plugins      │               │ Build Pipeline:      │
+│ │   └── Credentials  │               │ ├── build_spec.yaml  │
+│ │                    │               │ ├── Build runner     │
+│ └── Jenkinsfile:     │               │ ├── OCIR push        │
+│     ├── Build        │               │ └── Trivy scan       │
+│     ├── Trivy scan   │               │                      │
+│     ├── SBOM         │               │ Deploy Pipeline:     │
+│     ├── OCIR push    │               │ ├── Approval gate    │
+│     └── Deploy       │               │ ├── kubectl/helm     │
+└──────────────────────┘               │ └── Rollback         │
+  You manage the server                └──────────────────────┘
+  and all plugins                        Zero server management
+```
+
+**Interview talking point:** "In my lab, I use Jenkins because the role requires CloudBees experience. I understand Jenkins deeply — Jenkinsfile pipeline-as-code, credential management, plugin architecture, and running Jenkins as a systemd service on Oracle Linux. For comparison, OCI DevOps eliminates server management entirely while providing native integration with OCIR, OKE, and OCI Vault. The pipeline concepts (build → scan → deploy with approval gates) are identical — only the execution platform differs."
+
+---
+
+> **Summary: The OCI Managed Services Spectrum**
+>
+> | What You Built | Managed Equivalent | Cost | Lab Coverage |
+> |----------------|-------------------|------|-------------|
+> | `terraform apply` from laptop | OCI Resource Manager | Free | Appendix A (hands-on) |
+> | k3s on VMs | OKE (Oracle Kubernetes Engine) | Free control plane + node cost | Appendix B (comparison + optional lab) |
+> | Trivy pipeline scanning | OCIR Image Scanning | Free (5 images/month) | Appendix C (hands-on) |
+> | Jenkins on VM | OCI DevOps | Free (5000 min/month) | Appendix D (comparison) |
+> | `dnf update` manual patching | OCI OS Management Hub | Free on paid tenancy | Linux Admin Deep Dive Step 9 (hands-on) |
+>
+> **The progression:** Phase 1 teaches you to do it by hand. Phase 2 automates with open-source tools. Phase 3 adds enterprise patterns. These appendices show what the cloud provider handles when you're ready to let go of the knobs.

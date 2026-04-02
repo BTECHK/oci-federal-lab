@@ -7,7 +7,7 @@
 #
 # Run on:  app-server (SSH via bastion)
 # Run as:  clouduser (sudo for systemd/env file)
-# Prereq:  app-server-setup.sh already ran (clouduser, Python 3.11, pip packages exist)
+# Prereq:  app-server-setup.sh already ran (clouduser, Python 3, pip packages exist)
 # Usage:   bash fast-track-day2.sh
 #
 # Creates:
@@ -33,8 +33,8 @@ if ! id clouduser &>/dev/null; then
     exit 1
 fi
 
-if ! command -v python3.11 &>/dev/null; then
-    echo "ERROR: python3.11 not installed. Run app-server-setup.sh first."
+if ! command -v python3 &>/dev/null; then
+    echo "ERROR: python3 not installed. Run app-server-setup.sh first."
     exit 1
 fi
 
@@ -490,9 +490,9 @@ cat > /opt/fedtracker/oci_reporter.py << 'REPORTEREOF'
 """
 OCI Resource Reporter
 Queries OCI APIs to report on compute instances, their status,
-and tagging compliance. Run with: python3.11 oci_reporter.py
+and tagging compliance. Run with: python3 oci_reporter.py
 
-Requires: python3.11 -m pip install oci
+Requires: python3 -m pip install oci
 Requires: ~/.oci/config with valid API key authentication
 """
 
@@ -648,7 +648,7 @@ User=clouduser
 Group=clouduser
 WorkingDirectory=/opt/fedtracker
 EnvironmentFile=/etc/fedtracker/env
-ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=5
 StandardOutput=journal

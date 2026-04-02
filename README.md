@@ -4,7 +4,7 @@
 
 **Author:** BTECHK
 **Cloud:** Oracle Cloud Infrastructure (OCI)
-**Linux:** Oracle Linux 8
+**Linux:** Oracle Linux 9
 **Budget:** $0–$100 (OCI $300 trial credits)
 
 ---
@@ -55,7 +55,7 @@ Production-grade delivery: multi-stage Jenkins pipelines with security scanning,
 | Category | Tools |
 |----------|-------|
 | **Cloud** | OCI (Compute, VCN, Autonomous DB, Object Storage, Functions, API Gateway, GenAI) |
-| **Linux** | Oracle Linux 8 (SELinux, LVM, systemd, firewalld, PAM, sysctl, journalctl) |
+| **Linux** | Oracle Linux 9 (SELinux, LVM, systemd, firewalld, PAM, sysctl, journalctl) |
 | **IaC** | Terraform (progressive: manual → basics → modules) |
 | **Config Mgmt** | Ansible (progressive: playbooks → drift detection → roles + vault) |
 | **CI/CD** | Jenkins → CloudBees CI (progressive: open-source install → CloudBees migration → pipeline templates + governance) |

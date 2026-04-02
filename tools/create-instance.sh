@@ -80,8 +80,7 @@ useradd -r -s /sbin/nologin -M svc-fedtracker
 # Install packages
 dnf update -y
 dnf install -y git wget curl vim
-dnf install -y python3.11 python3.11-pip python3.11-devel
-alternatives --set python3 /usr/bin/python3.11
+dnf install -y python3 python3-pip python3-devel
 
 # Signal completion
 touch /tmp/cloud-init-complete

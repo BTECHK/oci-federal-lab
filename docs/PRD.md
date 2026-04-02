@@ -36,11 +36,11 @@ This is a learning lab, not a production application. The "product" is the infra
 **Acceptance Criteria:**
 - [ ] OCI tenancy created with $300 trial credits
 - [ ] Compartment, VCN, subnets (public + private), security lists, internet gateway configured
-- [ ] Oracle Linux 8 compute instance SSH-accessible
+- [ ] Oracle Linux 9 compute instance SSH-accessible
 - [ ] Budget alert set at $50
 
 ### US-002: Oracle Linux Hardening
-**Description:** As a Linux admin, I want to harden an Oracle Linux 8 instance so that I can demonstrate production security practices.
+**Description:** As a Linux admin, I want to harden an Oracle Linux 9 instance so that I can demonstrate production security practices.
 
 **Acceptance Criteria:**
 - [ ] SELinux in enforcing mode, custom booleans configured
@@ -127,7 +127,7 @@ This is a learning lab, not a production application. The "product" is the infra
 
 ## Functional Requirements
 
-- FR-1: All infrastructure provisioned on OCI using Oracle Linux 8 compute instances
+- FR-1: All infrastructure provisioned on OCI using Oracle Linux 9 compute instances
 - FR-2: Each phase is independent — can be started from a fresh environment
 - FR-3: Every phase covers all JD-required skills (Terraform, Ansible, Linux, Jenkins, containers)
 - FR-4: FastAPI apps built by hand with section-by-section scaffolding and ELI5 explanations
@@ -155,7 +155,7 @@ This is a learning lab, not a production application. The "product" is the infra
 ## Technical Considerations
 
 - **Budget constraint:** $100 max from $300 OCI trial credits. ARM A1 instances are Always Free tier.
-- **Oracle Linux 8:** Ships Podman by default, Docker not in repos. SELinux enforcing by default.
+- **Oracle Linux 9:** Ships Podman by default, Docker not in repos. SELinux enforcing by default.
 - **k3s on ARM:** Fully conformant K8s, ~70MB binary, runs on free-tier ARM instances.
 - **Autonomous Database:** OCI's managed Oracle DB — Always Free tier includes 2 instances.
 - **Phase independence:** Each phase tears down at the end. No cross-phase dependencies.

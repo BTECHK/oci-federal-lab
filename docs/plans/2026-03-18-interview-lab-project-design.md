@@ -156,13 +156,13 @@ Internet
 |  +---------------------------+                        |
 |  | Public Subnet 10.0.1.0/24 |                        |
 |  |  Bastion/CI VM              |                        |
-|  |  (Oracle Linux 8)          |                        |
+|  |  (Oracle Linux 9)          |                        |
 |  +-------------+-------------+                        |
 |                |                                       |
 |  +-------------v--------------+                       |
 |  | Private Subnet 10.0.2.0/24 |                       |
 |  |  App Server VM              |                       |
-|  |  (Oracle Linux 8)           |                       |
+|  |  (Oracle Linux 9)           |                       |
 |  |  Docker + FedTracker        |                       |
 |  +-------------+--------------+                       |
 |                |                                       |
@@ -182,7 +182,7 @@ Internet
 - Set up basic VCN (manual via console) — public subnet, internet gateway, security lists
 - Configure SSH key pairs
 - Enable billing alerts (cost protection)
-- Launch Oracle Linux 8 VM in public subnet (the "legacy" server)
+- Launch Oracle Linux 9 VM in public subnet (the "legacy" server)
 - Linux admin fundamentals: users, permissions, packages, services, firewall, disk mounting, log review
 - Manually install app stack (Python, FastAPI, Oracle DB client)
 - Deploy FedTracker the messy way — no automation, everything by hand
@@ -201,7 +201,7 @@ Internet
 **Implementation:**
 - Design target architecture: VCN with public/private subnets, bastion, NAT gateway, security lists, NSGs
 - Build it all manually via OCI console
-- Launch new Oracle Linux 8 VM in private subnet
+- Launch new Oracle Linux 9 VM in private subnet
 - Set up Oracle Autonomous DB (free tier), connect from VM, run schema scripts
 - Security hardening: SSH key-only auth, disable root login, firewalld rules, auditd, login banner
 - Implement cost tagging strategy on all resources
@@ -252,8 +252,8 @@ Internet
   - `docker-compose up/down`, logs, exec into container
   - Note: Podman also supports `podman-compose` but Docker Compose is more mature
 - **NEW CONCEPT:** OpenSCAP CIS benchmark scanning — full ELI5
-  - Install OpenSCAP on Oracle Linux 8
-  - Run CIS Oracle Linux 8 benchmark scan -> HTML compliance report
+  - Install OpenSCAP on Oracle Linux 9
+  - Run CIS Oracle Linux 9 benchmark scan -> HTML compliance report
   - Bash script to automate: run scan, parse results, log pass/fail count
   - Remediate top 5 failures manually
 - **NEW CONCEPT:** FedRAMP Readiness Agent — full ELI5
@@ -658,7 +658,7 @@ Includes: OCI account bootstrap, VCN, compute, Autonomous DB, Oracle Linux admin
 ## PILLAR DETAIL: SECURITY
 
 ### Phase 1: CIS Baseline Compliance with OpenSCAP
-- **What:** Install OpenSCAP, run CIS Oracle Linux 8 benchmark, generate HTML compliance report, remediate top findings.
+- **What:** Install OpenSCAP, run CIS Oracle Linux 9 benchmark, generate HTML compliance report, remediate top findings.
 - **Tool:** OpenSCAP + scap-security-guide (free, installed from Oracle Linux repos).
 - **Why it fits Phase 1:** First thing after migration = prove the instance meets baseline security. This is standard for any FedRAMP environment.
 - **Combines with:** Linux admin (remediation), Bash scripting (automation), AI pillar (evidence collection feeds CIS results to Ollama).
@@ -816,7 +816,7 @@ Managed K8s:        OKE                  EKS                    GKE             
 ```
 
 ### RULE 9: LINUX DISTRO
-- OCI project: Oracle Linux 8 (required — Oracle's distro)
+- OCI project: Oracle Linux 9 (required — Oracle's distro)
 - AWS project: Amazon Linux 2023 or RHEL
 - GCP project: Rocky Linux 9 or Ubuntu
 - Azure project: Ubuntu 22.04 or RHEL
@@ -882,4 +882,4 @@ The guide generator prompt will be populated with phase-specific details:
 - TARGET AUDIENCE: Career switcher with AWS/PM background, new to OCI/Linux/Terraform/Ansible
 - LEARNING GOALS per phase
 - DEPLOYMENT ENVIRONMENTS: Local terminal, OCI Console, VM Terminal (SSH), Editor
-- SPECIAL CONSTRAINTS: OCI Always Free, Oracle Linux 8, ARM instances
+- SPECIAL CONSTRAINTS: OCI Always Free, Oracle Linux 9, ARM instances

@@ -39,16 +39,16 @@ else
     echo "  Created svc-fedtracker (no login, no home)"
 fi
 
-echo "=== 4/6 Installing Python 3.11 ==="
-if command -v python3.11 &>/dev/null; then
-    echo "  python3.11 already installed — $(python3.11 --version)"
+echo "=== 4/6 Installing Python 3 ==="
+if command -v python3 &>/dev/null; then
+    echo "  python3 already installed — $(python3 --version)"
 else
-    sudo dnf install -y python3.11 python3.11-pip python3.11-devel
-    echo "  Installed $(python3.11 --version)"
+    sudo dnf install -y python3 python3-pip python3-devel
+    echo "  Installed $(python3 --version)"
 fi
 
 echo "=== 5/6 Installing Python packages ==="
-sudo python3.11 -m pip install fastapi uvicorn pydantic oracledb
+sudo python3 -m pip install fastapi uvicorn pydantic oracledb
 echo "  Installed fastapi, uvicorn, pydantic, oracledb"
 
 echo "=== 6/6 Setting up directories ==="
@@ -63,6 +63,6 @@ echo ""
 echo "=== Setup complete ==="
 echo "Verify:"
 echo "  id clouduser"
-echo "  python3.11 --version"
-echo "  python3.11 -c \"import fastapi, uvicorn, pydantic, oracledb; print('All packages OK')\""
+echo "  python3 --version"
+echo "  python3 -c \"import fastapi, uvicorn, pydantic, oracledb; print('All packages OK')\""
 echo "  ls -la /opt/fedtracker"

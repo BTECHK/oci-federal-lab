@@ -41,13 +41,13 @@ Internet
 │  ┌─────────────────────────────┐                      │
 │  │ Public Subnet (10.0.1.0/24) │                      │
 │  │  Bastion VM                 │                      │
-│  │  (Oracle Linux 8, 1 OCPU)   │                      │
+│  │  (Oracle Linux 9, 1 OCPU)   │                      │
 │  └──────────────┬──────────────┘                      │
 │                 │ SSH tunnel                           │
 │  ┌──────────────▼──────────────┐                      │
 │  │ Private Subnet (10.0.2.0/24)│                      │
 │  │  App Server VM              │                      │
-│  │  (Oracle Linux 8, 1 OCPU)   │                      │
+│  │  (Oracle Linux 9, 1 OCPU)   │                      │
 │  │  FedAnalytics (FastAPI)     │                      │
 │  │  systemd managed            │                      │
 │  └──────────────┬──────────────┘                      │
@@ -293,7 +293,7 @@ variable "ssh_public_key" {
 }
 
 variable "image_ocid" {
-  description = "Oracle Linux 8 ARM image OCID"
+  description = "Oracle Linux 9 ARM image OCID"
   type        = string
 }
 
@@ -656,14 +656,14 @@ region           = "us-ashburn-1"
 compartment_ocid    = "ocid1.compartment.oc1..YOUR_COMPARTMENT"
 availability_domain = "YOUR_AD_NAME"
 ssh_public_key      = "ssh-rsa YOUR_PUBLIC_KEY"
-image_ocid          = "ocid1.image.oc1..YOUR_OL8_ARM_IMAGE"
+image_ocid          = "ocid1.image.oc1..YOUR_OL9_ARM_IMAGE"
 
 db_admin_password  = "YourStr0ngP@ssw0rd!"
 db_wallet_password = "W@lletP@ss123!"
 EOF
 ```
 
-> **Important:** Fill in the actual values from your OCI account. You can find most of these in `~/.oci/config` and the OCI Console. The `image_ocid` is the Oracle Linux 8 ARM image for your region — find it under **Compute** → **Custom Images** or the [OCI image list](https://docs.oracle.com/en-us/iaas/images/).
+> **Important:** Fill in the actual values from your OCI account. You can find most of these in `~/.oci/config` and the OCI Console. The `image_ocid` is the Oracle Linux 9 ARM image for your region — find it under **Compute** → **Custom Images** or the [OCI image list](https://docs.oracle.com/en-us/iaas/images/).
 
 ---
 
@@ -1565,7 +1565,7 @@ WorkingDirectory=/opt/fedanalytics
 Environment="DB_TYPE={{ db_type | default('sqlite') }}"
 Environment="SQLITE_PATH=/opt/fedanalytics/fedanalytics.db"
 Environment="WEBHOOK_SECRET={{ webhook_secret | default('lab-secret-change-in-prod') }}"
-ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=5
 
@@ -1700,7 +1700,7 @@ EOF
 
 > **Federal Reality Check: SELinux**
 >
-> Oracle Linux 8 ships with SELinux in enforcing mode. If your service fails to start, check SELinux first:
+> Oracle Linux 9 ships with SELinux in enforcing mode. If your service fails to start, check SELinux first:
 > ```bash
 > # Check if SELinux is blocking your service
 > sudo ausearch -m avc -ts recent
@@ -1915,7 +1915,7 @@ git push
 
 **What you built:**
 - Terraform infrastructure: VCN, public/private subnets, bastion host, application server, Autonomous Database
-- Ansible hardening playbook: SSH lockdown, firewall, users, auto-updates (Oracle Linux 8)
+- Ansible hardening playbook: SSH lockdown, firewall, users, auto-updates (Oracle Linux 9)
 - Ansible deployment playbook: FedAnalytics FastAPI app with systemd service management
 - FedAnalytics API: 6 endpoints (ingest, webhook, logs, metrics, health, ingest/status)
 - Webhook endpoint with HMAC-SHA256 signature validation (Phase 2 API Pillar)

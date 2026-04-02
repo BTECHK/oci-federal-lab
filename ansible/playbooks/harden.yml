@@ -2,7 +2,7 @@
 # Targets: app server (and optionally bastion)
 # Run: ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
 
-- name: Harden Oracle Linux 8 servers
+- name: Harden Oracle Linux 9 servers
   hosts: app
   become: true  # Run as root (sudo)
 

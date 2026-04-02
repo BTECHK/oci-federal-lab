@@ -80,13 +80,13 @@ Internet
 │  ┌─────────────────────────────┐                      │
 │  │ Public Subnet (10.0.1.0/24) │                      │
 │  │  Bastion / Jenkins VM       │                      │
-│  │  (Oracle Linux 8)           │                      │
+│  │  (Oracle Linux 9)           │                      │
 │  └──────────────┬──────────────┘                      │
 │                 │ SSH tunnel                           │
 │  ┌──────────────▼──────────────┐                      │
 │  │ Private Subnet (10.0.2.0/24)│                      │
 │  │  App Server VM              │                      │
-│  │  (Oracle Linux 8)           │                      │
+│  │  (Oracle Linux 9)           │                      │
 │  │  Podman/Docker + FedTracker │                      │
 │  │  Ansible-managed            │                      │
 │  │  Hardened (auditd, firewall)│                      │
@@ -482,7 +482,7 @@ echo "=== ROUTE TABLES ===" && oci network route-table list --compartment-id <CO
 
 ---
 
-### Step 1.4 — Launch Oracle Linux 8 VM
+### Step 1.4 — Launch Oracle Linux 9 VM
 📍 **OCI Console**
 
 > **🧠 ELI5 — Compute Instance (VM):** A compute instance is a virtual machine — a slice of a physical server in Oracle's data center that acts like your own dedicated computer. You choose how powerful it is (shape), what operating system it runs (image), and which network it connects to (subnet). It's like renting a computer in the cloud that you access over SSH.
@@ -496,10 +496,10 @@ echo "=== ROUTE TABLES ===" && oci network route-table list --compartment-id <CO
 
 5. **Image and Shape** section:
    - Click **Edit** next to Image and Shape
-   - **Image:** Click **Change Image** → select **Oracle Linux** → select **Oracle Linux 8 or 9** — either works. If A1 Flex is only available with OL9, select that. → click **Select Image**
+   - **Image:** Click **Change Image** → select **Oracle Linux** → select **Oracle Linux 9** → click **Select Image**
    - **Shape:** Click **Change Shape** → select **Ampere** (ARM) → select **VM.Standard.A1.Flex** → set **OCPU count: 1** and **Memory: 6 GB** (A1 Flex allocates 6 GB per OCPU — sufficient for Phase 1) → click **Select Shape**
 
-> **🧠 ELI5 — Shapes and Images:** A *shape* is the hardware configuration — how many CPUs and how much RAM your VM gets. `VM.Standard.A1.Flex` means it uses ARM processors (like your phone's chip, very efficient) and "Flex" means you choose how many CPUs and RAM. An *image* is the operating system template — Oracle Linux 8 is Red Hat Enterprise Linux-compatible, which is the standard for federal environments.
+> **🧠 ELI5 — Shapes and Images:** A *shape* is the hardware configuration — how many CPUs and how much RAM your VM gets. `VM.Standard.A1.Flex` means it uses ARM processors (like your phone's chip, very efficient) and "Flex" means you choose how many CPUs and RAM. An *image* is the operating system template — Oracle Linux 9 is Red Hat Enterprise Linux-compatible, which is the standard for federal environments.
 
 > **Out of capacity?** A1 Flex is in high demand. If you see "Out of capacity" in one AD, try the other two ADs. If all three fail, try again in a few hours (capacity fluctuates). As a last resort, use `VM.Standard.E2.1.Micro` (1 OCPU / 1 GB) — it's always available and works for Phase 1, though you may need to upgrade for Phase 2.
 
@@ -528,7 +528,7 @@ Wait 1-2 minutes for the instance to show **RUNNING** status. Note the **Public 
 On the instance details page, confirm:
 - **State:** Running
 - **Shape:** VM.Standard.A1.Flex (1 OCPU, 6 GB)
-- **Image:** Oracle Linux 8 or 9
+- **Image:** Oracle Linux 9
 - **Public IP:** A valid IP address is shown (e.g., 129.xxx.xxx.xxx)
 
 ---
@@ -578,9 +578,9 @@ You're in. Every command from now on happens in this VM terminal unless a locati
 **Verify:**
 
 ```bash
-# Confirm you're on Oracle Linux 8 or 9
+# Confirm you're on Oracle Linux 9
 cat /etc/oracle-release
-# Expected: Oracle Linux Server release 8.x or 9.x (depending on image selected)
+# Expected: Oracle Linux Server release 9.x
 
 # Confirm your hostname
 hostname
@@ -615,7 +615,7 @@ uname -m
 | `ssh -i key opc@<IP>` connects | Shell prompt appears | Check: (1) key file path is correct, (2) `chmod 600` was run on the key, (3) public IP is correct, (4) you're using `opc` not `root`, (5) security list allows SSH on port 22 (wizard default enables this) |
 | `ssh` says "Permission denied" | Should not happen | Wrong key file, or key permissions too open. Run `chmod 600` on the key file |
 | `ssh` says "Connection timed out" | Should not happen | Security list may be missing port 22 rule, or you're trying to reach the private subnet IP instead of the public IP |
-| `cat /etc/oracle-release` shows Oracle Linux 8 or 9 | `Oracle Linux Server release 8.x or 9.x` | You selected the wrong image — terminate the instance and recreate with Oracle Linux 8 or 9 |
+| `cat /etc/oracle-release` shows Oracle Linux 9 | `Oracle Linux Server release 9.x` | You selected the wrong image — terminate the instance and recreate with Oracle Linux 9 |
 | `uname -m` shows `aarch64` | `aarch64` (ARM) | You selected the wrong shape — this is fine for learning, but A1 Flex is the Always Free shape |
 
 ---
@@ -773,7 +773,7 @@ grep svc-fedtracker /etc/passwd
 ### Step 2.2 — Manage Packages with dnf
 📍 **VM Terminal**
 
-> **🧠 ELI5 — Package Management (dnf):** `dnf` is Oracle Linux 8's package manager — it installs, updates, and removes software. Think of it like an app store for Linux. It downloads software from Oracle's repositories (online catalogs), handles dependencies automatically (if app A needs library B, it installs both), and tracks everything. `dnf` replaced `yum` starting in RHEL/Oracle Linux 8, though `yum` still works as an alias.
+> **🧠 ELI5 — Package Management (dnf):** `dnf` is Oracle Linux 9's package manager — it installs, updates, and removes software. Think of it like an app store for Linux. It downloads software from Oracle's repositories (online catalogs), handles dependencies automatically (if app A needs library B, it installs both), and tracks everything. `dnf` replaced `yum` starting in RHEL/Oracle Linux 8, though `yum` still works as an alias.
 
 ```bash
 # Update all installed packages to latest versions
@@ -786,23 +786,23 @@ sudo dnf update -y
 # Install the tools we'll need for the lab
 sudo dnf install -y git wget curl vim
 
-# Install Python 3.11 (required for modern FastAPI/Pydantic v2)
-sudo dnf install -y python3.11 python3.11-pip python3.11-devel
+# Verify Python 3 is available (OL9 ships with Python 3.9 — sufficient for FastAPI/Pydantic v2)
+python3 --version
+# Expected: Python 3.9.x
+
+# Install pip and development headers
+sudo dnf install -y python3-pip python3-devel
 ```
 
-> ⚠️ **Do NOT run `sudo alternatives --set python3 /usr/bin/python3.11`.** Changing the system-wide `python3` to 3.11 breaks system tools like `firewall-cmd` and `semanage` that depend on Python 3.9 packages (e.g., `gi` module). Instead, use `python3.11` explicitly for all lab commands. System tools keep working, your code uses the right version.
+> **🧠 ELI5 — Why Python 3.9 is sufficient:** Oracle Linux 9 ships with Python 3.9 as the system Python. FastAPI requires Python 3.8+ and Pydantic v2 requires Python 3.8+. Since 3.9 meets both requirements, there is no need to install a separate Python version. This means the system Python works for both your application code and system tools like `firewall-cmd` and `semanage` — no `alternatives` pain, no conflicting interpreters.
 
 ```bash
-# Verify Python 3.11 was installed correctly
-python3.11 --version
-# Expected: Python 3.11.x
-
 # Check what's installed related to Python
 dnf list installed | grep python3
 # Expected: Several python3 packages listed
 
 # Get detailed info about the python3 package
-dnf info python3.11
+dnf info python3
 # Shows: version, release, architecture, size, repository source
 ```
 
@@ -823,7 +823,7 @@ dnf search oracle
 | `dnf list installed` | | List all currently installed packages |
 | `dnf info` | | Show detailed info about a specific package |
 | `dnf search` | | Search package names and descriptions |
-| `python3.11 --version` | | Print installed Python version (should show 3.11.x) |
+| `python3 --version` | | Print installed Python version (should show 3.9.x) |
 
 </em></sub>
 
@@ -1489,25 +1489,25 @@ resolvectl status 2>/dev/null || cat /etc/resolv.conf
 
 ```bash
 # Install FastAPI, uvicorn (the ASGI server), and pydantic (data validation)
-sudo python3.11 -m pip install fastapi uvicorn pydantic
+sudo python3 -m pip install fastapi uvicorn pydantic
 ```
 
-> **Why install globally with `sudo python3.11 -m pip`?** This is the "legacy" approach — installing Python packages system-wide without virtual environments. It works but creates problems: version conflicts between apps, no isolation, messy upgrades. Day 3 will do this properly with a virtual environment in the Ansible playbook. We're doing it the wrong way first so you understand why virtual environments exist.
+> **Why install globally with `sudo python3 -m pip`?** This is the "legacy" approach — installing Python packages system-wide without virtual environments. It works but creates problems: version conflicts between apps, no isolation, messy upgrades. Day 3 will do this properly with a virtual environment in the Ansible playbook. We're doing it the wrong way first so you understand why virtual environments exist.
 
-> ⚠️ **Why `python3.11 -m pip` instead of `pip3.11`?** Running pip as a module (`python3.11 -m pip`) guarantees packages install to the same Python that will run your code. Using `pip3.11` directly can install to a different site-packages path — then `python3.11` can't find the modules. This is especially common on OL9 where system Python 3.9 coexists with 3.11.
+> ⚠️ **Why `python3 -m pip` instead of `pip3`?** Running pip as a module (`python3 -m pip`) guarantees packages install to the same Python that will run your code. Using `pip3` directly can sometimes install to a different site-packages path — then `python3` can't find the modules. Always prefer the module form.
 
-> ⚠️ **In production, never use `sudo python3.11 -m pip install`.** Always use virtual environments (`python3.11 -m venv`). We're being intentionally sloppy here for the legacy simulation.
+> ⚠️ **In production, never use `sudo python3 -m pip install`.** Always use virtual environments (`python3 -m venv`). We're being intentionally sloppy here for the legacy simulation.
 
 **Verify:**
 
 ```bash
-python3.11 -c "import fastapi; print(fastapi.__version__)"
+python3 -c "import fastapi; print(fastapi.__version__)"
 # Expected: 0.x.x (version number printed)
 
-python3.11 -c "import uvicorn; print(uvicorn.__version__)"
+python3 -c "import uvicorn; print(uvicorn.__version__)"
 # Expected: 0.x.x (version number printed)
 
-python3.11 -c "import pydantic; print(pydantic.__version__)"
+python3 -c "import pydantic; print(pydantic.__version__)"
 # Expected: 2.x.x or 1.x.x (version number printed)
 ```
 
@@ -2025,7 +2025,7 @@ head -20 /opt/fedtracker/main.py
 # Expected: shebang, docstring, imports including fastapi and pydantic
 
 # Verify the app runs without import errors (quick syntax check)
-python3.11 -c "import sys; sys.path.insert(0, '/opt/fedtracker'); import main; print('OK')"
+python3 -c "import sys; sys.path.insert(0, '/opt/fedtracker'); import main; print('OK')"
 # Expected: OK (no import errors)
 
 # Checkpoint: verify all endpoints made it into the file
@@ -2071,7 +2071,7 @@ whoami
 # Expected: clouduser (if not, run: sudo su - clouduser)
 
 # Start the application manually with uvicorn
-cd /opt/fedtracker && python3.11 main.py
+cd /opt/fedtracker && python3 main.py
 ```
 
 You should see:
@@ -2163,7 +2163,7 @@ Now **stop the manual app** by going back to the first terminal and pressing `Ct
 
 > **🧠 ELI5 — OpenAPI / Swagger:** FastAPI automatically generates interactive API documentation from your code. It reads your function signatures, Pydantic models, and docstrings to create a browsable interface where you can test every endpoint directly from your browser. This documentation stays perfectly in sync with your code — if you add an endpoint, it appears in the docs instantly.
 
-While the app is running (start it again with `cd /opt/fedtracker && python3.11 main.py`), verify the docs endpoint responds from the VM itself:
+While the app is running (start it again with `cd /opt/fedtracker && python3 main.py`), verify the docs endpoint responds from the VM itself:
 
 ```bash
 # Verify Swagger UI is served (from the VM — no firewall rule needed for localhost)
@@ -2232,7 +2232,7 @@ Environment=SQLITE_PATH=/opt/fedtracker/fedtracker.db
 # uvicorn main:app — "in the main module, find the app object"
 # --host 0.0.0.0 — listen on all interfaces (required for external access)
 # --port 8000 — FastAPI/uvicorn default port
-ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 # If the app crashes, restart it after 5 seconds
 Restart=always
@@ -2282,7 +2282,7 @@ Group=clouduser
 WorkingDirectory=/opt/fedtracker
 Environment=DB_TYPE=sqlite
 Environment=SQLITE_PATH=/opt/fedtracker/fedtracker.db
-ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -2347,7 +2347,7 @@ journalctl -u fedtracker -f
 
 > **Federal Reality Check: SELinux**
 >
-> Oracle Linux 8 ships with SELinux in enforcing mode. If your service fails to start, check SELinux first:
+> Oracle Linux 9 ships with SELinux in enforcing mode. If your service fails to start, check SELinux first:
 > ```bash
 > # Check if SELinux is blocking your service
 > sudo ausearch -m avc -ts recent
@@ -2434,7 +2434,7 @@ http://<PUBLIC_IP>:8000/docs
 | `curl` returns "Connection refused" | Should return JSON | Nothing is listening on port 8000. Service not running — `sudo systemctl start fedtracker` |
 | `curl` returns "Connection timed out" | Should return JSON | Firewall blocking — check both firewalld AND OCI security list |
 | `journalctl -u fedtracker` shows "Permission denied" | Should show startup messages | File permissions wrong: `ls -la /opt/fedtracker/main.py` — should be owned by clouduser. Fix: `sudo chown clouduser:clouduser /opt/fedtracker/main.py` |
-| `journalctl -u fedtracker` shows "ModuleNotFoundError: fastapi" | Should show startup messages | FastAPI not installed globally: `sudo python3.11 -m pip install fastapi uvicorn pydantic`. Or wrong Python path in service file |
+| `journalctl -u fedtracker` shows "ModuleNotFoundError: fastapi" | Should show startup messages | FastAPI not installed globally: `sudo python3 -m pip install fastapi uvicorn pydantic`. Or wrong Python path in service file |
 | `journalctl -u fedtracker` shows "command not found: uvicorn" | Should find uvicorn | Check path: `which uvicorn`. If it's in `/usr/local/bin/`, update the `ExecStart` path in the service file. Run `sudo systemctl daemon-reload` after editing |
 | SQLite database not created | `fedtracker.db` should exist | Check `ls -la /opt/fedtracker/`. If missing, the app didn't start successfully — check service logs |
 | Swagger UI not loading at `/docs` | Interactive API page | Ensure you're using port 8000 (not 5000). Check OCI security list allows 8000. Try with VM's public IP |
@@ -2676,10 +2676,10 @@ ls -la /opt/fedtracker/health_check.sh
 
 ```bash
 # Install the OCI Python SDK
-python3.11 -m pip install oci --user
+python3 -m pip install oci --user
 ```
 
-> **Why `--user`?** Installing with `--user` puts the package in your home directory instead of system-wide. This is slightly better than `sudo python3.11 -m pip install` but still not as good as a virtual environment. We're splitting the difference for Day 1.
+> **Why `--user`?** Installing with `--user` puts the package in your home directory instead of system-wide. This is slightly better than `sudo python3 -m pip install` but still not as good as a virtual environment. We're splitting the difference for Day 1.
 
 **Set up OCI API key authentication:**
 
@@ -2766,9 +2766,9 @@ cat > /opt/fedtracker/oci_reporter.py << 'PYEOF'
 """
 OCI Resource Reporter
 Queries OCI APIs to report on compute instances, their status,
-and tagging compliance. Run with: python3.11 oci_reporter.py
+and tagging compliance. Run with: python3 oci_reporter.py
 
-Requires: python3.11 -m pip install oci
+Requires: python3 -m pip install oci
 Requires: ~/.oci/config with valid API key authentication
 """
 
@@ -2928,7 +2928,7 @@ Now run the reporter:
 
 ```bash
 # Run the OCI resource reporter
-python3.11 /opt/fedtracker/oci_reporter.py
+python3 /opt/fedtracker/oci_reporter.py
 ```
 
 **Expected output:**
@@ -2985,7 +2985,7 @@ ls -la /opt/fedtracker/oci_reporter.py
 # Expected: file exists, owned by clouduser
 
 # Verify OCI SDK is installed
-python3.11 -c "import oci; print(oci.__version__)"
+python3 -c "import oci; print(oci.__version__)"
 # Expected: version number (e.g., 2.x.x)
 ```
 
@@ -2995,7 +2995,7 @@ python3.11 -c "import oci; print(oci.__version__)"
 
 | Command | Flag(s) | What It Does |
 |---------|---------|-------------|
-| `python3.11 -m pip install` | `--user` | Install a Python package in the user's home directory |
+| `python3 -m pip install` | `--user` | Install a Python package in the user's home directory |
 | `mkdir` | `-p` | Create directory (and parents). `-p` = no error if it exists |
 | `chmod` | `600` | Set file to owner-read/write only (for security-sensitive files) |
 | `scp` | `-i <key>` | Securely copy files between machines over SSH |
@@ -3121,21 +3121,21 @@ EOF
 
 ```bash
 cat > docker/Dockerfile << 'DOCKEOF'
-# Use Oracle Linux 8 as base (matches our OCI server OS)
-FROM oraclelinux:8-slim AS builder
+# Use Oracle Linux 9 as base (matches our OCI server OS)
+FROM oraclelinux:9-slim AS builder
 
 LABEL maintainer="lab-operator" \
       app="fedtracker" \
       version="1.0"
 
 # Install Python 3.11
-RUN microdnf install -y python3.11 python3.11-pip && \
+RUN microdnf install -y python3 python3-pip && \
     microdnf clean all
 
 # Install dependencies
 WORKDIR /app
 COPY requirements.txt .
-RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # Copy application
 COPY main.py .
@@ -3149,10 +3149,10 @@ EXPOSE 8000
 
 # Health check for orchestrator integration
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD python3.11 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Run the application
-CMD ["python3.11", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python3", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 DOCKEOF
 ```
 
@@ -3245,7 +3245,7 @@ cd ~/Desktop/github/oci-federal-lab
 git add docker/Dockerfile docker/requirements.txt
 git commit -m "Day 1: Add Dockerfile and requirements.txt for FedTracker container
 
-- Oracle Linux 8 slim base image (matches OCI server)
+- Oracle Linux 9 slim base image (matches OCI server)
 - Non-root appuser (CIS benchmark)
 - Health check for orchestrator integration
 - Pinned dependency versions for reproducible builds"
@@ -3505,7 +3505,7 @@ curl http://localhost:8000/health
 ### Day 1 Complete
 
 **What you built:**
-- OCI account with compartment, VCN, and Oracle Linux 8 VM
+- OCI account with compartment, VCN, and Oracle Linux 9 VM
 - FedTracker FastAPI REST API with 6 endpoints (built from scratch, not copy-pasted)
 - systemd service file to manage the application
 - Bash health check script
@@ -3513,7 +3513,7 @@ curl http://localhost:8000/health
 - Completed 3 troubleshooting labs (firewall, permissions, service)
 
 **What's running:**
-- Oracle Linux 8 VM (`legacy-server`) in public subnet
+- Oracle Linux 9 VM (`legacy-server`) in public subnet
 - FedTracker FastAPI app on port 8000 (systemd managed)
 - SQLite database at `/opt/fedtracker/fedtracker.db`
 - Auto-generated API docs at `http://<PUBLIC_IP>:8000/docs`
@@ -3836,7 +3836,7 @@ In `fedtracker-vcn`, you should see:
 2. Fill in:
    - **Name:** `bastion`
    - **Compartment:** `fedtracker-lab`
-   - **Image:** Oracle Linux 8
+   - **Image:** Oracle Linux 9
    - **Shape:** VM.Standard.A1.Flex — **1 OCPU / 6 GB RAM** (bastion doesn't need much)
    - **VCN:** `fedtracker-vcn`
    - **Subnet:** `public-subnet`
@@ -3863,7 +3863,7 @@ chmod 600 ~/.ssh/bastion.key
 2. Fill in:
    - **Name:** `app-server`
    - **Compartment:** `fedtracker-lab`
-   - **Image:** Oracle Linux 8
+   - **Image:** Oracle Linux 9
    - **Shape:** VM.Standard.A1.Flex — **1 OCPU / 10 GB RAM**
    - **VCN:** `fedtracker-vcn`
    - **Subnet:** `private-subnet`
@@ -4024,11 +4024,11 @@ sudo visudo -c
 # --- Service account ---
 sudo useradd -r -s /sbin/nologin -M svc-fedtracker
 
-# --- Python 3.11 ---
-sudo dnf install -y python3.11 python3.11-pip python3.11-devel
+# --- Python packages (OL9 ships with Python 3.9 — install pip and dev headers) ---
+sudo dnf install -y python3-pip python3-devel
 
 # --- Python packages (legacy-style global install — Day 3 uses venv) ---
-sudo python3.11 -m pip install fastapi uvicorn pydantic oracledb
+sudo python3 -m pip install fastapi uvicorn pydantic oracledb
 
 # --- App and wallet directories ---
 sudo mkdir -p /opt/fedtracker
@@ -4083,10 +4083,10 @@ chmod 600 ~/.oci/config
 id clouduser
 # Expected: uid=1001(clouduser) gid=1001(clouduser) groups=1001(clouduser),10(wheel)
 
-python3.11 --version
-# Expected: Python 3.11.x
+python3 --version
+# Expected: Python 3.9.x
 
-python3.11 -c "import fastapi, uvicorn, pydantic, oracledb; print('All packages OK')"
+python3 -c "import fastapi, uvicorn, pydantic, oracledb; print('All packages OK')"
 # Expected: All packages OK
 
 ls -la /opt/fedtracker
@@ -4173,7 +4173,7 @@ sudo chmod 600 /opt/oracle/wallet/*
 
 ```bash
 # Install the Oracle DB Python driver (skip if you already installed oracledb in Step 8.10)
-sudo python3.11 -m pip install oracledb
+sudo python3 -m pip install oracledb
 ```
 
 > **Why `oracledb` not `cx_Oracle`?** `oracledb` is the new name for the Python Oracle DB driver (formerly cx_Oracle). It can run in "thin mode" — pure Python, no Oracle Instant Client libraries needed. This simplifies deployment significantly.
@@ -4182,7 +4182,7 @@ sudo python3.11 -m pip install oracledb
 # Test the connection
 sudo su - clouduser
 
-python3.11 << 'PYEOF'
+python3 << 'PYEOF'
 import oracledb
 
 # Thin mode connection using wallet
@@ -4221,7 +4221,7 @@ Connection closed successfully
 📍 **VM Terminal** (app-server)
 
 ```bash
-python3.11 << 'PYEOF'
+python3 << 'PYEOF'
 import oracledb
 
 connection = oracledb.connect(
@@ -4388,7 +4388,7 @@ User=clouduser
 Group=clouduser
 WorkingDirectory=/opt/fedtracker
 EnvironmentFile=/etc/fedtracker/env
-ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -4450,7 +4450,7 @@ sudo ausearch -m avc -ts recent
 
 | Command | Flag(s) | What It Does |
 |---------|---------|-------------|
-| `python3.11 -m pip install` | `oracledb` | Install Oracle DB Python driver (thin mode, no native client needed) |
+| `python3 -m pip install` | `oracledb` | Install Oracle DB Python driver (thin mode, no native client needed) |
 | `unzip` | `-d <dir>` | Extract zip file. `-d` = target directory |
 | `systemctl daemon-reload` | | Reload service definitions after editing .service files |
 | `systemctl restart` | | Stop then start a service |
@@ -4506,7 +4506,7 @@ PasswordAuthentication no
 # Disable empty passwords
 PermitEmptyPasswords no
 
-# Protocol 2 removed - SSH protocol 1 support was dropped in OpenSSH 7.6+, Oracle Linux 8 ships 8.x
+# Protocol 2 removed - SSH protocol 1 support was dropped in OpenSSH 7.6+, Oracle Linux 9 ships 8.x+
 
 # Set login timeout to 60 seconds
 LoginGraceTime 60
@@ -4679,7 +4679,7 @@ For each resource (VMs, VCN, DB), go to its details page → **Tags** → **Add 
 # Run the OCI reporter script to check tagging
 ssh app-server
 sudo su - clouduser
-python3.11 /opt/fedtracker/oci_reporter.py
+python3 /opt/fedtracker/oci_reporter.py
 # Expected: All resources now show tags instead of "⚠ NONE"
 ```
 
@@ -5612,7 +5612,7 @@ ansible all -i ansible/inventory/inventory.ini -m ping
 # Targets: app server (and optionally bastion)
 # Run: ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
 
-- name: Harden Oracle Linux 8 servers
+- name: Harden Oracle Linux 9 servers
   hosts: app
   become: true  # Run as root (sudo)
 
@@ -5825,16 +5825,11 @@ ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playb
     - name: Install system packages
       dnf:
         name:
-          - python3.11
-          - python3.11-pip
-          - python3.11-devel
+          - python3
+          - python3-pip
+          - python3-devel
           - git
         state: present
-
-    - name: Set python3.11 as default python3
-      alternatives:
-        name: python3
-        path: /usr/bin/python3.11
 
     - name: Install Python packages
       pip:
@@ -5843,7 +5838,7 @@ ansible-playbook --syntax-check -i ansible/inventory/inventory.ini ansible/playb
           - uvicorn
           - pydantic
           - oracledb
-        executable: /usr/bin/python3.11 -m pip
+        executable: pip3
 
     # --- Application Directory ---
     - name: Create application directory
@@ -5913,7 +5908,7 @@ Group={{ app_user }}
 WorkingDirectory={{ app_dir }}
 Environment=DB_TYPE=sqlite
 Environment=SQLITE_PATH={{ app_dir }}/fedtracker.db
-ExecStart=/usr/bin/python3.11 -m uvicorn main:app --host 0.0.0.0 --port {{ app_port }}
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port {{ app_port }}
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -6290,7 +6285,7 @@ docker push iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
 # SSH into your app server (via bastion — see ~/.ssh/config)
 ssh app-server
 
-# Podman is pre-installed on Oracle Linux 8/9
+# Podman is pre-installed on Oracle Linux 9
 podman --version
 # Expected: podman version 4.x.x
 
@@ -6492,7 +6487,7 @@ PROFILE="xccdf_org.ssgproject.content_profile_cis"
 CONTENT="/usr/share/xml/scap/ssg/content/ssg-ol8-ds.xml"
 
 echo "=== CIS Benchmark Scan ==="
-echo "Profile: CIS Level 1 for Oracle Linux 8"
+echo "Profile: CIS Level 1 for Oracle Linux 9"
 echo "Started: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 echo ""
 
@@ -6537,7 +6532,7 @@ sudo /opt/fedtracker/cis_scan.sh
 
 ```
 === CIS Benchmark Scan ===
-Profile: CIS Level 1 for Oracle Linux 8
+Profile: CIS Level 1 for Oracle Linux 9
 Started: 2026-03-23 10:00:00 UTC
 
 === Results ===
@@ -6585,7 +6580,7 @@ sudo /opt/fedtracker/cis_scan.sh
 # Expected: Higher score than before
 ```
 
-> **🧠 Interview framing:** "I ran CIS Level 1 benchmarks against Oracle Linux 8 using OpenSCAP. The initial scan showed a 78% compliance score. I remediated the top failures — file permissions, core dump restrictions, ASLR, password complexity — and improved the score to 85%. In production, I'd automate these remediations in the Ansible hardening playbook."
+> **🧠 Interview framing:** "I ran CIS Level 1 benchmarks against Oracle Linux 9 using OpenSCAP. The initial scan showed a 78% compliance score. I remediated the top failures — file permissions, core dump restrictions, ASLR, password complexity — and improved the score to 85%. In production, I'd automate these remediations in the Ansible hardening playbook."
 
 ---
 
@@ -6859,7 +6854,7 @@ FedRAMP Readiness Agent
 Checks OCI environment against key NIST 800-53 Rev 5 controls
 from the FedRAMP Moderate baseline. Uses Ollama for narrative report.
 
-Usage: python3.11 fedramp_agent.py
+Usage: python3 fedramp_agent.py
 Output: Markdown readiness report in compliance/reports/
 Requires: Ollama running with tinyllama model
 
@@ -7136,10 +7131,10 @@ PYEOF
 
 ```bash
 # Install requests library (needed for Ollama API calls)
-python3.11 -m pip install requests --user
+python3 -m pip install requests --user
 
 # Run the FedRAMP readiness agent
-python3.11 /opt/fedtracker/compliance/fedramp_agent.py
+python3 /opt/fedtracker/compliance/fedramp_agent.py
 ```
 
 > The script runs each check and prints PASS/FAIL in real time, then calls Ollama to generate a narrative assessment. Total time: 2-3 minutes.
@@ -7185,7 +7180,7 @@ sudo iptables -A OUTPUT -p tcp --dport 443 -j DROP
 sudo iptables -A OUTPUT -p tcp --dport 80 -j DROP
 
 # Run the agent — it should still work because Ollama is localhost
-python3.11 /opt/fedtracker/compliance/fedramp_agent.py
+python3 /opt/fedtracker/compliance/fedramp_agent.py
 
 # Restore network access
 sudo iptables -D OUTPUT -p tcp --dport 443 -j DROP
@@ -7205,7 +7200,7 @@ sudo iptables -D OUTPUT -p tcp --dport 80 -j DROP
 | `ollama --version` | Version printed | Ollama not installed. Re-run the install script |
 | `ollama pull tinyllama` | Model downloaded | Not enough disk space? Try a smaller quantized variant |
 | `ollama run tinyllama "test"` | Text response | Model not loaded? Wait 30 seconds after pull. Check RAM: `free -h` (need ~1 GB available for tinyllama) |
-| `python3.11 fedramp_agent.py` runs | Score printed + report file | `requests` not installed? `python3.11 -m pip install requests --user`. Checklist not found? Check path to `checklist.json` |
+| `python3 fedramp_agent.py` runs | Score printed + report file | `requests` not installed? `python3 -m pip install requests --user`. Checklist not found? Check path to `checklist.json` |
 | AI narrative is "[Ollama error]" | Should be narrative text | Ollama service down or model not pulled. Check `curl http://localhost:11434/api/tags` |
 | Score seems wrong | Review individual PASS/FAIL | Check commands match your OS version. Some commands differ between OL8 and OL9 |
 | Memory error from Ollama | Model loads successfully | 8GB RAM shared with FedTracker container. Stop the container first: `podman stop fedtracker-app`, run agent, restart container |
@@ -7824,7 +7819,7 @@ Similarly, add the `terraform.tfvars` as a secret file credential for the Terraf
 | Jenkins UI loads | Login page at :8080 | Check: (1) Jenkins service running: `systemctl status jenkins`, (2) firewall port 8080 open, (3) OCI security list has 8080 ingress |
 | Initial password works | Unlock Jenkins screen | Run `sudo cat /var/lib/jenkins/secrets/initialAdminPassword` again |
 | Pipeline Terraform stage | Green/passed | Terraform not installed on Jenkins agent? Install on bastion |
-| Pipeline Ansible stage | Green/passed | Ansible not installed? `python3.11 -m pip install ansible` on bastion |
+| Pipeline Ansible stage | Green/passed | Ansible not installed? `python3 -m pip install ansible` on bastion |
 | Pipeline Deploy stage | Green/passed | SSH credential not configured? Add SSH key in Jenkins credentials |
 | Smoke test passes | Health endpoint returns 200 | App not responding after deploy. Check `journalctl -u fedtracker` on app server |
 
@@ -7985,7 +7980,7 @@ cat > ~/oci-federal-lab/docs/dr-runbook.md << 'DREOF'
 # FedTracker Disaster Recovery Runbook
 
 ## Overview
-- **Application:** FedTracker (FastAPI on Oracle Linux 8)
+- **Application:** FedTracker (FastAPI on Oracle Linux 9)
 - **Infrastructure:** OCI (Terraform-managed)
 - **Configuration:** Ansible-managed
 - **Measured RTO:** ~15 minutes (terraform apply + ansible-playbook)
@@ -8051,8 +8046,8 @@ cat > /opt/fedtracker/cost_reporter.py << 'PYEOF'
 OCI Cost and Compliance Reporter
 Reports on resource costs, tagging compliance, and free tier usage.
 
-Usage: python3.11 cost_reporter.py
-Requires: python3.11 -m pip install oci
+Usage: python3 cost_reporter.py
+Requires: python3 -m pip install oci
 """
 
 import oci
@@ -8144,7 +8139,7 @@ PYEOF
 ```
 
 ```bash
-python3.11 /opt/fedtracker/cost_reporter.py
+python3 /opt/fedtracker/cost_reporter.py
 ```
 
 ---
