@@ -4770,7 +4770,7 @@ terraform --version
 📍 **Local Terminal**
 
 ```bash
-cd ~/oci-federal-lab/terraform
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/terraform
 ```
 
 > **Note:** Your repo uses a phase-first structure. All Phase 1 Terraform files live in `phases/phase-1-fedtracker-migration/terraform/`. The `environments/` subdirectory is there for future use. In a production setup, you'd separate configurations by environment — each environment directory would have its own `.tf` files with different variable values.
@@ -5362,7 +5362,7 @@ output "ssh_command_app_server" {
 📍 **Local Terminal**
 
 ```bash
-cd ~/oci-federal-lab/terraform
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/terraform
 
 # Initialize — downloads the OCI provider plugin
 terraform init
@@ -5423,7 +5423,7 @@ oci compute instance list --compartment-id $COMP --query "data[?\"lifecycle-stat
 **Step 2:** Import each resource. Run these from your **Local Terminal** in the `phases/phase-1-fedtracker-migration/terraform/` directory. Replace each `<OCID_FROM_CLOUD_SHELL>` with the actual OCID from the output above:
 
 ```bash
-cd ~/oci-federal-lab/terraform
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/terraform
 
 # --- Network resources ---
 terraform import oci_core_vcn.main <VCN_OCID>
@@ -5892,7 +5892,7 @@ Create the service template:
 
 ```bash
 # templates/ isn't in the scaffold — create it:
-mkdir -p ~/oci-federal-lab/ansible/templates
+mkdir -p ~/oci-federal-lab/phases/phase-1-fedtracker-migration/ansible/templates
 ```
 
 **Build `phases/phase-1-fedtracker-migration/ansible/templates/fedtracker.service.j2`:**
@@ -6015,7 +6015,7 @@ ssh app-server "curl -s http://localhost:8000/health"
 📍 **Local Terminal**
 
 ```bash
-cd ~/oci-federal-lab/terraform
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/terraform
 
 # Preview what will be destroyed
 terraform plan -destroy
@@ -7321,8 +7321,8 @@ fn update context registry <REGION>.ocir.io/<TENANCY_NAMESPACE>/fedtracker
 
 ```bash
 # Create function directory
-mkdir -p ~/oci-federal-lab/functions/audit-processor
-cd ~/oci-federal-lab/functions/audit-processor
+mkdir -p ~/oci-federal-lab/phases/phase-1-fedtracker-migration/functions/audit-processor
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/functions/audit-processor
 
 # Initialize the function
 fn init --runtime python audit-processor
@@ -7447,8 +7447,8 @@ fn deploy --app fedtracker-functions
 > This function checks your application's health endpoint. It could be triggered by a monitoring alarm (CPU > 80%) or run on a schedule. When it detects the app is down, it logs the incident.
 
 ```bash
-mkdir -p ~/oci-federal-lab/functions/health-checker
-cd ~/oci-federal-lab/functions/health-checker
+mkdir -p ~/oci-federal-lab/phases/phase-1-fedtracker-migration/functions/health-checker
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/functions/health-checker
 
 fn init --runtime python health-checker
 ```
@@ -7658,7 +7658,7 @@ http://<BASTION_PUBLIC_IP>:8080
 **Build `Jenkinsfile` section by section:**
 
 ```bash
-mkdir -p ~/oci-federal-lab/jenkins
+mkdir -p ~/oci-federal-lab/phases/phase-1-fedtracker-migration/jenkins
 ```
 
 **Build `jenkins/Jenkinsfile`:**
@@ -7870,7 +7870,7 @@ cat /tmp/pre-dr-health.json
 **Step 2: Destroy the app server (simulating a disaster)**
 
 ```bash
-cd ~/oci-federal-lab/terraform
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/terraform
 
 # Destroy only the app server
 terraform destroy -target=oci_core_instance.app_server
@@ -8150,7 +8150,7 @@ python3 /opt/fedtracker/cost_reporter.py
 > ⚠️ **This destroys ALL resources.** Only do this when you're done with the entire lab.
 
 ```bash
-cd ~/oci-federal-lab/terraform
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/terraform
 
 # Preview what will be destroyed
 terraform plan -destroy
@@ -8183,7 +8183,7 @@ First, copy the `cost_reporter.py` script from the app-server to your local repo
 
 ```bash
 # Copy cost_reporter.py from app-server via bastion
-scp -o ProxyJump=opc@<BASTION_PUBLIC_IP> opc@<APP_SERVER_PRIVATE_IP>:/opt/fedtracker/cost_reporter.py ~/oci-federal-lab/app/
+scp -o ProxyJump=opc@<BASTION_PUBLIC_IP> opc@<APP_SERVER_PRIVATE_IP>:/opt/fedtracker/cost_reporter.py ~/oci-federal-lab/phases/phase-1-fedtracker-migration/app/
 ```
 
 ```bash

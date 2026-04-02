@@ -46,7 +46,7 @@ Production-grade delivery: multi-stage Jenkins pipelines with security scanning,
 |-------|-----------|---------------|
 | Phase 1 | ![Swagger UI + Health Check](phases/phase-1-fedtracker-migration/docs/screenshots/swagger-and-health.png) | REST API built from scratch, running on OCI, with auto-generated docs |
 | Phase 2 | ![k3s + AIDE](phases/phase-2-fedanalytics-dr/docs/screenshots/k3s-and-aide.png) | Kubernetes cluster running + file integrity monitoring (NIST SI-7) |
-| Phase 3 | ![Jenkins Pipeline](phases/phase-3-fedcompliance-cicd/docs/screenshots/jenkins-pipeline.png) | Full CI/CD with security scanning (Trivy + SBOM), GitOps delivery |
+| Phase 3 | ![Jenkins Pipeline](phases/phase-3-fedcompliance-gitops-security/docs/screenshots/jenkins-pipeline.png) | Full CI/CD with security scanning (Trivy + SBOM), GitOps delivery |
 
 ---
 
@@ -84,7 +84,7 @@ oci-federal-lab/
 │   ├── phase-2-fedanalytics-dr/                   # Disaster Recovery & Backup
 │   │   ├── terraform/ ansible/ app/ docker/
 │   │   └── docs/
-│   └── phase-3-fedcompliance-cicd/                # CI/CD Modernization
+│   └── phase-3-fedcompliance-gitops-security/                # CI/CD Modernization
 │       ├── terraform/ ansible/ app/ docker/
 │       └── docs/
 ├── docs/                                          # Project-wide documentation
@@ -122,7 +122,7 @@ This is a **learning lab**, not a deploy-and-forget project. Each phase has a de
 | Phase 1: Legacy-to-Cloud Migration | [Implementation Guide](phases/phase-1-fedtracker-migration/docs/implementation-guide.md) | In progress |
 | Phase 1: Linux Admin Deep Dive | [Deep Dive](phases/phase-1-fedtracker-migration/docs/linux-admin-deep-dive.md) | Not started |
 | Phase 2: DR & Backup Architecture | [Implementation Guide](phases/phase-2-fedanalytics-dr/docs/implementation-guide.md) | Not started |
-| Phase 3: CI/CD Modernization | [Implementation Guide](phases/phase-3-fedcompliance-cicd/docs/implementation-guide.md) | Not started |
+| Phase 3: CI/CD Modernization | [Implementation Guide](phases/phase-3-fedcompliance-gitops-security/docs/implementation-guide.md) | Not started |
 
 ---
 
