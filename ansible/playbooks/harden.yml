@@ -1,0 +1,142 @@
+# Hardening Playbook — applies CIS-aligned security settings
+# Targets: app server (and optionally bastion)
+# Run: ansible-playbook -i ansible/inventory/inventory.ini ansible/playbooks/harden.yml
+
+- name: Harden Oracle Linux 8 servers
+  hosts: app
+  become: true  # Run as root (sudo)
+
+  tasks:
+  # --- SSH Hardening ---
+    - name: Disable root SSH login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+      notify: restart sshd
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+        state: present
+      notify: restart sshd
+
+    - name: Set max auth tries to 3
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?MaxAuthTries'
+        line: 'MaxAuthTries 3'
+        state: present
+      notify: restart sshd
+
+    - name: Set login grace time to 60 seconds
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?LoginGraceTime'
+        line: 'LoginGraceTime 60'
+        state: present
+      notify: restart sshd
+
+    - name: Deploy legal login banner
+      copy:
+        dest: /etc/issue.net
+        content: |
+          ***************************************************************************
+          *                    AUTHORIZED ACCESS ONLY                                *
+          *                                                                           *
+          *  This system is the property of the organization. Unauthorized access    *
+          *  is prohibited. All activities are monitored and recorded.                *
+          ***************************************************************************
+        mode: '0644'
+
+    - name: Enable SSH banner
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?Banner'
+        line: 'Banner /etc/issue.net'
+        state: present
+      notify: restart sshd
+
+    # --- Firewall ---
+    - name: Ensure firewalld is running
+      systemd:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Open port 8000 for FastAPI
+      firewalld:
+        port: 8000/tcp
+        permanent: true
+        state: enabled
+        immediate: true
+
+    # --- Audit ---
+    - name: Install auditd
+      dnf:
+        name: audit
+        state: present
+
+    - name: Enable auditd
+      systemd:
+        name: auditd
+        state: started
+        enabled: true
+
+    - name: Deploy audit rules
+      copy:
+        dest: /etc/audit/rules.d/fedtracker.rules
+        content: |
+          -w /etc/passwd -p wa -k user_changes
+          -w /etc/shadow -p wa -k user_changes
+          -w /etc/ssh/sshd_config -p wa -k ssh_config
+          -w /opt/fedtracker/ -p wa -k fedtracker_changes
+        mode: '0640'
+      notify: reload audit rules
+
+    # --- Kernel Tuning (sysctl) ---
+    - name: Apply kernel tuning for web server
+      ansible.posix.sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/99-fedtracker.conf
+        reload: yes
+      loop:
+        - { key: 'net.core.somaxconn', value: '4096' }
+        - { key: 'vm.swappiness', value: '10' }
+        - { key: 'net.ipv4.tcp_tw_reuse', value: '1' }
+        - { key: 'net.ipv4.tcp_syncookies', value: '1' }
+
+    # --- Password Policy (PAM) ---
+    - name: Set password minimum length via PAM
+      lineinfile:
+        path: /etc/security/pwquality.conf
+        regexp: '^#?\s*minlen'
+        line: 'minlen = 14'
+        state: present
+
+    - name: Set password complexity — require digit
+      lineinfile:
+        path: /etc/security/pwquality.conf
+        regexp: '^#?\s*dcredit'
+        line: 'dcredit = -1'
+        state: present
+
+    - name: Set password complexity — require uppercase
+      lineinfile:
+        path: /etc/security/pwquality.conf
+        regexp: '^#?\s*ucredit'
+        line: 'ucredit = -1'
+        state: present
+
+  handlers:
+    - name: restart sshd
+      systemd:
+        name: sshd
+        state: restarted
+
+    - name: reload audit rules
+      command: augenrules --load

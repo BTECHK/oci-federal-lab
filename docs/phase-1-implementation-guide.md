@@ -4,24 +4,24 @@
 **Goal:** Simulate a real legacy-to-cloud migration — build a "legacy" app locally, containerize it, push to OCI Container Registry, and deploy on OCI compute. Then automate with Terraform, Ansible, Jenkins, and assess FedRAMP readiness with an AI-powered compliance agent — while learning REST API fundamentals by building a FastAPI app from scratch.
 **Total Cost:** $0.00 (OCI Always Free tier + Docker Desktop free)
 **Primary Tool:** Docker Desktop (local) + SSH Terminal + OCI Console (DevOps/infra files built by hand; FastAPI app built section-by-section with ELI5)
-**Prerequisite:** Docker Desktop installed on Windows
+**Prerequisite:** Docker Desktop installed on Windows — verify with `docker --version` (expect 24.x or later)
 
 ---
 
 ## WHAT YOU'RE BUILDING
 
-Day 1 builds the "before" state — a manually-configured legacy server with no automation, no proper security, no backup strategy. On Day 4, you containerize the app locally and migrate it to OCI via OCIR (simulating a real lift-and-shift). Over Days 2-5, you tear down the manual setup and rebuild it properly. You need to feel the pain of manual work first so the automation makes sense.
+Day 1 builds the "before" state — a manually-configured legacy server with no automation, no proper security, no backup strategy. You also containerize the app locally with Docker Desktop (the first step of migration). Over Days 2-5, you tear down the manual setup and rebuild it properly — Day 4 completes the migration by pushing the container to OCIR and deploying with Podman. You need to feel the pain of manual work first so the automation makes sense.
 
 | Component | Day 1 (Legacy) | Day 5 (Modern) |
 |-----------|----------------|-----------------|
 | Infrastructure | Manual OCI console clicks | Terraform IaC |
 | Configuration | SSH + manual commands | Ansible playbooks |
 | Deployment | Manual install + systemctl | Jenkins CI/CD pipeline |
-| Migration | App runs on "on-prem" (local Docker) | Containerized on OCI via OCIR registry |
+| Migration | Built & tested locally (Docker Desktop) | ARM rebuild → OCIR registry → Podman on OCI |
 | Security | Default settings | Hardened (SSH, firewall, IAM, auditd, OpenSCAP) |
 | Networking | Flat public subnet | Public/private with bastion |
 | Database | SQLite on the VM | Oracle Autonomous DB (Always Free) |
-| Application | FastAPI manually started | Podman/Docker containerized |
+| Application | FastAPI on VM (systemd) + local Docker container | Podman container via OCIR registry |
 | API Framework | FastAPI (built section-by-section) | Same app, production-grade deployment |
 | Backup | None | Block volume + Object Storage + DR runbook |
 | Cost Control | None | Tags + budget alerts + cost scripts |
@@ -33,34 +33,26 @@ Day 1 builds the "before" state — a manually-configured legacy server with no 
 
 ## ARCHITECTURE OVERVIEW
 
-**Day 1 — Legacy Architecture (what you build today):**
+**Day 1 — Legacy Architecture + Local Container (what you build today):**
 
 ```
-Internet
-    │
-┌───▼──────────────────────────────────────┐
-│  OCI VCN: legacy-vcn (10.0.0.0/16)       │
-│                                            │
-│  ┌──────────────────────────────────┐     │
-│  │  Public Subnet (10.0.0.0/24)     │     │
-│  │                                   │     │
-│  │  ┌───────────────────────────┐   │     │
-│  │  │  Oracle Linux 8 VM         │   │     │
-│  │  │  (VM.Standard.A1.Flex)     │   │     │
-│  │  │  2 OCPU / 8 GB RAM (ARM)  │   │     │
-│  │  │                            │   │     │
-│  │  │  ┌──────────────────────┐ │   │     │
-│  │  │  │ FedTracker (FastAPI)  │ │   │     │
-│  │  │  │ Port 8000             │ │   │     │
-│  │  │  │ SQLite DB (local)     │ │   │     │
-│  │  │  │ systemd managed       │ │   │     │
-│  │  │  └──────────────────────┘ │   │     │
-│  │  │                            │   │     │
-│  │  │  health_check.sh           │   │     │
-│  │  │  oci_reporter.py           │   │     │
-│  │  └───────────────────────────┘   │     │
-│  └──────────────────────────────────┘     │
-└────────────────────────────────────────────┘
+┌──────────────────────────────┐          ┌──────────────────────────────────────────┐
+│  Windows Workstation          │          │  OCI VCN: legacy-vcn (10.0.0.0/16)       │
+│  ("on-prem" developer box)    │          │                                            │
+│                               │   SSH    │  ┌──────────────────────────────────┐     │
+│  Docker Desktop               │─────────▶│  │  Public Subnet (10.0.0.0/24)     │     │
+│  ┌─────────────────────────┐ │          │  │                                   │     │
+│  │ FedTracker container     │ │          │  │  ┌───────────────────────────┐   │     │
+│  │ (x86, local test)        │ │          │  │  │  Oracle Linux VM           │   │     │
+│  │ Port 8000                │ │          │  │  │  (VM.Standard.A1.Flex)     │   │     │
+│  └─────────────────────────┘ │          │  │  │                            │   │     │
+│                               │          │  │  │  FedTracker (systemd)      │   │     │
+│  Dockerfile                   │          │  │  │  Port 8000, SQLite         │   │     │
+│  requirements.txt             │          │  │  │  health_check.sh           │   │     │
+│  app/main.py                  │          │  │  │  oci_reporter.py           │   │     │
+└──────────────────────────────┘          │  │  └───────────────────────────┘   │     │
+                                           │  └──────────────────────────────────┘     │
+                                           └──────────────────────────────────────────┘
 ```
 
 **Day 4 — Migration Flow (containerize and migrate):**
@@ -3080,6 +3072,207 @@ git push
 
 ---
 
+## PHASE 6A: CONTAINERIZE FEDTRACKER LOCALLY (30 min)
+
+> You have a running "legacy" app on the VM and a copy of the code on your local machine. Now containerize it — this is the first step of any legacy-to-cloud migration. You'll build a Docker image on your Windows workstation, test it locally, and verify the same app runs identically in a container. Day 4 completes the migration by pushing this image to OCI Container Registry and deploying it with Podman on the cloud.
+>
+> 📍 **Where work happens:** Local Terminal (Git Bash or PowerShell on Windows).
+>
+> 🛠️ **Build approach:** Dockerfile and requirements.txt built by hand.
+>
+> **Prerequisite:** Docker Desktop must be installed and running on your Windows machine.
+
+---
+
+### Step 6A.1 — Understand Containers
+📍 **Local Terminal**
+
+> **🧠 ELI5 — What are Containers?** Think of a shipping container at a port. Before containers, each ship had to figure out how to store different cargo — barrels of oil next to crates of electronics next to bags of grain. Chaos. Shipping containers standardized everything: same size, same shape, stack them anywhere, load them on any ship. Software containers do the same thing: your app, its dependencies, its configuration — all packed into one standardized unit that runs the same way everywhere. It doesn't matter if the server runs Oracle Linux, Ubuntu, or Amazon Linux — the container runs identically.
+
+```bash
+# Verify Docker Desktop is running
+docker --version
+# Expected: Docker version 24.x.x or later
+
+# If you see "Cannot connect to the Docker daemon" — open Docker Desktop from the Start menu and wait for it to start
+```
+
+> **Why containerize now?** You just spent 30+ minutes manually installing Python, pip, FastAPI, configuring systemd, opening firewall ports. A container packages ALL of that into a single `docker run` command. Day 4 will push this container to OCI and deploy it with one `podman pull` + `podman run`. That's the migration payoff.
+
+---
+
+### Step 6A.2 — Create Dockerfile and requirements.txt
+📍 **Local Terminal** (Git Bash on Windows)
+
+```bash
+cd ~/Desktop/github/oci-federal-lab
+
+# Create requirements.txt — lists the Python packages the app needs
+cat > docker/requirements.txt << 'EOF'
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+EOF
+```
+
+> **Why pin versions?** `fastapi==0.104.1` means "exactly this version." Without pinning, `pip install fastapi` grabs the latest version — which might break your app. In production, you always pin versions so builds are reproducible.
+
+**Build the Dockerfile section by section:**
+
+```bash
+cat > docker/Dockerfile << 'DOCKEOF'
+# Use Oracle Linux 8 as base (matches our OCI server OS)
+FROM oraclelinux:8-slim AS builder
+
+LABEL maintainer="lab-operator" \
+      app="fedtracker" \
+      version="1.0"
+
+# Install Python 3.11
+RUN microdnf install -y python3.11 python3.11-pip && \
+    microdnf clean all
+
+# Install dependencies
+WORKDIR /app
+COPY requirements.txt .
+RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
+
+# Copy application
+COPY main.py .
+
+# Create non-root user (security: never run containers as root)
+RUN useradd -r -s /bin/false appuser
+USER appuser
+
+# Expose the application port
+EXPOSE 8000
+
+# Health check for orchestrator integration
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD python3.11 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+# Run the application
+CMD ["python3.11", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+DOCKEOF
+```
+
+> **Why Oracle Linux as base?** Using the same OS as your OCI server avoids compatibility issues. In federal environments, consistency matters — your container should match the host OS family when possible.
+
+> **Why `USER appuser`?** Running containers as root is a security risk — if an attacker escapes the container, they're root on the host. This is a CIS benchmark requirement and a federal best practice.
+
+> **Windows CRLF note:** If `docker build` fails with "exec format error" or `/bin/sh: not found`, your files may have Windows line endings (CRLF instead of LF). Fix with: `dos2unix docker/Dockerfile docker/requirements.txt` — or set Git to handle this automatically: `git config --global core.autocrlf input`.
+
+---
+
+### Step 6A.3 — Build and Run with Docker Desktop
+📍 **Local Terminal** (Git Bash on Windows)
+
+```bash
+cd ~/Desktop/github/oci-federal-lab
+
+# Build the container image
+# The build context is the docker/ directory, but main.py is in app/
+# Copy main.py into the docker build context first
+cp app/main.py docker/main.py
+
+docker build -t fedtracker:1.0 docker/
+# Expected: Successfully built, image tagged fedtracker:1.0
+```
+
+> **Why not `--platform linux/arm64`?** Right now you're building for YOUR machine (x86/AMD64) to test locally. On Day 4, you'll rebuild for ARM (the OCI VM's architecture) before pushing to OCIR. Building for the wrong architecture causes `exec format error` at runtime.
+
+```bash
+# Run the container
+docker run -d --name fedtracker-local -p 8000:8000 -e DB_TYPE=sqlite fedtracker:1.0
+
+# Verify it started
+docker ps
+# Expected: fedtracker-local running, port 0.0.0.0:8000->8000/tcp
+```
+
+---
+
+### Step 6A.4 — Test All Endpoints Locally
+📍 **Local Terminal** (Git Bash on Windows)
+
+```bash
+# Health check
+curl http://localhost:8000/health
+# Expected: {"status": "healthy", ...}
+
+# List personnel (seeded data)
+curl http://localhost:8000/personnel
+# Expected: JSON list of personnel records
+
+# Create a record
+curl -X POST http://localhost:8000/personnel \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Container Test", "role": "DevOps", "clearance_level": "Secret"}'
+# Expected: 201 Created with the new record
+
+# View audit log
+curl http://localhost:8000/audit
+# Expected: Audit entries showing the creation
+
+# Check container logs
+docker logs fedtracker-local
+# Expected: Uvicorn startup messages and request logs
+```
+
+> **What just happened?** The exact same app that took 30+ minutes to deploy on the VM is running locally in seconds. Same code, same behavior, no manual pip installs, no systemd service file, no firewall rules. This portability is the entire point of containers.
+
+---
+
+### Step 6A.5 — Stop and Clean Up
+📍 **Local Terminal**
+
+```bash
+# Stop and remove the container
+docker stop fedtracker-local
+docker rm fedtracker-local
+
+# The image stays for Day 4 (OCIR push)
+docker images | grep fedtracker
+# Expected: fedtracker  1.0  <image-id>  <size>
+```
+
+> **Don't delete the image!** You'll rebuild it for ARM and push it to OCI Container Registry on Day 4.
+
+**Add the Docker files to your git commit:**
+
+```bash
+cd ~/Desktop/github/oci-federal-lab
+git add docker/Dockerfile docker/requirements.txt
+git commit -m "Day 1: Add Dockerfile and requirements.txt for FedTracker container
+
+- Oracle Linux 8 slim base image (matches OCI server)
+- Non-root appuser (CIS benchmark)
+- Health check for orchestrator integration
+- Pinned dependency versions for reproducible builds"
+git push
+```
+
+> **💼 Interview Insight — Container Migration:** "On Day 1, I containerized the legacy application locally with Docker Desktop — same Oracle Linux base as the target server, non-root user, pinned dependencies, built-in health check. On Day 4, I'll rebuild for ARM, push to OCIR, and deploy with Podman. This is the exact lift-and-shift pattern used in federal legacy-to-cloud migrations."
+
+<sub><em style="color: #999; font-size: 0.65em;">
+
+💡🖥️ Commands used:
+
+| Command | Flag(s) | What It Does |
+|---------|---------|-------------|
+| `docker --version` | | Verify Docker Desktop is installed |
+| `docker build` | `-t name:tag` | Build a container image from a Dockerfile. `-t` = name and tag the image |
+| `docker run` | `-d -p 8000:8000 -e VAR=val` | Run a container. `-d` = detached (background), `-p` = port mapping, `-e` = environment variable |
+| `docker ps` | | List running containers |
+| `docker logs` | `<container>` | View container stdout/stderr |
+| `docker stop` | `<container>` | Stop a running container |
+| `docker rm` | `<container>` | Remove a stopped container |
+| `docker images` | | List local images |
+
+</em></sub>
+
+---
+
 ## PHASE 7: TROUBLESHOOTING LAB — LINUX & APP (1 hr)
 
 > This section is where you intentionally break things and fix them. This is the MOST VALUABLE part for interview prep. When an interviewer asks "how would you troubleshoot a web application that's unreachable?", you'll have a real answer because you actually did it. Don't skip any steps — go through the full diagnosis process every time, even if you already know the answer.
@@ -5977,28 +6170,26 @@ git push
 
 **Skills practiced:** Terraform (deep), Ansible (deep), IaC patterns, configuration management, destroy/rebuild, idempotency
 
-**Next:** Day 4 — "Containerize & Secure" — you'll containerize FedTracker with Podman and Docker, run CIS compliance scans with OpenSCAP, and build a FedRAMP readiness agent with Ollama.
+**Next:** Day 4 — "Migrate & Secure" — you'll rebuild the Day 1 container for ARM, push to OCIR, deploy with Podman on OCI, run CIS compliance scans with OpenSCAP, and build a FedRAMP readiness agent with Ollama.
 
 ---
 
-## PHASE 14: CONTAINERS & CLOUD MIGRATION (3.5 hrs)
+## PHASE 14: CONTAINER REGISTRY MIGRATION & PODMAN DEPLOYMENT (2 hrs)
 
-> Containers package your application and all its dependencies into a single, portable unit. Instead of installing Python, FastAPI, and uvicorn on the server, you build a container image that includes everything. The image runs identically on your laptop, in CI/CD, and in production.
->
-> **Migration simulation:** You'll build the FedTracker container locally on your Windows machine (simulating an on-prem developer workstation), push it to OCI Container Registry (OCIR), then deploy it on your OCI compute instance with Podman. This is the same workflow used in real legacy-to-cloud migrations — containerize the app, push to a private registry, deploy on cloud infrastructure.
+> You containerized FedTracker locally on Day 1 (Phase 6A). That image was built for x86 (your Windows machine). The OCI VM is ARM (Ampere A1 Flex). Now you'll rebuild for the target architecture, push to OCI Container Registry, and deploy with Podman — completing the migration from "on-prem" (local Docker Desktop) to cloud (OCI compute).
 >
 > 📍 **Where work happens:** Local Terminal (Windows) → OCI Console → VM Terminal (app-server).
 >
-> 🛠️ **Build approach:** Dockerfile and docker-compose.yml are built by hand, section by section. Container commands are typed manually.
+> 🛠️ **Build approach:** Container commands typed manually. Registry operations via Docker CLI and Podman.
 
 ---
 
-### Step 14.1 — Understand Containers
+### Step 14.1 — Podman vs Docker
 📍 **VM Terminal** (app-server)
 
-> **🧠 ELI5 — What are Containers?** Think of a shipping container at a port. Before containers, each ship had to figure out how to store different cargo — barrels of oil next to crates of electronics next to bags of grain. Chaos. Shipping containers standardized everything: same size, same shape, stack them anywhere, load them on any ship. Software containers do the same thing: your app, its dependencies, its configuration — all packed into one standardized unit that runs the same way everywhere. It doesn't matter if the server runs Oracle Linux, Ubuntu, or Amazon Linux — the container runs identically.
+> You used **Docker** on Day 1 to build and test locally. Now you'll use **Podman** on the OCI VM to deploy. Same Dockerfile, same OCI image format, interchangeable commands. Here's what you need to know:
 
-> **🧠 ELI5 — Podman vs Docker:**
+> **🧠 Podman vs Docker:**
 >
 > | Feature | Podman | Docker |
 > |---------|--------|--------|
@@ -6009,109 +6200,25 @@ git push
 > | Federal preference | **Preferred** — rootless, no daemon attack surface | Common but security-conscious orgs prefer Podman |
 > | OCI Images | Uses same OCI image format | Same format — images are interchangeable |
 >
-> **Bottom line:** Same Dockerfile, same images, different runtime. Podman is more secure by default. Use Podman when you can, Docker when you must (Docker Compose ecosystem is more mature).
+> **Bottom line:** Same Dockerfile, same images, different runtime. Podman is more secure by default. Use Docker on Windows/Mac for local builds. Use Podman on Oracle Linux for deployment.
 
 ---
 
-### Step 14.2 — Build FedTracker Container Locally
-📍 **Local Terminal** (Windows — Docker Desktop)
+### Step 14.2 — Rebuild for ARM and Push to OCIR
+📍 **Local Terminal** (Git Bash on Windows)
 
-> **🧠 ELI5 — Migration Simulation:** In a real federal environment, legacy apps run on on-premises servers. The first step to cloud migration is containerizing the app so it's portable. You're simulating this by building the container on your Windows workstation (the "on-prem" machine), then migrating it to OCI. This is the same workflow every cloud engineer follows.
-
-> **Prerequisite:** Docker Desktop must be installed on your Windows machine. Download from https://www.docker.com/products/docker-desktop/ if you don't have it. Verify with `docker --version` in Git Bash or PowerShell.
-
-First, create a local project directory and copy the FedTracker application files:
+> **⚠️ Why rebuild?** On Day 1, you built with `docker build` (x86, for your local machine). The OCI VM is ARM (Ampere A1 Flex). If you push the x86 image and try to `podman run` it on ARM, you'll get `exec format error`. You must rebuild for the target architecture.
 
 ```bash
-# In Git Bash on your Windows machine
-mkdir -p ~/fedtracker-migration
-cd ~/fedtracker-migration
+cd ~/Desktop/github/oci-federal-lab
 
-# Copy your main.py from the repo (or recreate it)
-# If you have the app code in your repo:
-# Adjust path to your local repo clone
-cp ~/Desktop/github/oci-federal-lab/app/main.py . 2>/dev/null || echo "Create main.py manually — copy from Phase 3 guide steps"
-
-# Create requirements.txt
-cat > requirements.txt << 'EOF'
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
-EOF
-```
-
-**Build the Dockerfile section by section:**
-
-```bash
-cat > Dockerfile << 'DOCKEOF'
-# Use Oracle Linux 8 as base (matches our OCI server OS)
-FROM oraclelinux:8-slim AS builder
-
-LABEL maintainer="lab-operator" \
-      app="fedtracker" \
-      version="1.0"
-
-# Install Python 3.11
-RUN microdnf install -y python3.11 python3.11-pip && \
-    microdnf clean all
-
-# Install dependencies
-WORKDIR /app
-COPY requirements.txt .
-RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
-
-# Copy application
-COPY main.py .
-
-# Create non-root user (security: never run containers as root)
-RUN useradd -r -s /bin/false appuser
-USER appuser
-
-# Expose the application port
-EXPOSE 8000
-
-# Health check for orchestrator integration
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD python3.11 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
-
-# Run the application
-CMD ["python3.11", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-DOCKEOF
-```
-
-> **Why Oracle Linux as base?** Using the same OS as your OCI server avoids compatibility issues. In federal environments, consistency matters — your container should match the host OS family when possible.
-
-> **Why `USER appuser`?** Running containers as root is a security risk — if an attacker escapes the container, they're root on the host. This is a CIS benchmark requirement and a federal best practice.
-
-**Build and test locally:**
-
-> **⚠️ ARM cross-compilation:** Your Windows machine is x86 (AMD/Intel) but the OCI VM is ARM (Ampere A1.Flex). You MUST build for ARM or the image will crash on the VM with `exec format error`. Docker Desktop's `buildx` handles this automatically with the `--platform` flag.
-
-```bash
-# Build the container image for ARM (matches your OCI VM architecture)
-docker buildx build --platform linux/arm64 -t fedtracker:1.0 .
+# Rebuild for ARM (matches your OCI VM architecture)
+docker buildx build --platform linux/arm64 -t fedtracker:1.0-arm64 docker/
 # Expected: Successfully built, image tagged
 # Note: First ARM build may take longer as Docker downloads ARM base layers
-
-# Run it locally to verify (Docker Desktop can run ARM images on x86 via emulation)
-docker run -d --name fedtracker-local -p 8000:8000 -e DB_TYPE=sqlite fedtracker:1.0
-
-# Test it
-curl http://localhost:8000/health
-# Expected: {"status": "healthy", ...}
-
-curl http://localhost:8000/personnel
-# Expected: JSON list of personnel records
-
-# Check logs
-docker logs fedtracker-local
-
-# Stop and remove when verified
-docker stop fedtracker-local
-docker rm fedtracker-local
 ```
 
-> **What just happened?** You containerized a legacy application on your "on-prem" workstation. The app runs identically whether it's on your Windows machine, a Linux server, or in the cloud. This portability is the entire point of containers.
+> **What is `buildx`?** Docker's extended build tool that supports cross-compilation. The `--platform linux/arm64` flag tells Docker to build for ARM even though you're on an x86 machine. Docker Desktop handles the emulation layer automatically.
 
 ---
 
@@ -8131,10 +8238,10 @@ Take one screenshot now and save it to `docs/screenshots/` in your repo:
 
 | Day | What You Did | Skills Practiced |
 |-----|-------------|-----------------|
-| Day 1 | Manual VM setup, Linux admin, FastAPI REST API (built from scratch), systemd, Bash/Python scripts | Oracle Linux, OCI basics, FastAPI, REST APIs, Bash, Python, systemd |
+| Day 1 | Manual VM setup, Linux admin, FastAPI REST API (built from scratch), systemd, Docker containerization, Bash/Python scripts | Oracle Linux, OCI basics, FastAPI, REST APIs, Docker, Bash, Python, systemd |
 | Day 2 | Proper architecture: VCN, subnets, bastion, Oracle DB, security hardening, IAM, cost tagging | OCI networking, Oracle DB, security, cost management, IAM |
 | Day 3 | Terraform + Ansible automation, destroy/rebuild proof | Terraform, Ansible, IaC, configuration management |
-| Day 4 | Podman, Docker, Docker Compose, OpenSCAP CIS, FedRAMP readiness agent (Ollama) | Containers, compliance scanning, FedRAMP/AI integration |
+| Day 4 | ARM rebuild, OCIR push, Podman deploy, OpenSCAP CIS, FedRAMP readiness agent (Ollama) | Container registry migration, compliance scanning, FedRAMP/AI integration |
 | Day 5 | OCI Functions, Jenkins pipeline, DR drill, cost reporting, teardown | Serverless, CI/CD, disaster recovery, FinOps |
 
 ### What You Can Now Talk About in Interviews
