@@ -8,7 +8,7 @@
 set -e
 
 # --- CONFIGURATION (from your existing infrastructure) ---
-COMPARTMENT_OCID="ocid1.compartment.oc1..aaaaaaaashs5zel3yuwrlxxhsnndqgye6gnz7xsdtw76sugmmszp5lm645ha"
+COMPARTMENT_OCID="ocid1.compartment.oc1..YOUR_COMPARTMENT_OCID"
 DISPLAY_NAME="legacy-server"
 SHAPE="VM.Standard.A1.Flex"
 OCPUS=2

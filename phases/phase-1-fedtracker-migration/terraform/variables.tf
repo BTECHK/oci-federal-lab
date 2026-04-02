@@ -111,7 +111,7 @@ variable "freeform_tags" {
   default = {
     "Project"     = "fedtracker"
     "Environment" = "lab"
-    "Owner"       = "btechk"
-    "CostCenter"  = "interview-prep"
+    "Owner"       = "lab-operator"
+    "CostCenter"  = "lab-project"
   }
 }

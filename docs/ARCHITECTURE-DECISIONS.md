@@ -123,7 +123,7 @@ Managed CI/CD (GitHub Actions, Terraform Cloud, OCI Resource Manager) eliminates
 ## ADR-001: Three Independent Phases with Repeated Skill Pillars
 **Date:** 2026-03-18
 **Status:** Accepted
-**Context:** Interview is for Accenture Federal Services Cloud Engineer / Linux Admin. Need to demonstrate breadth across many skills (Terraform, Ansible, Kubernetes, CI/CD, security, AI, containers, API development). A single linear project would only touch each skill once.
+**Context:** Interview is for a federal Cloud Engineer / Linux Admin role. Need to demonstrate breadth across many skills (Terraform, Ansible, Kubernetes, CI/CD, security, AI, containers, API development). A single linear project would only touch each skill once.
 **Decision:** Three independent phases, each with the same "skill pillars" but different tools and use cases:
 - AI: Ollama (Phase 1) → OCI GenAI (Phase 2) → scikit-learn (Phase 3)
 - Security: OpenSCAP CIS (Phase 1) → AIDE (Phase 2) → Trivy SBOM (Phase 3)

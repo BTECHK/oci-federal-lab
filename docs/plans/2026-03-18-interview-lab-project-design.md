@@ -2,7 +2,7 @@
 ## Three Independent Hands-On Labs for Interview Preparation
 
 **Date:** 2026-03-18 | **Updated:** 2026-03-20
-**Target Role:** Accenture Federal Services — Cloud Engineer / Linux Admin (CL9 Specialist)
+**Target Role:** Federal Cloud Engineer / Linux Admin
 **Timeline:** ~15 days total (3 phases x 5 days max), 4-8 hours/day
 **Budget:** $0-$15 (OCI Always Free tier)
 **Execution Partner:** Claude Code (tutor + troubleshooting guide)

@@ -5144,7 +5144,7 @@ type: application       # "application" = runnable workload; "library" = reusabl
 version: 0.1.0          # Chart version — increment when chart structure changes
 appVersion: "1.0.0"     # Application version — informational; image tag controls actual version
 maintainers:
-  - name: <YOUR_NAME>       # e.g., "Kyne Atekwana"
+  - name: <YOUR_NAME>       # e.g., "Jane Smith"
     email: <YOUR_EMAIL>      # e.g., "you@example.com"
 EOF
 ```
