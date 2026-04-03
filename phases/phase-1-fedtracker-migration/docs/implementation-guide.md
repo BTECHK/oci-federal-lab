@@ -6040,15 +6040,7 @@ terraform apply
 # Type "yes" when prompted
 # Expected: "Apply complete! Resources: X added"
 
-# Get the new IPs
-terraform output
-# Note: The IPs WILL be different from before
-```
-
-> **Important:** Update the Ansible inventory with the new IPs:
-
-```bash
-# Get the new IPs
+# Capture the new IPs into shell variables (keep this terminal open!)
 BASTION_IP=$(terraform output -raw bastion_public_ip)
 APP_IP=$(terraform output -raw app_server_private_ip)
 
@@ -6056,7 +6048,27 @@ echo "Bastion: $BASTION_IP"
 echo "App Server: $APP_IP"
 ```
 
-Update `phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini` with these new IPs.
+> **Important:** The new VMs have different IPs. Your inventory has three places with the old IPs — the bastion host, the app server host, and the bastion IP buried inside the ProxyCommand string. Update all three:
+
+```bash
+# Update bastion public IP (the ansible_host= value on the bastion_server line)
+sed -i "s/bastion_server ansible_host=[^ ]*/bastion_server ansible_host=$BASTION_IP/" \
+  ../ansible/inventory/inventory.ini
+
+# Update app server private IP (the ansible_host= value on the app-server line)
+sed -i "s/app-server ansible_host=[^ ]*/app-server ansible_host=$APP_IP/" \
+  ../ansible/inventory/inventory.ini
+
+# Update bastion IP inside the ProxyCommand string (opc@OLD_IP → opc@NEW_IP)
+sed -i "s/opc@[^\"]*\"/opc@$BASTION_IP\"/" \
+  ../ansible/inventory/inventory.ini
+
+# Verify all three IPs updated correctly
+echo "--- Updated inventory ---"
+cat ../ansible/inventory/inventory.ini
+```
+
+> **🧠 Production equivalent:** In a CI/CD pipeline, `terraform output` feeds directly into `sed` (or a dynamic inventory plugin queries the cloud API at runtime). No human edits a file — the pipeline script does exactly what you just did with variables. You're manually simulating what Jenkins would automate.
 
 ---
 
@@ -6079,37 +6091,70 @@ ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/invent
 ---
 
 ### Step 13.4 — Verify Everything Works
-📍 **Local Terminal**
+📍 **WSL2 Terminal** (Windows) / **Local Terminal** (macOS/Linux)
 
 ```bash
-# Health check
-ssh app-server "curl -s http://localhost:8000/health"
+# Health check (use p1-app-server alias from SSH config)
+ssh p1-app-server "curl -s http://localhost:8000/health"
 # Expected: {"status": "healthy", ...}
 
 # Personnel endpoint
-ssh app-server "curl -s http://localhost:8000/personnel"
+ssh p1-app-server "curl -s http://localhost:8000/personnel"
 # Expected: JSON with personnel records
 
-# Swagger docs (from browser)
-echo "Visit: http://$BASTION_IP:8000/docs"
-# Note: You'd need to set up port forwarding or adjust security lists
-# to access the app from your browser through the bastion
+# Swagger docs — use SSH port forwarding to access from your browser
+# This tunnels your laptop's port 8000 through the bastion to the app server
+ssh -L 8000:localhost:8000 p1-app-server
+# While that SSH session is open, visit http://localhost:8000/docs in your browser
+# Press Ctrl+C in the terminal when you're done
 ```
+
+> **🧠 ELI5 — Port forwarding:** The app server has no public IP — you can't reach it from your browser directly. `ssh -L 8000:localhost:8000` says "take anything I send to my laptop's port 8000, tunnel it through SSH, and deliver it to the app server's port 8000." Your browser thinks it's talking to localhost, but the traffic travels through the bastion to the private subnet. This is how teams access internal tools without exposing them to the internet.
+
+---
 
 ### Step 13.5 — Measure and Document Rebuild Time
-📍 **Local Terminal**
+📍 **WSL2 Terminal** (Windows) / **Local Terminal** (macOS/Linux)
+
+You need actual numbers for your interview, not guesses. The `time` command measures how long any command takes. Run each step with `time` and Ansible's built-in timing to capture real metrics.
+
+**Option A: Quick — time each command manually**
 
 ```bash
-# Document the rebuild time
-echo "=== REBUILD METRICS ==="
-echo "Terraform apply: ~X minutes"
-echo "Ansible hardening: ~X minutes"
-echo "Ansible deploy: ~X minutes"
-echo "Total time from zero to healthy app: ~X minutes"
-echo "========================"
+cd ~/oci-federal-lab
+
+# Time terraform apply
+time terraform -chdir=phases/phase-1-fedtracker-migration/terraform apply -auto-approve
+# Look for the "real" line in the output — that's wall clock time
+# Example: real  3m42.108s
+
+# Time ansible hardening
+time ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
+# Example: real  1m15.432s
+
+# Time ansible deploy
+time ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/deploy_app.yml
+# Example: real  0m52.871s
 ```
 
-> **🧠 Interview framing:** "I can rebuild the entire environment from scratch in under 15 minutes. Terraform creates the VCN, subnets, gateways, security lists, and VMs. Ansible hardens the servers and deploys the application. Everything is codified — no manual steps, no console clicking, fully repeatable."
+> **🧠 ELI5 — The `time` command:** Prefix any command with `time` and the shell measures how long it runs. It reports three numbers: `real` (wall clock — the one you care about), `user` (CPU time in your process), and `sys` (CPU time in the kernel). For infrastructure commands that spend most of their time waiting on API responses, `real` is much larger than `user + sys`.
+
+**Option B: Scripted — capture everything to a file**
+
+A rebuild timing script lives at `tools/rebuild-and-time.sh`. It runs the full destroy/rebuild pipeline, captures timing for each phase, and writes results to `phases/phase-1-fedtracker-migration/docs/rebuild-metrics.txt`:
+
+```bash
+cd ~/oci-federal-lab
+bash tools/rebuild-and-time.sh
+```
+
+Review the results:
+
+```bash
+cat phases/phase-1-fedtracker-migration/docs/rebuild-metrics.txt
+```
+
+> **🧠 Interview framing:** "I can rebuild the entire environment from scratch in under 15 minutes. Terraform creates the VCN, subnets, gateways, security lists, and VMs. Ansible hardens the servers and deploys the application. I have a script that measures each phase — here are my actual times." Concrete numbers are more credible than round estimates.
 
 ---
 

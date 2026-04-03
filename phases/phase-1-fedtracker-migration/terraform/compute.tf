@@ -56,7 +56,7 @@ resource "oci_core_instance" "app_server" {
   }
 
   metadata = {
-    ssh_authorized_keys = file(var.ssh_public_key_path)
+    ssh_authorized_keys = file(var.ssh_app_public_key_path)
   }
 
   freeform_tags = var.freeform_tags

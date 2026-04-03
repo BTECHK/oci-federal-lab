@@ -95,7 +95,12 @@ variable "app_server_memory_gb" {
 }
 
 variable "ssh_public_key_path" {
-  description = "Path to the SSH public key for instance access"
+  description = "Path to the SSH public key for bastion access"
+  type        = string
+}
+
+variable "ssh_app_public_key_path" {
+  description = "Path to the SSH public key for app server access"
   type        = string
 }
 

@@ -1,0 +1,25 @@
+=== REBUILD METRICS ===
+Date: 2026-04-03 (app server keypair replacement rebuild)
+
+Note: This was a partial rebuild (app server only, not full destroy/rebuild).
+Terraform replaced the app server to apply the new SSH keypair.
+
+Terraform apply (app server replace):
+  - Destroy old instance:   1m 4s
+  - Create new instance:    0m 37s
+  - Total terraform apply:  1m 41s
+
+VM boot wait:               1m 0s (manual sleep)
+
+Ansible hardening:          completed (exact time not captured — use 'time' prefix next run)
+Ansible deploy:             completed (exact time not captured — use 'time' prefix next run)
+
+Health check: {"status":"healthy","service":"fedtracker","version":"1.0.0-legacy"}
+
+To capture exact ansible times on next run:
+  time ansible-playbook -i .../inventory.ini .../harden.yml
+  time ansible-playbook -i .../inventory.ini .../deploy_app.yml
+
+Or use the full timed rebuild script:
+  bash tools/rebuild-and-time.sh
+===========================
