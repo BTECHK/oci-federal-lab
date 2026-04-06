@@ -1,0 +1,1058 @@
+<mxfile host="app.diagrams.net" modified="2026-04-02T00:00:00.000Z" agent="draw.io" version="24.0.0" type="device">
+  <diagram id="production-pipeline" name="Production CI/CD Pipeline">
+    <mxGraphModel dx="3200" dy="4800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="3400" pageHeight="5400" background="#1a1a2e" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============================================================ -->
+        <!-- TITLE BAR                                                     -->
+        <!-- ============================================================ -->
+        <mxCell id="title_bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0f3460;strokeColor=#533483;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="3360" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="title_text" value="Production CI/CD Pipeline &amp;mdash; From Commit to Production" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=28;fontFamily=Consolas;fontStyle=1;fontColor=#e0e0e0;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="3360" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle_text" value="How enterprise teams maintain software infrastructure &amp;mdash; from first commit to production deployment" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontColor=#a0a0c0;" vertex="1" parent="1">
+          <mxGeometry x="20" y="65" width="3360" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- COLUMN 1: DEVELOPER WORKSTATION (blue #0096D6)                -->
+        <!-- ============================================================ -->
+        <mxCell id="col1_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0096D6;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="20" y="130" width="500" height="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_header" value="DEVELOPER WORKSTATION" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontFamily=Consolas;fontStyle=1;fontColor=#0096D6;" vertex="1" parent="1">
+          <mxGeometry x="30" y="140" width="480" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Developer laptop icon -->
+        <mxCell id="dev_laptop" value="&#x1F4BB; Developer Laptop" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0096D6;fontColor=#e0e0e0;fontSize=14;fontFamily=Consolas;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="190" width="400" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Write code -->
+        <mxCell id="dev_write" value="Write / edit application code&#xa;(Python, Terraform, Ansible, Dockerfiles)" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=12;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="70" y="260" width="400" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- git add -->
+        <mxCell id="dev_gitadd" value="git add changed_files" style="rounded=1;whiteSpace=wrap;fillColor=#002244;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=13;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="330" width="340" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- git commit -->
+        <mxCell id="dev_gitcommit" value="git commit -m &quot;feat: add health endpoint&quot;" style="rounded=1;whiteSpace=wrap;fillColor=#002244;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=13;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="385" width="340" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- git push -->
+        <mxCell id="dev_gitpush" value="git push origin feature/health-endpoint" style="rounded=1;whiteSpace=wrap;fillColor=#002244;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=13;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="100" y="440" width="340" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- PR -->
+        <mxCell id="dev_pr" value="Open Pull Request (PR)&#xa;feature/health-endpoint &#x2192; main" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0096D6;fontColor=#e0e0e0;fontSize=13;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="70" y="500" width="400" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Code review -->
+        <mxCell id="dev_review" value="&#x1F50D; Code Review by Team&#xa;- Reviewer checks logic, style, security&#xa;- CI checks pass (automated tests)&#xa;- At least 1 approval required" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="575" width="400" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Merge -->
+        <mxCell id="dev_merge" value="&#x2705; PR Merged to main branch" style="rounded=1;whiteSpace=wrap;fillColor=#003355;strokeColor=#00aaff;fontColor=#ffffff;fontSize=14;fontFamily=Consolas;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="70" y="675" width="400" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Lab callout -->
+        <mxCell id="col1_lab" value="&#x1F3D7;&#xFE0F; In Kyle's Lab:&#xa;This is what Kyle does manually &#x2014;&#xa;git add, commit, push, and merge&#xa;from his laptop terminal." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="740" width="430" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- File annotations: Developer Workstation -->
+        <mxCell id="col1_files_box" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0c1e30;strokeColor=#0077aa;strokeWidth=1;dashed=1;dashPattern=4 3;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="840" width="460" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_files_title" value="FILES EDITED BY DEVELOPER" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontStyle=1;fontColor=#5aafdb;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="50" y="845" width="440" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f1" value="app/main.py" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#7ab8d9;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="50" y="870" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f1d" value="application code" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#5a8aa0;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="260" y="870" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f2" value="phases/.../terraform/*.tf" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#7ab8d9;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="50" y="893" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f2d" value="infrastructure definitions" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#5a8aa0;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="260" y="893" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f3" value="phases/.../ansible/playbooks/*.yml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#7ab8d9;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="50" y="916" width="250" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f3d" value="config automation" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#5a8aa0;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="310" y="916" width="180" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f4" value="phases/.../docker/Dockerfile" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#7ab8d9;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="50" y="939" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f4d" value="container recipe" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#5a8aa0;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="260" y="939" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f5" value="requirements.txt" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#7ab8d9;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="50" y="962" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col1_f5d" value="Python dependencies" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#5a8aa0;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="260" y="962" width="230" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows within column 1 -->
+        <mxCell id="a_c1_1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0077aa;strokeWidth=1.5;fontColor=#80d0ff;fontSize=10;fontFamily=Consolas;" edge="1" parent="1" source="dev_laptop" target="dev_write">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c1_2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0077aa;strokeWidth=1.5;" edge="1" parent="1" source="dev_write" target="dev_gitadd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c1_3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0077aa;strokeWidth=1.5;" edge="1" parent="1" source="dev_gitadd" target="dev_gitcommit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c1_4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0077aa;strokeWidth=1.5;" edge="1" parent="1" source="dev_gitcommit" target="dev_gitpush">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c1_5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0077aa;strokeWidth=1.5;" edge="1" parent="1" source="dev_gitpush" target="dev_pr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c1_6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0077aa;strokeWidth=1.5;" edge="1" parent="1" source="dev_pr" target="dev_review">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c1_7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#0077aa;strokeWidth=1.5;" edge="1" parent="1" source="dev_review" target="dev_merge">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- COLUMN 2: CI/CD PIPELINE - BUILD (orange #FF8C00)             -->
+        <!-- ============================================================ -->
+        <mxCell id="col2_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#1a1000;strokeColor=#FF8C00;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="560" y="130" width="500" height="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_header" value="CI/CD PIPELINE &amp;mdash; BUILD" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontFamily=Consolas;fontStyle=1;fontColor=#FF8C00;" vertex="1" parent="1">
+          <mxGeometry x="570" y="140" width="480" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_subheader" value="Jenkins / GitHub Actions / OCI DevOps" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontFamily=Consolas;fontColor=#cc7000;" vertex="1" parent="1">
+          <mxGeometry x="570" y="168" width="480" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Trigger -->
+        <mxCell id="ci_trigger" value="&#x26A1; TRIGGER: merge to main fires webhook" style="rounded=1;whiteSpace=wrap;fillColor=#2a1500;strokeColor=#FF8C00;fontColor=#ffcc80;fontSize=13;fontFamily=Consolas;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="205" width="420" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 1: Checkout -->
+        <mxCell id="ci_checkout" value="Stage 1: CHECKOUT&#xa;git clone repo &#x2192; workspace" style="rounded=1;whiteSpace=wrap;fillColor=#1a1000;strokeColor=#cc7000;fontColor=#e0c090;fontSize=12;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="610" y="260" width="400" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 2: Unit Tests -->
+        <mxCell id="ci_tests" value="Stage 2: UNIT TESTS&#xa;pytest --cov=app tests/&#xa;flake8 (linting) | black (formatting)" style="rounded=1;whiteSpace=wrap;fillColor=#1a1000;strokeColor=#cc7000;fontColor=#e0c090;fontSize=12;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="610" y="320" width="400" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 3: Docker Build -->
+        <mxCell id="ci_docker" value="Stage 3: DOCKER BUILD&#xa;Dockerfile &#x2192; multi-stage build&#xa;  FROM python:3.11-slim AS builder&#xa;  FROM python:3.11-slim AS runtime&#xa;Tag: fedtracker:abc123 (git SHA)" style="rounded=1;whiteSpace=wrap;fillColor=#1a1000;strokeColor=#cc7000;fontColor=#e0c090;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="610" y="390" width="400" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 4: Security Scan -->
+        <mxCell id="ci_security" value="" style="rounded=1;whiteSpace=wrap;fillColor=#2a0a00;strokeColor=#ff4400;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="610" y="500" width="400" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="ci_sec_title" value="Stage 4: SECURITY SCAN" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontStyle=1;fontColor=#ff6644;" vertex="1" parent="1">
+          <mxGeometry x="620" y="505" width="380" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="ci_trivy" value="&#x1F6E1;&#xFE0F; Trivy &amp;mdash; container vulnerability scan" style="rounded=1;whiteSpace=wrap;fillColor=#1a0800;strokeColor=#993300;fontColor=#e0a080;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="625" y="535" width="370" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ci_syft" value="&#x1F4DC; Syft &amp;mdash; SBOM generation (software bill of materials)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0800;strokeColor=#993300;fontColor=#e0a080;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="625" y="568" width="370" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ci_oscap" value="&#x1F512; OpenSCAP &amp;mdash; CIS benchmark check" style="rounded=1;whiteSpace=wrap;fillColor=#1a0800;strokeColor=#993300;fontColor=#e0a080;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="625" y="601" width="370" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="ci_gate" value="&#x1F6D1; GATE: critical vulnerability found &#x2192; PIPELINE FAILS" style="rounded=1;whiteSpace=wrap;fillColor=#3a0000;strokeColor=#ff0000;fontColor=#ff8888;fontSize=12;fontFamily=Consolas;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="625" y="635" width="370" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- Pipeline output -->
+        <mxCell id="ci_output" value="&#x2705; All stages pass &#x2192; artifacts ready to push" style="rounded=1;whiteSpace=wrap;fillColor=#1a2200;strokeColor=#66aa00;fontColor=#c0e080;fontSize=13;fontFamily=Consolas;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="610" y="690" width="400" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Lab callout -->
+        <mxCell id="col2_lab" value="&#x1F3D7;&#xFE0F; In Kyle's Lab:&#xa;He runs docker build and pytest&#xa;manually from his terminal.&#xa;Jenkins automates all of this." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="590" y="750" width="430" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- File annotations: CI/CD Pipeline -->
+        <mxCell id="col2_files_box" value="" style="rounded=1;whiteSpace=wrap;fillColor=#1e1500;strokeColor=#cc7000;strokeWidth=1;dashed=1;dashPattern=4 3;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="580" y="840" width="460" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_files_title" value="FILES DRIVING THE PIPELINE" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontStyle=1;fontColor=#e0a050;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="590" y="845" width="440" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f1" value=".github/workflows/ci.yml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d9b67a;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="870" width="210" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f1d" value="pipeline definition" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#a08050;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="810" y="870" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f1alt" value="(or Jenkinsfile)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#806030;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="890" width="200" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f2" value="Dockerfile" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d9b67a;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="912" width="210" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f2d" value="docker build stage input" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#a08050;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="810" y="912" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f3" value="pytest.ini / tests/" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d9b67a;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="935" width="210" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f3d" value="unit test configuration" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#a08050;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="810" y="935" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f4" value=".flake8 / pyproject.toml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d9b67a;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="958" width="210" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f4d" value="linting config" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#a08050;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="810" y="958" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f5_sep" value="&#x2500;&#x2500; Security Scan Files &#x2500;&#x2500;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#cc5533;spacingLeft=0;" vertex="1" parent="1">
+          <mxGeometry x="590" y="982" width="440" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f5" value=".trivyignore" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d9b67a;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1002" width="210" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f5d" value="known vulnerability exceptions" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#a08050;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1002" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f6" value="sbom.json" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d9b67a;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1025" width="210" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f6d" value="generated SBOM artifact" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#a08050;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1025" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f7" value="oscap-profile.xml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d9b67a;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1048" width="210" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col2_f7d" value="CIS benchmark profile" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#a08050;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1048" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows within column 2 -->
+        <mxCell id="a_c2_1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#cc7000;strokeWidth=1.5;" edge="1" parent="1" source="ci_trigger" target="ci_checkout">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c2_2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#cc7000;strokeWidth=1.5;" edge="1" parent="1" source="ci_checkout" target="ci_tests">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c2_3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#cc7000;strokeWidth=1.5;" edge="1" parent="1" source="ci_tests" target="ci_docker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c2_4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#cc7000;strokeWidth=1.5;" edge="1" parent="1" source="ci_docker" target="ci_security">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c2_5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#66aa00;strokeWidth=1.5;" edge="1" parent="1" source="ci_security" target="ci_output">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-column arrow: Col1 to Col2 -->
+        <mxCell id="a_c1_to_c2" value="webhook" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#FF8C00;strokeWidth=2;fontColor=#FF8C00;fontSize=11;fontFamily=Consolas;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="dev_merge" target="ci_trigger">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- COLUMN 3: ARTIFACT REGISTRIES (teal #00B4AA)                  -->
+        <!-- ============================================================ -->
+        <mxCell id="col3_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#001a18;strokeColor=#00B4AA;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="130" width="520" height="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_header" value="ARTIFACT REGISTRIES" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontFamily=Consolas;fontStyle=1;fontColor=#00B4AA;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="140" width="500" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Container Registry -->
+        <mxCell id="reg_container" value="" style="rounded=1;whiteSpace=wrap;fillColor=#002a28;strokeColor=#00B4AA;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="190" width="460" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_cont_title" value="&#x1F4E6; Container Registry" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontStyle=1;fontColor=#00e6d8;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="195" width="430" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_cont_sub" value="OCIR / Harbor / ECR / Docker Hub" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80c0bb;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="218" width="430" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_cont_b1" value="&#x2022; Stores Docker images (tagged by git SHA)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="240" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_cont_b2" value="&#x2022; Vulnerability scanning on push" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="262" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_cont_b3" value="&#x2022; Image signing with cosign (supply chain trust)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="284" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_cont_cmd" value="docker push iad.ocir.io/tenancy/fedtracker:abc123" style="rounded=1;whiteSpace=wrap;fillColor=#003a38;strokeColor=#00B4AA;fontColor=#80ffee;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="312" width="420" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- Artifact Repository -->
+        <mxCell id="reg_artifact" value="" style="rounded=1;whiteSpace=wrap;fillColor=#002a28;strokeColor=#008877;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="365" width="460" height="175" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_art_title" value="&#x1F4DA; Artifact Repository" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontStyle=1;fontColor=#00e6d8;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="370" width="430" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_art_sub" value="Artifactory / Nexus" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80c0bb;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="393" width="430" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_art_b1" value="&#x2022; Helm charts (Kubernetes deployments)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="415" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_art_b2" value="&#x2022; Python packages (pip), OS packages (RPM/DEB)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="437" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_art_b3" value="&#x2022; Terraform modules (reusable infra code)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="459" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_art_b4" value="&#x2022; Version controlled + cached from public registries" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="481" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_art_cmd" value="helm push fedtracker-chart artifactory.internal" style="rounded=1;whiteSpace=wrap;fillColor=#003a38;strokeColor=#008877;fontColor=#80ffee;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="508" width="420" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Terraform Registry -->
+        <mxCell id="reg_terraform" value="" style="rounded=1;whiteSpace=wrap;fillColor=#002a28;strokeColor=#006655;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="555" width="460" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_tf_title" value="&#x1F4C1; Terraform Registry" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontStyle=1;fontColor=#00e6d8;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="560" width="430" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_tf_sub" value="Terraform Cloud / Private Registry" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80c0bb;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="583" width="430" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_tf_b1" value="&#x2022; Reusable Terraform modules (networking, compute)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="605" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_tf_b2" value="&#x2022; Versioned: v1.0.0, v1.1.0, v2.0.0" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="627" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="reg_tf_cmd" value="terraform publish module oci-vcn v1.2.0" style="rounded=1;whiteSpace=wrap;fillColor=#003a38;strokeColor=#006655;fontColor=#80ffee;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="653" width="420" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Lab callout -->
+        <mxCell id="col3_lab" value="&#x1F3D7;&#xFE0F; In Kyle's Lab:&#xa;OCIR (500MB free tier).&#xa;Production: Artifactory manages&#xa;ALL artifact types in one place." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="700" width="430" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- File annotations: Artifact Registries -->
+        <mxCell id="col3_files_box" value="" style="rounded=1;whiteSpace=wrap;fillColor=#021e1c;strokeColor=#008877;strokeWidth=1;dashed=1;dashPattern=4 3;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="790" width="480" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_files_title" value="REGISTRY ARTIFACTS" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontStyle=1;fontColor=#40bfb0;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="795" width="460" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f1" value="fedtracker:v1.2.3-abc123" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80d9cc;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="820" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f1d" value="image tag format" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#509080;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="820" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_flow_label" value="&#x2500;&#x2500; Image Build Flow &#x2500;&#x2500;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#40bfb0;spacingLeft=0;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="845" width="460" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_flow" value="Dockerfile &#x2192; docker build &#x2192; image &#x2192; OCIR" style="rounded=1;whiteSpace=wrap;fillColor=#003a38;strokeColor=#006655;fontColor=#80ffee;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="866" width="430" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f2_sep" value="&#x2500;&#x2500; Helm Chart Files &#x2500;&#x2500;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#40bfb0;spacingLeft=0;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="896" width="460" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f2" value="helm/Chart.yaml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80d9cc;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="917" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f2d" value="chart metadata + version" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#509080;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="917" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f3" value="helm/values.yaml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80d9cc;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="940" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f3d" value="deploy configuration values" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#509080;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="940" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f3_sep" value="&#x2500;&#x2500; Terraform Modules &#x2500;&#x2500;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#40bfb0;spacingLeft=0;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="965" width="460" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f4" value="modules/vcn/main.tf" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80d9cc;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="986" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col3_f4d" value="reusable infra module" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#509080;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="986" width="220" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-column arrow: Col2 to Col3 -->
+        <mxCell id="a_c2_to_c3" value="docker push&#xa;helm push&#xa;terraform publish" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#00B4AA;strokeWidth=2;fontColor=#00B4AA;fontSize=10;fontFamily=Consolas;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="ci_output" target="reg_container">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- COLUMN 4: DEPLOYMENT (green #4CAF50)                          -->
+        <!-- ============================================================ -->
+        <mxCell id="col4_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#001a00;strokeColor=#4CAF50;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="130" width="540" height="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_header" value="DEPLOYMENT" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontFamily=Consolas;fontStyle=1;fontColor=#4CAF50;" vertex="1" parent="1">
+          <mxGeometry x="1670" y="140" width="520" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Path A: Infrastructure (Terraform) -->
+        <mxCell id="dep_tf_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#388E3C;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="185" width="500" height="255" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_title" value="Path A: INFRASTRUCTURE (Terraform)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=13;fontFamily=Consolas;fontStyle=1;fontColor=#66BB6A;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1690" y="190" width="480" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_sub" value="Terraform Cloud / OCI Resource Manager" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80aa80;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1690" y="213" width="480" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_step1" value="1. Reads .tf files from git repo" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#2E7D32;fontColor=#a0d0a0;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="240" width="460" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_step2" value="2. terraform plan &#x2192; shows what will change" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#2E7D32;fontColor=#a0d0a0;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="270" width="460" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_gate" value="3. &#x1F6D1; HUMAN APPROVAL GATE &#x2192; manager reviews plan" style="rounded=1;whiteSpace=wrap;fillColor=#2a1500;strokeColor=#FF8C00;fontColor=#ffcc80;fontSize=11;fontFamily=Consolas;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="300" width="460" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_step3" value="4. terraform apply &#x2192; creates cloud resources" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#2E7D32;fontColor=#a0d0a0;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="330" width="460" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_creates" value="Creates: VCN, subnets, compute, load balancers, databases" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80aa80;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="358" width="460" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_state" value="State: stored remotely (OCI Object Storage &amp;mdash; NOT local!)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#ccaa00;fontStyle=2;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="378" width="460" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_tf_lab" value="Lab: terraform apply from laptop.&#xa;Prod: Terraform Cloud runs it." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#c0a0e0;fontStyle=2;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="400" width="460" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Path B: Application (GitOps) -->
+        <mxCell id="dep_gitops_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#388E3C;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="455" width="500" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_gitops_title" value="Path B: APPLICATION (GitOps)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=13;fontFamily=Consolas;fontStyle=1;fontColor=#66BB6A;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1690" y="460" width="480" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_gitops_sub" value="ArgoCD watches git repo for Helm chart changes" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80aa80;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1690" y="483" width="480" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_gitops_s1" value="1. Detects new image tag in values.yaml" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#2E7D32;fontColor=#a0d0a0;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="510" width="460" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_gitops_s2" value="2. Pulls Helm chart from Artifactory" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#2E7D32;fontColor=#a0d0a0;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="540" width="460" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_gitops_s3" value="3. Deploys to Kubernetes (OKE / k3s)&#xa;   kubectl apply (managed by ArgoCD)" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#2E7D32;fontColor=#a0d0a0;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="570" width="460" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_gitops_s4" value="4. Rolling update: old pods &#x2192; new pods&#xa;   Health checks before traffic cutover" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#2E7D32;fontColor=#a0d0a0;fontSize=11;fontFamily=Consolas;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="615" width="460" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_gitops_lab" value="Lab: ansible-playbook deploys directly.&#xa;Prod: ArgoCD pulls from git." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#c0a0e0;fontStyle=2;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="660" width="460" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Path C: Configuration (Ansible) -->
+        <mxCell id="dep_ansible_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0a200a;strokeColor=#388E3C;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="740" width="500" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_ansible_title" value="Path C: CONFIGURATION (Ansible)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=13;fontFamily=Consolas;fontStyle=1;fontColor=#66BB6A;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1690" y="745" width="480" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_ansible_sub" value="Ansible Tower / AWX (web UI with RBAC)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#80aa80;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1690" y="768" width="480" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_ansible_s1" value="&#x2022; Scheduled or triggered by CI/CD pipeline" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0a0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="793" width="460" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_ansible_s2" value="&#x2022; Runs playbooks against dynamic inventory&#xa;  (queries cloud API for current hosts)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0a0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="815" width="460" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_ansible_s3" value="&#x2022; Hardens new servers, updates configurations" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0a0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="850" width="460" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_ansible_s4" value="&#x2022; Full audit trail: who ran what playbook, when" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0a0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="872" width="460" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dep_ansible_lab" value="Lab: ansible-playbook from WSL terminal.&#xa;Prod: Ansible Tower with scheduling + RBAC." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#c0a0e0;fontStyle=2;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="900" width="460" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- File annotations: Deployment -->
+        <mxCell id="col4_files_box" value="" style="rounded=1;whiteSpace=wrap;fillColor=#061806;strokeColor=#2E7D32;strokeWidth=1;dashed=1;dashPattern=4 3;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1670" y="1000" width="520" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_files_title" value="DEPLOYMENT FILES" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontStyle=1;fontColor=#66BB6A;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1005" width="500" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f1" value="helm/Chart.yaml + values.yaml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d9a0;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1030" width="260" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f1d" value="Helm chart files" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#608060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1950" y="1030" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f2" value="argocd/application.yaml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d9a0;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1053" width="260" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f2d" value="ArgoCD app definition" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#608060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1950" y="1053" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f3" value="ansible/playbooks/deploy_app.yml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d9a0;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1076" width="260" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f3d" value="Ansible deploy (lab equivalent)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#608060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1950" y="1076" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f4" value="terraform/main.tf" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d9a0;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1099" width="260" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f4d" value="infra definition" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#608060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1950" y="1099" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f5" value="terraform/terraform.tfstate" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d9a0;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1122" width="260" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f5d" value="state (in Terraform Cloud)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#608060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1950" y="1122" width="230" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f6" value="ansible/inventory/" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d9a0;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1145" width="260" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col4_f6d" value="dynamic inventory (auto-generated)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#608060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1950" y="1145" width="230" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-column arrow: Col3 to Col4 -->
+        <mxCell id="a_c3_to_c4a" value="pull image" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#4CAF50;fontSize=10;fontFamily=Consolas;exitX=1;exitY=0.3;entryX=0;entryY=0.5;" edge="1" parent="1" source="col3_group" target="dep_gitops_group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c3_to_c4b" value="pull chart" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#4CAF50;strokeWidth=1.5;fontColor=#4CAF50;fontSize=10;fontFamily=Consolas;dashed=1;" edge="1" parent="1" source="reg_artifact" target="dep_gitops_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c3_to_c4c" value="pull module" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#4CAF50;strokeWidth=1.5;fontColor=#4CAF50;fontSize=10;fontFamily=Consolas;dashed=1;" edge="1" parent="1" source="reg_terraform" target="dep_tf_step1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- COLUMN 5: RUNTIME ENVIRONMENT (purple #9C27B0)                -->
+        <!-- ============================================================ -->
+        <mxCell id="col5_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#9C27B0;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="2240" y="130" width="520" height="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="col5_header" value="RUNTIME ENVIRONMENTS" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontFamily=Consolas;fontStyle=1;fontColor=#9C27B0;" vertex="1" parent="1">
+          <mxGeometry x="2250" y="140" width="500" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- DEV Environment -->
+        <mxCell id="env_dev" value="" style="rounded=1;whiteSpace=wrap;fillColor=#200030;strokeColor=#7B1FA2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="2270" y="190" width="460" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="env_dev_title" value="DEV Environment (small)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontStyle=1;fontColor=#CE93D8;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="195" width="430" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="env_dev_b1" value="&#x2022; Single-node Kubernetes (k3s / minikube)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#b090c0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="225" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_dev_b2" value="&#x2022; Auto-deploy on every merge to main" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#b090c0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="247" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_dev_b3" value="&#x2022; Ephemeral (destroyed nightly to save cost)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#b090c0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="269" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_dev_auto" value="&#x2192; auto-deploy" style="rounded=1;whiteSpace=wrap;fillColor=#1a0050;strokeColor=#7B1FA2;fontColor=#CE93D8;fontSize=11;fontFamily=Consolas;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="296" width="120" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- STAGING Environment -->
+        <mxCell id="env_staging" value="" style="rounded=1;whiteSpace=wrap;fillColor=#200030;strokeColor=#7B1FA2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="2270" y="345" width="460" height="165" as="geometry" />
+        </mxCell>
+        <mxCell id="env_stg_title" value="STAGING Environment (medium)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontStyle=1;fontColor=#CE93D8;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="350" width="430" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="env_stg_b1" value="&#x2022; Multi-node Kubernetes cluster (3+ nodes)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#b090c0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="380" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_stg_b2" value="&#x2022; Load testing (k6 / Locust)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#b090c0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="402" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_stg_b3" value="&#x2022; Integration tests against staging DB" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#b090c0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="424" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_stg_gate" value="&#x1F6D1; MANUAL APPROVAL GATE to Production" style="rounded=1;whiteSpace=wrap;fillColor=#2a1500;strokeColor=#FF8C00;fontColor=#ffcc80;fontSize=12;fontFamily=Consolas;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="2290" y="455" width="420" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow from staging gate to production -->
+        <mxCell id="a_stg_to_prod" value="approved" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#4CAF50;fontSize=10;fontFamily=Consolas;" edge="1" parent="1" source="env_stg_gate" target="env_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- PRODUCTION Environment -->
+        <mxCell id="env_prod" value="" style="rounded=1;whiteSpace=wrap;fillColor=#200030;strokeColor=#E040FB;strokeWidth=2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="2270" y="530" width="460" height="290" as="geometry" />
+        </mxCell>
+        <mxCell id="env_prod_title" value="&#x1F451; PRODUCTION Environment (large)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontStyle=1;fontColor=#F48FB1;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="535" width="430" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="env_prod_b1" value="&#x2022; Multi-node Kubernetes (OKE) with HA" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d0a0d0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="565" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_prod_b2" value="&#x2022; Load Balancer (OCI LB) &#x2014; distributes traffic" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d0a0d0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="587" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_prod_b3" value="&#x2022; Autonomous Database (not SQLite!)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d0a0d0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="609" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_prod_b4" value="&#x2022; Object Storage for backups (99.999% durability)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d0a0d0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="631" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_prod_b5" value="&#x2022; WAF (Web Application Firewall) &#x2014; blocks attacks" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d0a0d0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="653" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_prod_b6" value="&#x2022; Cross-region DR replica (disaster recovery)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d0a0d0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="2280" y="675" width="430" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="env_prod_icon" value="&#x1F310; LIVE TRAFFIC" style="rounded=1;whiteSpace=wrap;fillColor=#3a0050;strokeColor=#E040FB;fontColor=#F48FB1;fontSize=14;fontFamily=Consolas;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="2370" y="710" width="260" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow from dev to staging -->
+        <mxCell id="a_dev_to_stg" value="promote" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9C27B0;strokeWidth=1.5;fontColor=#CE93D8;fontSize=10;fontFamily=Consolas;" edge="1" parent="1" source="env_dev" target="env_staging">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-column arrow: Col4 to Col5 -->
+        <mxCell id="a_c4_to_c5" value="deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9C27B0;strokeWidth=2;fontColor=#CE93D8;fontSize=11;fontFamily=Consolas;exitX=1;exitY=0.3;entryX=0;entryY=0.2;" edge="1" parent="1" source="col4_group" target="col5_group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- COLUMN 6: MONITORING & FEEDBACK (red #E84D4D)                 -->
+        <!-- ============================================================ -->
+        <mxCell id="col6_group" value="" style="rounded=1;whiteSpace=wrap;fillColor=#1a0808;strokeColor=#E84D4D;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="2800" y="130" width="560" height="1050" as="geometry" />
+        </mxCell>
+        <mxCell id="col6_header" value="MONITORING &amp; FEEDBACK" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontFamily=Consolas;fontStyle=1;fontColor=#E84D4D;" vertex="1" parent="1">
+          <mxGeometry x="2810" y="140" width="540" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Prometheus -->
+        <mxCell id="mon_prom" value="&#x1F4CA; Prometheus&#xa;Collects metrics from all services&#xa;CPU, memory, request latency, error rate&#xa;Time-series database (TSDB)" style="rounded=1;whiteSpace=wrap;fillColor=#2a0808;strokeColor=#E84D4D;fontColor=#e0a0a0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="195" width="500" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- Grafana -->
+        <mxCell id="mon_grafana" value="&#x1F4C8; Grafana&#xa;Dashboards: real-time visualization&#xa;Alerting rules: &quot;if error rate &gt; 5% for 5min&quot;&#xa;Pre-built dashboards for K8s, databases" style="rounded=1;whiteSpace=wrap;fillColor=#2a0808;strokeColor=#E84D4D;fontColor=#e0a0a0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="300" width="500" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- ELK/Loki -->
+        <mxCell id="mon_logging" value="&#x1F4DD; ELK Stack / Loki&#xa;Centralized logging from all containers&#xa;Search: &quot;show all ERROR logs from fedtracker&quot;&#xa;Structured logs (JSON) with correlation IDs" style="rounded=1;whiteSpace=wrap;fillColor=#2a0808;strokeColor=#E84D4D;fontColor=#e0a0a0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="405" width="500" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- PagerDuty -->
+        <mxCell id="mon_pager" value="&#x1F6A8; PagerDuty / OpsGenie&#xa;On-call alerting: pages the engineer on duty&#xa;Escalation: if not acknowledged in 10min &#x2192; manager&#xa;Incident tracking and post-mortems" style="rounded=1;whiteSpace=wrap;fillColor=#2a0808;strokeColor=#E84D4D;fontColor=#e0a0a0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="510" width="500" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- Feedback loop -->
+        <mxCell id="mon_feedback" value="&#x1F504; FEEDBACK LOOP&#xa;alert &#x2192; investigate &#x2192; fix &#x2192; commit&#xa;&#x2192; pipeline runs again &#x2192; deploy fix" style="rounded=1;whiteSpace=wrap;fillColor=#3a0000;strokeColor=#ff4444;fontColor=#ff8888;fontSize=13;fontFamily=Consolas;fontStyle=1;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="620" width="500" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Lab callout -->
+        <mxCell id="col6_lab" value="&#x1F3D7;&#xFE0F; In Kyle's Lab:&#xa;curl + docker logs for monitoring.&#xa;Production: Prometheus + Grafana +&#xa;PagerDuty with on-call rotation." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="710" width="500" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- File annotations: Monitoring -->
+        <mxCell id="col6_files_box" value="" style="rounded=1;whiteSpace=wrap;fillColor=#1e0a0a;strokeColor=#cc3333;strokeWidth=1;dashed=1;dashPattern=4 3;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="2820" y="800" width="520" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="col6_files_title" value="MONITORING CONFIG FILES" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontStyle=1;fontColor=#e06060;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="805" width="500" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="col6_f1" value="prometheus.yml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d99090;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="830" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col6_f1d" value="scrape config (what to monitor)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#906060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="3060" y="830" width="270" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col6_f2" value="grafana/dashboards/*.json" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d99090;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="853" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col6_f2d" value="dashboard definitions" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#906060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="3060" y="853" width="270" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col6_f3" value="alertmanager.yml" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d99090;spacingLeft=18;" vertex="1" parent="1">
+          <mxGeometry x="2830" y="876" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="col6_f3d" value="alert rules + routing" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontFamily=Consolas;fontColor=#906060;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="3060" y="876" width="270" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows within column 6 -->
+        <mxCell id="a_c6_1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#cc3333;strokeWidth=1.5;" edge="1" parent="1" source="mon_prom" target="mon_grafana">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c6_2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#cc3333;strokeWidth=1.5;" edge="1" parent="1" source="mon_grafana" target="mon_logging">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c6_3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#cc3333;strokeWidth=1.5;" edge="1" parent="1" source="mon_logging" target="mon_pager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a_c6_4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#ff4444;strokeWidth=2;" edge="1" parent="1" source="mon_pager" target="mon_feedback">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Cross-column arrow: Col5 to Col6 -->
+        <mxCell id="a_c5_to_c6" value="metrics +&#xa;logs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#E84D4D;strokeWidth=2;fontColor=#E84D4D;fontSize=10;fontFamily=Consolas;exitX=1;exitY=0.3;entryX=0;entryY=0.2;" edge="1" parent="1" source="col5_group" target="col6_group">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- FEEDBACK LOOP: Big curved arrow from monitoring back to developer -->
+        <mxCell id="feedback_loop_arrow" value="FEEDBACK: alert &#x2192; investigate &#x2192; fix &#x2192; commit &#x2192; pipeline runs again" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#ff4444;strokeWidth=3;fontColor=#ff8888;fontSize=12;fontFamily=Consolas;fontStyle=1;dashed=1;dashPattern=8 4;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="mon_feedback" target="dev_laptop">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3080" y="1120" />
+              <mxPoint x="270" y="1120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- BOTTOM SECTION: LAB-TO-PRODUCTION MAPPING TABLE               -->
+        <!-- ============================================================ -->
+        <mxCell id="table_bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0f1a2e;strokeColor=#533483;strokeWidth=2;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1320" width="3360" height="610" as="geometry" />
+        </mxCell>
+        <mxCell id="table_title" value="LAB-TO-PRODUCTION MAPPING &amp;mdash; What Kyle Builds vs. What Enterprises Run" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontFamily=Consolas;fontStyle=1;fontColor=#e0e0e0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1330" width="3320" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Table Headers -->
+        <mxCell id="th_lab" value="Kyle's Lab (this project)" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=16;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1385" width="1500" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="th_prod" value="Production Equivalent" style="rounded=1;whiteSpace=wrap;fillColor=#1a0050;strokeColor=#9C27B0;fontColor=#CE93D8;fontSize=16;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1385" width="1620" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Row 1 -->
+        <mxCell id="tr1_lab" value="terraform apply from laptop" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1440" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr1_prod" value="Terraform Cloud / OCI Resource Manager (remote plan + apply with approval)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1440" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr1_arrow" style="strokeColor=#4CAF50;strokeWidth=2;fontColor=#4CAF50;fontSize=10;fontFamily=Consolas;" edge="1" parent="1" source="tr1_lab" target="tr1_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 2 -->
+        <mxCell id="tr2_lab" value="ansible-playbook from WSL terminal" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1490" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr2_prod" value="Ansible Tower / AWX (web UI, scheduling, RBAC, audit trail)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1490" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr2_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr2_lab" target="tr2_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 3 -->
+        <mxCell id="tr3_lab" value="docker build + docker run locally" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1540" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr3_prod" value="Jenkins / GitHub Actions pipeline stage (automated build, test, scan)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1540" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr3_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr3_lab" target="tr3_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 4 -->
+        <mxCell id="tr4_lab" value="OCIR (500MB free tier)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1590" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr4_prod" value="Artifactory + OCIR + Harbor (all artifact types, caching, signing)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1590" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr4_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr4_lab" target="tr4_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 5 -->
+        <mxCell id="tr5_lab" value="curl + docker logs for monitoring" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1640" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr5_prod" value="Prometheus + Grafana + PagerDuty (metrics, dashboards, on-call alerting)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1640" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr5_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr5_lab" target="tr5_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 6 -->
+        <mxCell id="tr6_lab" value="Single VM with Podman / Docker" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1690" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr6_prod" value="OKE Kubernetes cluster (multi-node, auto-scaling, HA)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1690" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr6_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr6_lab" target="tr6_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 7 -->
+        <mxCell id="tr7_lab" value="SQLite (embedded file database)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1740" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr7_prod" value="Oracle Autonomous Database (managed, encrypted, auto-patched)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1740" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr7_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr7_lab" target="tr7_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 8 -->
+        <mxCell id="tr8_lab" value="Manual PR review + git push" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1790" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr8_prod" value="GitHub Actions + branch protection (required reviews, status checks)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1790" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr8_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr8_lab" target="tr8_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 9 -->
+        <mxCell id="tr9_lab" value="OpenSCAP manual scan from terminal" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1840" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr9_prod" value="Trivy + SBOM generation in automated pipeline gate (blocks deploy on failure)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1840" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr9_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr9_lab" target="tr9_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Row 10 -->
+        <mxCell id="tr10_lab" value="git push (manual deployment trigger)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1890" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr10_prod" value="ArgoCD GitOps auto-deploy (watches repo, syncs to cluster automatically)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="1890" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="tr10_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="tr10_lab" target="tr10_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- FLOW DIRECTION INDICATORS                                     -->
+        <!-- ============================================================ -->
+        <!-- flow label moved to legend bar -->
+
+        <!-- ============================================================ -->
+        <!-- LEGEND                                                        -->
+        <!-- ============================================================ -->
+        <mxCell id="legend_bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0f1a2e;strokeColor=#333355;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1200" width="3360" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="LEGEND" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontFamily=Consolas;fontStyle=1;fontColor=#e0e0e0;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1205" width="100" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_blue" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0096D6;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1238" width="16" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_blue_t" value="Developer" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#c0dce8;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1235" width="100" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_orange" value="" style="rounded=1;whiteSpace=wrap;fillColor=#FF8C00;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="170" y="1238" width="16" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_orange_t" value="CI/CD Build" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#e0c090;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="190" y="1235" width="110" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_teal" value="" style="rounded=1;whiteSpace=wrap;fillColor=#00B4AA;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="310" y="1238" width="16" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_teal_t" value="Registries" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0cc;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1235" width="100" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_green" value="" style="rounded=1;whiteSpace=wrap;fillColor=#4CAF50;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="440" y="1238" width="16" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_green_t" value="Deployment" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#a0d0a0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="460" y="1235" width="110" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_purple" value="" style="rounded=1;whiteSpace=wrap;fillColor=#9C27B0;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1238" width="16" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_purple_t" value="Runtime Envs" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#d0a0d0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="600" y="1235" width="120" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_red" value="" style="rounded=1;whiteSpace=wrap;fillColor=#E84D4D;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="730" y="1238" width="16" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_red_t" value="Monitoring" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#e0a0a0;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="750" y="1235" width="100" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_dash" value="" style="endArrow=classic;strokeColor=#ff4444;strokeWidth=2;dashed=1;dashPattern=8 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="870" y="1248" as="sourcePoint" />
+            <mxPoint x="920" y="1248" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg_dash_t" value="Feedback loop" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#ff8888;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="925" y="1235" width="130" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_gate" value="&#x1F6D1;" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1065" y="1237" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_gate_t" value="Approval gate" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#ffcc80;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="1088" y="1235" width="130" height="22" as="geometry" />
+        </mxCell>
+        <!-- Legend entry for file annotations -->
+        <mxCell id="leg_files_icon" value="" style="rounded=1;whiteSpace=wrap;fillColor=none;strokeColor=#666688;strokeWidth=1;dashed=1;dashPattern=4 3;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="1238" width="16" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_files_t" value="File annotations (dashed = config files that drive each stage)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontFamily=Consolas;fontColor=#888aaa;spacingLeft=3;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="1235" width="500" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_flow_arrow" value="&#x27A1;&#xFE0F; PIPELINE FLOW: Left to Right" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontFamily=Consolas;fontStyle=1;fontColor=#555580;" vertex="1" parent="1">
+          <mxGeometry x="2800" y="1235" width="560" height="22" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- FILE-LEVEL MAPPING TABLE: Lab Files to Production Files       -->
+        <!-- ============================================================ -->
+        <mxCell id="ftable_bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0f1a2e;strokeColor=#666688;strokeWidth=2;arcSize=3;dashed=1;dashPattern=6 3;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1940" width="3360" height="470" as="geometry" />
+        </mxCell>
+        <mxCell id="ftable_title" value="LAB FILES &#x2192; PRODUCTION FILES &amp;mdash; How Kyle's Actual Files Map to Enterprise Equivalents" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontFamily=Consolas;fontStyle=1;fontColor=#e0e0e0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1950" width="3320" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- File Table Headers -->
+        <mxCell id="fth_lab" value="Lab File (Kyle's project)" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=15;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2000" width="1500" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="fth_prod" value="Production Equivalent" style="rounded=1;whiteSpace=wrap;fillColor=#1a0050;strokeColor=#9C27B0;fontColor=#CE93D8;fontSize=15;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="2000" width="1620" height="38" as="geometry" />
+        </mxCell>
+
+        <!-- File Row 1: inventory -->
+        <mxCell id="fr1_lab" value="inventory.ini (static host list)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2050" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr1_prod" value="Dynamic inventory (AWS SSM, OCI CLI query, auto-discovers hosts)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="2050" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr1_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="fr1_lab" target="fr1_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- File Row 2: harden -->
+        <mxCell id="fr2_lab" value="harden.yml (manual ansible-playbook run)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2095" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr2_prod" value="Ansible Tower / AWX (scheduled jobs, RBAC, audit trail)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="2095" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr2_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="fr2_lab" target="fr2_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- File Row 3: deploy_app -->
+        <mxCell id="fr3_lab" value="deploy_app.yml (manual ansible-playbook run)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2140" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr3_prod" value="ArgoCD GitOps (auto-sync on merge to main, declarative)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="2140" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr3_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="fr3_lab" target="fr3_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- File Row 4: Dockerfile -->
+        <mxCell id="fr4_lab" value="Dockerfile (local docker build on laptop)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2185" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr4_prod" value="Jenkins multi-stage build + Trivy scan + cosign image signing" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="2185" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr4_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="fr4_lab" target="fr4_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- File Row 5: terraform apply -->
+        <mxCell id="fr5_lab" value="terraform apply (run from laptop terminal)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2230" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr5_prod" value="Terraform Cloud / OCI Resource Manager (remote state, approval gates)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="2230" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr5_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="fr5_lab" target="fr5_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- File Row 6: main.py SCP -->
+        <mxCell id="fr6_lab" value="main.py (SCP'd directly to VM)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2275" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr6_prod" value="Container image in OCIR / Harbor registry (versioned, signed)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="2275" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr6_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="fr6_lab" target="fr6_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- File Row 7: sed IP handoff -->
+        <mxCell id="fr7_lab" value="sed IP handoff (manual find-and-replace of IP addresses)" style="rounded=1;whiteSpace=wrap;fillColor=#0a1628;strokeColor=#0077aa;fontColor=#c0dce8;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="2320" width="1500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr7_prod" value="Service discovery / DNS (Consul, Route53, OCI DNS zones)" style="rounded=1;whiteSpace=wrap;fillColor=#1a0028;strokeColor=#7B1FA2;fontColor=#d0a0d0;fontSize=13;fontFamily=Consolas;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1680" y="2320" width="1620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fr7_arrow" style="strokeColor=#4CAF50;strokeWidth=2;" edge="1" parent="1" source="fr7_lab" target="fr7_prod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- File table footer note -->
+        <mxCell id="ftable_footer" value="Every file Kyle touches in the lab teaches the same concept used in production &amp;mdash; the tooling scales, but the patterns stay the same." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontFamily=Consolas;fontColor=#888aaa;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2370" width="3320" height="30" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

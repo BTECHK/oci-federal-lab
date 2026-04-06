@@ -1,0 +1,756 @@
+<mxfile host="app.diagrams.net" modified="2026-04-02T00:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="tool-workflows" name="OCI Lab Tool Workflows">
+    <mxGraphModel dx="2800" dy="3800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2400" pageHeight="3600" background="#1a1a2e" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============================================================ -->
+        <!-- SECTION 0: PROJECT FILE MAP                                  -->
+        <!-- ============================================================ -->
+
+        <!-- Section 0 Container -->
+        <mxCell id="s0_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16213e;strokeColor=#CCCCCC;strokeWidth=2;arcSize=4;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="2320" height="540" as="geometry" />
+        </mxCell>
+
+        <!-- Section 0 Title -->
+        <mxCell id="s0_title" value="&lt;font style=&quot;font-size:18px;&quot;&gt;&lt;b&gt;SECTION 0: PROJECT FILE MAP&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#CCCCCC;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="60" y="40" width="380" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Subtitle -->
+        <mxCell id="s0_subtitle" value="&lt;font style=&quot;font-size:11px;&quot; color=&quot;#888888&quot;&gt;How ACTUAL PROJECT FILES orchestrate the entire workflow &amp;mdash; color-coded to the sections below&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="460" y="40" width="730" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- ===== File Tree Block ===== -->
+        <mxCell id="s0_tree" value="&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;phases/phase-1-fedtracker-migration/&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;├── &lt;/font&gt;&lt;font color=&quot;#0096D6&quot;&gt;&lt;b&gt;terraform/&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#555555&quot;&gt; ··············· &lt;/font&gt;&lt;font color=&quot;#0096D6&quot;&gt;BLUE — feeds Section 1&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   ├── provider.tf&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;       ← OCI auth config (API key)&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   ├── variables.tf&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;      ← input definitions (region, shape, CIDR)&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   ├── terraform.tfvars&lt;/font&gt;&lt;font color=&quot;#FF5722&quot;&gt;  ← actual secret values (gitignored!)&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   ├── network.tf&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;        ← VCN, subnets, gateways, routes&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   ├── compute.tf&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;        ← bastion + app server VMs&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   └── outputs.tf&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;        ← exports bastion_public_ip, app_server_private_ip&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;├── &lt;/font&gt;&lt;font color=&quot;#4CAF50&quot;&gt;&lt;b&gt;ansible/&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#555555&quot;&gt; ················· &lt;/font&gt;&lt;font color=&quot;#4CAF50&quot;&gt;GREEN — feeds Section 3&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   ├── inventory/&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   │   └── inventory.ini&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt; ← target hosts + SSH ProxyCommand config&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   ├── playbooks/&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   │   ├── harden.yml&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;   ← 20 security tasks (SSH, firewall, audit, PAM)&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   │   └── deploy_app.yml&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;← install deps, copy app, create systemd service&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   └── templates/&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│       └── fedtracker.service.j2&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt; ← Jinja2 template for systemd unit&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;├── &lt;/font&gt;&lt;font color=&quot;#00B4AA&quot;&gt;&lt;b&gt;docker/&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#555555&quot;&gt; ·················· &lt;/font&gt;&lt;font color=&quot;#00B4AA&quot;&gt;TEAL — feeds Section 4&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   └── Dockerfile&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;        ← OL9-slim, Python 3.11, non-root user&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;├── &lt;/font&gt;&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;app/&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#555555&quot;&gt; ····················· &lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot;&gt;SHARED — used by both Ansible + Docker&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   ├── main.py&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;           ← FastAPI application (the thing being deployed)&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;│   └── requirements.txt&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt;  ← pip dependencies (fastapi, uvicorn, oracledb)&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;└── &lt;/font&gt;&lt;font color=&quot;#888888&quot;&gt;&lt;b&gt;docs/&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;    └── implementation-guide.md&lt;/font&gt;&lt;font color=&quot;#666666&quot;&gt; ← 8300-line step-by-step guide&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d0d1e;strokeColor=#444444;strokeWidth=1;fontColor=#e0e0e0;arcSize=6;verticalAlign=top;spacingTop=8;spacingLeft=12;spacingRight=12;align=left;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="75" width="720" height="480" as="geometry" />
+        </mxCell>
+
+        <!-- ===== File Orchestration Chain ===== -->
+        <mxCell id="s0_chain_title" value="&lt;font style=&quot;font-size:14px;&quot; color=&quot;#FFC107&quot;&gt;&lt;b&gt;FILE ORCHESTRATION CHAIN&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="850" y="75" width="260" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s0_chain_subtitle" value="&lt;font style=&quot;font-size:11px;&quot; color=&quot;#888888&quot;&gt;Linear flow: how each file feeds the next&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="75" width="340" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- Chain Step 1: TF config files -->
+        <mxCell id="s0c_tf_config" value="&lt;font color=&quot;#0096D6&quot;&gt;&lt;b&gt;provider.tf + variables.tf&lt;br&gt;+ terraform.tfvars&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot; color=&quot;#888888&quot;&gt;auth + inputs + secrets&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=10;fontSize=11;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="870" y="110" width="240" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow -->
+        <mxCell id="s0c_arr1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;" edge="1" source="s0c_tf_config" target="s0c_tf_infra" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Chain Step 2: TF infra files -->
+        <mxCell id="s0c_tf_infra" value="&lt;font color=&quot;#0096D6&quot;&gt;&lt;b&gt;network.tf + compute.tf&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot; color=&quot;#888888&quot;&gt;VCN + subnets + VMs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=10;fontSize=11;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="870" y="195" width="240" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow with label -->
+        <mxCell id="s0c_arr2" value="&lt;font style=&quot;font-size:9px;&quot;&gt;terraform apply&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;fontColor=#5bc0de;fontFamily=Consolas;" edge="1" source="s0c_tf_infra" target="s0c_outputs" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Chain Step 3: outputs.tf -->
+        <mxCell id="s0c_outputs" value="&lt;font color=&quot;#0096D6&quot;&gt;&lt;b&gt;outputs.tf&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot; color=&quot;#888888&quot;&gt;exports bastion_public_ip,&lt;br&gt;app_server_private_ip&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=10;fontSize=11;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="870" y="270" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow with label -->
+        <mxCell id="s0c_arr3" value="&lt;font style=&quot;font-size:9px;&quot;&gt;shell $() capture&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;fontColor=#FFC107;fontFamily=Consolas;" edge="1" source="s0c_outputs" target="s0c_sed" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Chain Step 4: sed commands -->
+        <mxCell id="s0c_sed" value="&lt;font color=&quot;#FFC107&quot;&gt;&lt;b&gt;3x sed commands&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot; color=&quot;#888888&quot;&gt;find-and-replace IPs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2a0a;strokeColor=#FFC107;strokeWidth=2;fontColor=#e0e0e0;arcSize=10;fontSize=11;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="870" y="350" width="240" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow with label -->
+        <mxCell id="s0c_arr4" value="&lt;font style=&quot;font-size:9px;&quot;&gt;find-and-replace&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;fontColor=#FFC107;fontFamily=Consolas;" edge="1" source="s0c_sed" target="s0c_inventory" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Chain Step 5: inventory.ini -->
+        <mxCell id="s0c_inventory" value="&lt;font color=&quot;#4CAF50&quot;&gt;&lt;b&gt;inventory.ini&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot; color=&quot;#888888&quot;&gt;updated with live IPs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e15;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=10;fontSize=11;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="870" y="420" width="240" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow with label -->
+        <mxCell id="s0c_arr5" value="&lt;font style=&quot;font-size:9px;&quot;&gt;ansible-playbook -i&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#81C784;fontFamily=Consolas;" edge="1" source="s0c_inventory" target="s0c_playbooks" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Chain Step 6: playbooks -->
+        <mxCell id="s0c_playbooks" value="&lt;font color=&quot;#4CAF50&quot;&gt;&lt;b&gt;harden.yml &amp;rarr; deploy_app.yml&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot; color=&quot;#888888&quot;&gt;security hardening, then app deployment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e15;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=10;fontSize=11;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="420" width="310" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow with label -->
+        <mxCell id="s0c_arr6" value="&lt;font style=&quot;font-size:9px;&quot;&gt;copy + template&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#81C784;fontFamily=Consolas;" edge="1" source="s0c_playbooks" target="s0c_app_files" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Chain Step 7: app files + template -->
+        <mxCell id="s0c_app_files" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;app/main.py&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#888888&quot;&gt; + &lt;/font&gt;&lt;font color=&quot;#4CAF50&quot;&gt;&lt;b&gt;fedtracker.service.j2&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot; color=&quot;#888888&quot;&gt;app code + systemd unit template&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#666666;strokeWidth=2;fontColor=#e0e0e0;arcSize=10;fontSize=11;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="1540" y="420" width="340" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow with label -->
+        <mxCell id="s0c_arr7" value="&lt;font style=&quot;font-size:9px;&quot;&gt;systemd start&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#81C784;fontFamily=Consolas;" edge="1" source="s0c_app_files" target="s0c_result" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Chain Step 8: Running API -->
+        <mxCell id="s0c_result" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;FedTracker API&lt;br&gt;running on :8000&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=3;fontColor=#e0e0e0;arcSize=10;fontSize=12;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="1940" y="410" width="190" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Connector arrows from tree to chain (showing the link) -->
+        <!-- Blue bracket: terraform/ → chain step 1 -->
+        <mxCell id="s0_link_tf" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=1;dashed=1;dashPattern=6 4;exitX=1;exitY=0.12;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="s0_tree" target="s0c_tf_config" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Green bracket: ansible/ → chain step 5 -->
+        <mxCell id="s0_link_ansible" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=1;dashed=1;dashPattern=6 4;exitX=1;exitY=0.45;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="s0_tree" target="s0c_inventory" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Teal bracket: docker/ → note about Section 4 -->
+        <mxCell id="s0_docker_note" value="&lt;font color=&quot;#00B4AA&quot; style=&quot;font-size:10px;&quot;&gt;&lt;b&gt;Dockerfile&lt;/b&gt; &amp;rarr; separate local-build pipeline (Section 4)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="350" width="440" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- Shared app/ note -->
+        <mxCell id="s0_app_note" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:10px;&quot;&gt;&lt;b&gt;app/&lt;/b&gt; is the shared payload &amp;mdash; both Ansible and Docker deploy the same main.py&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="1170" y="375" width="620" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: TERRAFORM WORKFLOW (Step 11) — Blue theme         -->
+        <!-- ============================================================ -->
+
+        <!-- Section 1 Container -->
+        <mxCell id="s1_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16213e;strokeColor=#0096D6;strokeWidth=2;arcSize=4;dashed=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="610" width="2320" height="420" as="geometry" />
+        </mxCell>
+
+        <!-- Section 1 Title -->
+        <mxCell id="s1_title" value="&lt;font style=&quot;font-size:18px;&quot;&gt;&lt;b&gt;SECTION 1: TERRAFORM WORKFLOW (Step 11)&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#0096D6;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="60" y="620" width="500" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Step 1: Write .tf files -->
+        <mxCell id="s1_tf_files" value="&lt;b&gt;Write .tf files&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;provider.tf&lt;br&gt;variables.tf&lt;br&gt;network.tf&lt;br&gt;compute.tf&lt;br&gt;outputs.tf&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="670" width="190" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 1→2 -->
+        <mxCell id="s1_arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;fontColor=#b0b0b0;fontSize=11;fontFamily=Consolas;" edge="1" source="s1_tf_files" target="s1_init" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 2: terraform init -->
+        <mxCell id="s1_init" value="&lt;b&gt;&lt;font face=&quot;Consolas&quot;&gt;terraform init&lt;/font&gt;&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Downloads OCI provider plugin&lt;br&gt;Creates &lt;font face=&quot;Consolas&quot;&gt;.terraform/&lt;/font&gt; directory&lt;br&gt;Initializes backend&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="340" y="670" width="240" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 2→3 -->
+        <mxCell id="s1_arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;fontColor=#b0b0b0;fontSize=11;fontFamily=Consolas;" edge="1" source="s1_init" target="s1_plan" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 3: terraform plan -->
+        <mxCell id="s1_plan" value="&lt;b&gt;&lt;font face=&quot;Consolas&quot;&gt;terraform plan&lt;/font&gt;&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Dry run — no changes made&lt;br&gt;Shows &lt;b&gt;11 resources&lt;/b&gt; to create&lt;br&gt;Catches config errors early&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="660" y="670" width="240" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 3→4 -->
+        <mxCell id="s1_arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;fontColor=#b0b0b0;fontSize=11;fontFamily=Consolas;" edge="1" source="s1_plan" target="s1_apply" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 4: terraform apply -->
+        <mxCell id="s1_apply" value="&lt;b&gt;&lt;font face=&quot;Consolas&quot;&gt;terraform apply&lt;/font&gt;&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Creates resources in OCI via API&lt;br&gt;Prompts &lt;font face=&quot;Consolas&quot;&gt;yes&lt;/font&gt; to confirm&lt;br&gt;Builds in dependency order&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="980" y="670" width="260" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 4→5 -->
+        <mxCell id="s1_arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;fontColor=#b0b0b0;fontSize=11;fontFamily=Consolas;" edge="1" source="s1_apply" target="s1_output" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 5: terraform output -->
+        <mxCell id="s1_output" value="&lt;b&gt;&lt;font face=&quot;Consolas&quot;&gt;terraform output&lt;/font&gt;&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Prints:&lt;br&gt;&lt;font face=&quot;Consolas&quot;&gt;bastion_public_ip&lt;/font&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot;&gt;app_server_private_ip&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="670" width="260" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- terraform.tfstate box below -->
+        <mxCell id="s1_tfstate" value="&lt;font face=&quot;Consolas&quot;&gt;&lt;b&gt;terraform.tfstate&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Terraform&#39;s memory of what exists in OCI&lt;br&gt;Maps each .tf resource to a real OCID&lt;br&gt;Never edit by hand — &lt;font face=&quot;Consolas&quot;&gt;terraform state&lt;/font&gt; commands only&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
+          <mxGeometry x="70" y="860" width="520" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow from apply down to tfstate -->
+        <mxCell id="s1_arrow_state" value="writes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;fontColor=#b0b0b0;fontSize=11;fontFamily=Consolas;dashed=1;dashPattern=4 4;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="s1_apply" target="s1_tfstate" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1110" y="840" />
+              <mxPoint x="330" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Flow indicators (chevron labels) -->
+        <mxCell id="s1_flow_label" value="&lt;font color=&quot;#5bc0de&quot; style=&quot;font-size:11px;&quot;&gt;Infrastructure as Code pipeline &amp;mdash; declarative, idempotent, repeatable&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#5bc0de;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="660" y="830" width="530" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: TERRAFORM IMPORT vs GENERATE-CONFIG               -->
+        <!-- ============================================================ -->
+
+        <!-- Section 2 Container -->
+        <mxCell id="s2_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16213e;strokeColor=#7B68EE;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1060" width="2320" height="440" as="geometry" />
+        </mxCell>
+
+        <!-- Section 2 Title -->
+        <mxCell id="s2_title" value="&lt;font style=&quot;font-size:18px;&quot;&gt;&lt;b&gt;SECTION 2: TERRAFORM IMPORT vs GENERATE-CONFIG&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#7B68EE;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1070" width="600" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ===== PATH A: terraform import (Blue) ===== -->
+        <mxCell id="s2_pathA_label" value="&lt;font style=&quot;font-size:14px;&quot; color=&quot;#0096D6&quot;&gt;&lt;b&gt;PATH A: &lt;font face=&quot;Consolas&quot;&gt;terraform import&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;What you did (Step 11.10) &amp;mdash; learns the resource model&lt;/font&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1110" width="480" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Path A Step 1 -->
+        <mxCell id="s2a_step1" value="&lt;b&gt;1. Write .tf by hand&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;resource &quot;oci_core_vcn&quot; &quot;lab_vcn&quot; {&lt;br&gt;&amp;nbsp;&amp;nbsp;compartment_id = var.compartment_id&lt;br&gt;&amp;nbsp;&amp;nbsp;cidr_blocks = [&quot;10.0.0.0/16&quot;]&lt;br&gt;}&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1170" width="330" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow A 1→2 -->
+        <mxCell id="s2a_arrow1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;" edge="1" source="s2a_step1" target="s2a_step2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Path A Step 2 -->
+        <mxCell id="s2a_step2" value="&lt;b&gt;2. Import existing OCID&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;terraform import \&lt;br&gt;&amp;nbsp;&amp;nbsp;oci_core_vcn.lab_vcn \&lt;br&gt;&amp;nbsp;&amp;nbsp;ocid1.vcn.oc1.iad...&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1170" width="330" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow A 2→3 -->
+        <mxCell id="s2a_arrow2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0096D6;strokeWidth=2;" edge="1" source="s2a_step2" target="s2a_step3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Path A Step 3 -->
+        <mxCell id="s2a_step3" value="&lt;b&gt;3. Fix drift &amp;amp; plan clean&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;terraform plan&lt;br&gt;# &quot;No changes&quot; = success&lt;br&gt;# Drift? Update .tf to match&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="870" y="1170" width="280" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- ===== PATH B: generate-config (Purple) ===== -->
+        <mxCell id="s2_pathB_label" value="&lt;font style=&quot;font-size:14px;&quot; color=&quot;#9B59B6&quot;&gt;&lt;b&gt;PATH B: &lt;font face=&quot;Consolas&quot;&gt;terraform plan -generate-config-out&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Bulk migration tool (Terraform 1.5+) &amp;mdash; auto-generates code&lt;/font&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="1110" width="520" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Path B Step 1 -->
+        <mxCell id="s2b_step1" value="&lt;b&gt;1. Write import block only&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#9B59B6;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;import {&lt;br&gt;&amp;nbsp;&amp;nbsp;to = oci_core_vcn.lab_vcn&lt;br&gt;&amp;nbsp;&amp;nbsp;id = &quot;ocid1.vcn.oc1...&quot;&lt;br&gt;}&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a0a2e;strokeColor=#9B59B6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="1170" width="310" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow B 1→2 -->
+        <mxCell id="s2b_arrow1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9B59B6;strokeWidth=2;" edge="1" source="s2b_step1" target="s2b_step2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Path B Step 2 -->
+        <mxCell id="s2b_step2" value="&lt;b&gt;2. Terraform generates .tf&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#9B59B6;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;terraform plan \&lt;br&gt;&amp;nbsp;&amp;nbsp;-generate-config-out=&lt;br&gt;&amp;nbsp;&amp;nbsp;generated.tf&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Auto-writes full resource blocks&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a0a2e;strokeColor=#9B59B6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="1170" width="310" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Path B Step 3 -->
+        <mxCell id="s2b_step3" value="&lt;b&gt;3. Review &amp;amp; refactor&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#9B59B6;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Clean up generated code&lt;br&gt;Add variables, format,&lt;br&gt;then &lt;font face=&quot;Consolas&quot;&gt;terraform apply&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a0a2e;strokeColor=#9B59B6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2010" y="1170" width="280" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow B 2→3 -->
+        <mxCell id="s2b_arrow2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9B59B6;strokeWidth=2;" edge="1" source="s2b_step2" target="s2b_step3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- VS Divider -->
+        <mxCell id="s2_vs" value="&lt;font style=&quot;font-size:22px;&quot; color=&quot;#FFC107&quot;&gt;&lt;b&gt;VS&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="1220" width="50" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Comparison notes -->
+        <mxCell id="s2_note_a" value="&lt;font style=&quot;font-size:11px;&quot; color=&quot;#0096D6&quot;&gt;&#10006; Manual — you write every attribute&lt;br&gt;&#10004; Deep learning — forces you to understand the resource model&lt;br&gt;&#10004; Best for interviews: &quot;I hand-wrote and imported 11 resources&quot;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1320" width="480" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2_note_b" value="&lt;font style=&quot;font-size:11px;&quot; color=&quot;#9B59B6&quot;&gt;&#10004; Fast — one block per resource, Terraform writes the rest&lt;br&gt;&#10004; Ideal for brownfield migrations (100+ resources)&lt;br&gt;&#10006; Generated code needs cleanup; less learning value&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="1320" width="480" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Divider line between paths -->
+        <mxCell id="s2_divider" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#444444;strokeWidth=2;dashPattern=8 8;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1210" y="1110" as="sourcePoint" />
+            <mxPoint x="1210" y="1480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: ANSIBLE WORKFLOW (Step 12) — Green theme          -->
+        <!-- ============================================================ -->
+
+        <!-- Section 3 Container -->
+        <mxCell id="s3_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0a2e1a;strokeColor=#4CAF50;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1530" width="2320" height="500" as="geometry" />
+        </mxCell>
+
+        <!-- Section 3 Title -->
+        <mxCell id="s3_title" value="&lt;font style=&quot;font-size:18px;&quot;&gt;&lt;b&gt;SECTION 3: ANSIBLE WORKFLOW (Step 12)&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#4CAF50;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1540" width="480" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Step 1: inventory.ini -->
+        <mxCell id="s3_inventory" value="&lt;b&gt;inventory.ini&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#4CAF50;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;[bastion]&lt;br&gt;bastion_server ansible_host=&lt;b&gt;PUBLIC_IP&lt;/b&gt;&lt;br&gt;&lt;br&gt;[app]&lt;br&gt;app-server ansible_host=&lt;b&gt;PRIVATE_IP&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;ansible_ssh_common_args=&lt;br&gt;&amp;nbsp;&amp;nbsp;&#39;-o ProxyCommand=&quot;ssh -W %h:%p&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;opc@BASTION_IP&quot;&#39;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e15;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1590" width="340" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 1→2 -->
+        <mxCell id="s3_arrow1" value="feeds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#81C784;fontSize=11;fontFamily=Consolas;" edge="1" source="s3_inventory" target="s3_harden" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 2: harden.yml -->
+        <mxCell id="s3_harden" value="&lt;b&gt;harden.yml&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#4CAF50;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;&lt;b&gt;20 tasks&lt;/b&gt; including:&lt;br&gt;SSH lockdown (no root, no passwords)&lt;br&gt;firewalld (ports 22, 8000)&lt;br&gt;auditd (STIG rules)&lt;br&gt;Kernel tuning (sysctl)&lt;br&gt;PAM password complexity&lt;br&gt;Fail2ban configuration&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e15;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="490" y="1590" width="300" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 2→3 -->
+        <mxCell id="s3_arrow2" value="then" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#81C784;fontSize=11;fontFamily=Consolas;" edge="1" source="s3_harden" target="s3_deploy" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 3: deploy_app.yml -->
+        <mxCell id="s3_deploy" value="&lt;b&gt;deploy_app.yml&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#4CAF50;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;&lt;b&gt;10 tasks&lt;/b&gt; including:&lt;br&gt;Create &lt;font face=&quot;Consolas&quot;&gt;fedtracker&lt;/font&gt; service user&lt;br&gt;Install Python3 + pip&lt;br&gt;Copy &lt;font face=&quot;Consolas&quot;&gt;main.py&lt;/font&gt; + requirements&lt;br&gt;Create systemd unit file&lt;br&gt;Start &amp;amp; enable service&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e15;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="870" y="1590" width="300" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 3→4 -->
+        <mxCell id="s3_arrow3" value="result" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#81C784;fontSize=11;fontFamily=Consolas;" edge="1" source="s3_deploy" target="s3_result" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 4: Running FedTracker API -->
+        <mxCell id="s3_result" value="&lt;font color=&quot;#4CAF50&quot;&gt;&lt;b&gt;Running FedTracker API&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#4CAF50;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;curl localhost:8000/health&lt;br&gt;{&quot;status&quot;: &quot;healthy&quot;}&lt;br&gt;&lt;br&gt;systemctl status fedtracker&lt;br&gt;Active: active (running)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=3;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="1590" width="300" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- SSH Jump Diagram (below main flow) -->
+        <mxCell id="s3_ssh_title" value="&lt;font style=&quot;font-size:13px;&quot; color=&quot;#81C784&quot;&gt;&lt;b&gt;SSH Jump Path (ProxyCommand)&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1810" width="260" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- Laptop -->
+        <mxCell id="s3_laptop" value="&lt;b&gt;Laptop (WSL2)&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;ansible-playbook&lt;br&gt;-i inventory.ini&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e15;strokeColor=#81C784;strokeWidth=2;fontColor=#e0e0e0;arcSize=12;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1850" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow laptop→bastion -->
+        <mxCell id="s3_ssh1" value="&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;SSH port 22&lt;br&gt;(public internet)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#81C784;strokeWidth=2;fontColor=#81C784;fontSize=10;" edge="1" source="s3_laptop" target="s3_bastion_box" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Bastion box -->
+        <mxCell id="s3_bastion_box" value="&lt;b&gt;Bastion Server&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;PUBLIC subnet&lt;br&gt;129.x.x.x&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e15;strokeColor=#FFC107;strokeWidth=2;fontColor=#e0e0e0;arcSize=12;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1850" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow bastion→app -->
+        <mxCell id="s3_ssh2" value="&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;SSH port 22&lt;br&gt;(private subnet)&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#81C784;strokeWidth=2;fontColor=#81C784;fontSize=10;" edge="1" source="s3_bastion_box" target="s3_app_box" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- App server box -->
+        <mxCell id="s3_app_box" value="&lt;b&gt;App Server&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;PRIVATE subnet&lt;br&gt;10.0.1.x&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e15;strokeColor=#FF5722;strokeWidth=2;fontColor=#e0e0e0;arcSize=12;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="730" y="1850" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Cloud boundary -->
+        <mxCell id="s3_cloud" value="&lt;font style=&quot;font-size:11px;&quot; color=&quot;#666666&quot;&gt;OCI VCN (10.0.0.0/16)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#444444;strokeWidth=1;dashed=1;dashPattern=8 4;verticalAlign=bottom;spacingBottom=4;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1835" width="590" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- Ansible note -->
+        <mxCell id="s3_note" value="&lt;font style=&quot;font-size:11px;&quot; color=&quot;#81C784&quot;&gt;Ansible runs from WSL2 &amp;mdash; keys stored in WSL native filesystem (~/.ssh/), never /mnt/c/&lt;br&gt;ProxyCommand (not ProxyJump) for compatibility with older SSH versions&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1970" width="800" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: DOCKER WORKFLOW (Step 6A) — Teal theme            -->
+        <!-- ============================================================ -->
+
+        <!-- Section 4 Container -->
+        <mxCell id="s4_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0a2e2e;strokeColor=#00B4AA;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2060" width="2320" height="370" as="geometry" />
+        </mxCell>
+
+        <!-- Section 4 Title -->
+        <mxCell id="s4_title" value="&lt;font style=&quot;font-size:18px;&quot;&gt;&lt;b&gt;SECTION 4: DOCKER WORKFLOW (Step 6A)&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#00B4AA;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="60" y="2070" width="480" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Step 1: Source files -->
+        <mxCell id="s4_source" value="&lt;b&gt;Source Files&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#00B4AA;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;Dockerfile&lt;br&gt;requirements.txt&lt;br&gt;main.py&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;FastAPI + SQLite app&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e2a;strokeColor=#00B4AA;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2120" width="220" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 1→2 -->
+        <mxCell id="s4_arrow1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00B4AA;strokeWidth=2;" edge="1" source="s4_source" target="s4_build" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 2: docker build -->
+        <mxCell id="s4_build" value="&lt;b&gt;&lt;font face=&quot;Consolas&quot;&gt;docker build&lt;/font&gt;&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#00B4AA;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Layer stack:&lt;br&gt;&lt;font face=&quot;Consolas&quot;&gt;FROM python:3.11-slim&lt;br&gt;RUN pip install...&lt;br&gt;COPY main.py .&lt;br&gt;USER nonroot&lt;br&gt;CMD [&quot;uvicorn&quot;...]&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e2a;strokeColor=#00B4AA;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="370" y="2120" width="260" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 2→3 -->
+        <mxCell id="s4_arrow2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00B4AA;strokeWidth=2;" edge="1" source="s4_build" target="s4_run" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 3: docker run -->
+        <mxCell id="s4_run" value="&lt;b&gt;&lt;font face=&quot;Consolas&quot;&gt;docker run&lt;/font&gt;&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#00B4AA;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;-p 8000:8000&lt;br&gt;-e SQLITE_PATH=/data/db&lt;br&gt;-d fedtracker:latest&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Local testing on Windows&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e2a;strokeColor=#00B4AA;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="710" y="2120" width="260" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 3→4 -->
+        <mxCell id="s4_arrow3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00B4AA;strokeWidth=2;" edge="1" source="s4_run" target="s4_push" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 4: docker push to OCIR -->
+        <mxCell id="s4_push" value="&lt;b&gt;&lt;font face=&quot;Consolas&quot;&gt;docker push to OCIR&lt;/font&gt;&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#00B4AA;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;docker tag fedtracker \&lt;br&gt;&amp;nbsp;&amp;nbsp;iad.ocir.io/NAMESPACE/&lt;br&gt;&amp;nbsp;&amp;nbsp;fedtracker:v1&lt;br&gt;docker push iad.ocir.io/...&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e2a;strokeColor=#00B4AA;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="2120" width="300" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow 4→5 -->
+        <mxCell id="s4_arrow4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00B4AA;strokeWidth=2;" edge="1" source="s4_push" target="s4_podman" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Step 5: podman pull + run on OCI -->
+        <mxCell id="s4_podman" value="&lt;b&gt;&lt;font face=&quot;Consolas&quot;&gt;podman pull + run on OCI&lt;/font&gt;&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#00B4AA;&quot;&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Rootless &amp;amp; daemonless&lt;br&gt;FIPS-compatible runtime&lt;br&gt;OCI compute instance&lt;br&gt;Drop-in Docker replacement&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2e2a;strokeColor=#00B4AA;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="2120" width="280" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- Docker flow label -->
+        <mxCell id="s4_flow_label" value="&lt;font color=&quot;#5eddd6&quot; style=&quot;font-size:11px;&quot;&gt;Local Docker build &amp;rarr; OCIR registry &amp;rarr; OCI compute (podman) &amp;mdash; the migration path&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2300" width="680" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: STEP 13 — DESTROY & REBUILD — Red/Green           -->
+        <!-- ============================================================ -->
+
+        <!-- Section 5 Container -->
+        <mxCell id="s5_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e1a1a;strokeColor=#FF5722;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="2460" width="2320" height="530" as="geometry" />
+        </mxCell>
+
+        <!-- Section 5 Title -->
+        <mxCell id="s5_title" value="&lt;font style=&quot;font-size:18px;&quot;&gt;&lt;b&gt;SECTION 5: STEP 13 &amp;mdash; DESTROY &amp;amp; REBUILD&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#FF5722;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="60" y="2470" width="520" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Phase A: Destroy (Red) ===== -->
+        <mxCell id="s5_phaseA_label" value="&lt;font style=&quot;font-size:14px;&quot; color=&quot;#FF5722&quot;&gt;&lt;b&gt;PHASE A: Teardown &amp;mdash; &lt;font face=&quot;Consolas&quot;&gt;terraform destroy&lt;/font&gt;&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2510" width="440" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Destroy: VMs first -->
+        <mxCell id="s5d_vms" value="&lt;b&gt;VMs (Compute)&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;bastion_server&lt;br&gt;app_server&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3e1515;strokeColor=#FF5722;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2550" width="180" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5d_arrow1" value="&lt;font style=&quot;font-size:10px;&quot;&gt;then&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF5722;strokeWidth=2;fontColor=#FF8A65;" edge="1" source="s5d_vms" target="s5d_subnets" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Destroy: Subnets -->
+        <mxCell id="s5d_subnets" value="&lt;b&gt;Subnets&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;public_subnet&lt;br&gt;private_subnet&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3e1515;strokeColor=#FF5722;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="310" y="2550" width="180" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5d_arrow2" value="&lt;font style=&quot;font-size:10px;&quot;&gt;then&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF5722;strokeWidth=2;fontColor=#FF8A65;" edge="1" source="s5d_subnets" target="s5d_routes" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Destroy: Route Tables + Security Lists -->
+        <mxCell id="s5d_routes" value="&lt;b&gt;Route Tables &amp;amp;&lt;br&gt;Security Lists&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;public_rt, private_rt&lt;br&gt;public_sl, private_sl&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3e1515;strokeColor=#FF5722;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="550" y="2540" width="210" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5d_arrow3" value="&lt;font style=&quot;font-size:10px;&quot;&gt;then&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF5722;strokeWidth=2;fontColor=#FF8A65;" edge="1" source="s5d_routes" target="s5d_gateways" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Destroy: Gateways -->
+        <mxCell id="s5d_gateways" value="&lt;b&gt;Gateways&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;internet_gateway&lt;br&gt;nat_gateway&lt;br&gt;service_gateway&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3e1515;strokeColor=#FF5722;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="820" y="2540" width="200" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5d_arrow4" value="&lt;font style=&quot;font-size:10px;&quot;&gt;last&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF5722;strokeWidth=2;fontColor=#FF8A65;" edge="1" source="s5d_gateways" target="s5d_vcn" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Destroy: VCN last -->
+        <mxCell id="s5d_vcn" value="&lt;b&gt;VCN&lt;/b&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;lab_vcn (10.0.0.0/16)&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot; color=&quot;#FF5722&quot;&gt;&lt;b&gt;All 11 resources gone&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3e1515;strokeColor=#FF5722;strokeWidth=3;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="2540" width="220" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Destroy order label -->
+        <mxCell id="s5_destroy_order" value="&lt;font color=&quot;#FF8A65&quot; style=&quot;font-size:11px;&quot;&gt;Dependency-order deletion: children first, parents last (reverse of creation)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2650" width="600" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Phase B: Rebuild (Green) ===== -->
+        <mxCell id="s5_phaseB_label" value="&lt;font style=&quot;font-size:14px;&quot; color=&quot;#4CAF50&quot;&gt;&lt;b&gt;PHASE B: Rebuild &amp;mdash; full pipeline&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2690" width="330" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Rebuild Step 1: terraform apply -->
+        <mxCell id="s5r_apply" value="&lt;font face=&quot;Consolas&quot;&gt;&lt;b&gt;terraform apply&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Recreates all 11 resources&lt;br&gt;New IPs assigned&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2730" width="230" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5r_arrow1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;" edge="1" source="s5r_apply" target="s5r_output" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Rebuild Step 2: terraform output -->
+        <mxCell id="s5r_output" value="&lt;font face=&quot;Consolas&quot;&gt;&lt;b&gt;terraform output&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Capture new IPs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="2730" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5r_arrow2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;" edge="1" source="s5r_output" target="s5r_sed" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Rebuild Step 3: sed commands (THE HANDOFF) -->
+        <mxCell id="s5r_sed" value="&lt;font face=&quot;Consolas&quot;&gt;&lt;b&gt;3x sed commands&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#FFC107;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;sed #1: bastion ansible_host=&lt;br&gt;sed #2: app-server ansible_host=&lt;br&gt;sed #3: opc@IP in ProxyCommand&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2a0a;strokeColor=#FFC107;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="2720" width="280" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5r_arrow3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;" edge="1" source="s5r_sed" target="s5r_inventory" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Rebuild Step 4: updated inventory -->
+        <mxCell id="s5r_inventory" value="&lt;font face=&quot;Consolas&quot;&gt;&lt;b&gt;inventory.ini&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Now has new IPs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="960" y="2730" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5r_arrow4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;" edge="1" source="s5r_inventory" target="s5r_harden" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Rebuild Step 5: ansible harden -->
+        <mxCell id="s5r_harden" value="&lt;font face=&quot;Consolas&quot;&gt;&lt;b&gt;ansible-playbook&lt;br&gt;harden.yml&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="2730" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5r_arrow5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;" edge="1" source="s5r_harden" target="s5r_deploy" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Rebuild Step 6: ansible deploy -->
+        <mxCell id="s5r_deploy" value="&lt;font face=&quot;Consolas&quot;&gt;&lt;b&gt;ansible-playbook&lt;br&gt;deploy_app.yml&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="2730" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5r_arrow6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;" edge="1" source="s5r_deploy" target="s5r_healthy" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Rebuild Step 7: Healthy -->
+        <mxCell id="s5r_healthy" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:14px;&quot;&gt;&lt;b&gt;HEALTHY&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;curl :8000/health&lt;br&gt;{&quot;status&quot;:&quot;healthy&quot;}&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=3;fontColor=#e0e0e0;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1740" y="2725" width="210" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Rebuild pipeline label -->
+        <mxCell id="s5_rebuild_label" value="&lt;font color=&quot;#81C784&quot; style=&quot;font-size:11px;&quot;&gt;Full destroy-and-rebuild proves infrastructure is truly repeatable &amp;mdash; nothing was &quot;hand-configured&quot;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2840" width="750" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- Big arrow connecting Phase A to Phase B -->
+        <mxCell id="s5_phase_arrow" value="&lt;font style=&quot;font-size:12px;&quot; color=&quot;#FFC107&quot;&gt;&lt;b&gt;CLEAN SLATE&lt;br&gt;(0 resources)&lt;/b&gt;&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=3;dashed=1;dashPattern=8 4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="s5d_vcn" target="s5r_apply" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1190" y="2670" />
+              <mxPoint x="50" y="2670" />
+              <mxPoint x="50" y="2770" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: THE HANDOFF — Yellow theme                        -->
+        <!-- ============================================================ -->
+
+        <!-- Section 6 Container -->
+        <mxCell id="s6_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2a0a;strokeColor=#FFC107;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="3020" width="2320" height="520" as="geometry" />
+        </mxCell>
+
+        <!-- Section 6 Title -->
+        <mxCell id="s6_title" value="&lt;font style=&quot;font-size:18px;&quot;&gt;&lt;b&gt;SECTION 6: THE HANDOFF &amp;mdash; Terraform Output &amp;rarr; Ansible Inventory&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#FFC107;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="60" y="3030" width="740" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Terraform output box -->
+        <mxCell id="s6_tf_output" value="&lt;font face=&quot;Consolas&quot;&gt;&lt;b&gt;terraform output&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#0096D6;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;bastion_public_ip = &quot;129.153.x.x&quot;&lt;br&gt;app_server_private_ip = &quot;10.0.1.x&quot;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0d2137;strokeColor=#0096D6;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="3090" width="360" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Variable capture box -->
+        <mxCell id="s6_capture" value="&lt;b&gt;Capture into shell variables&lt;/b&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#FFC107;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;BASTION_IP=$(terraform output \&lt;br&gt;&amp;nbsp;&amp;nbsp;-raw bastion_public_ip)&lt;br&gt;&lt;br&gt;APP_IP=$(terraform output \&lt;br&gt;&amp;nbsp;&amp;nbsp;-raw app_server_private_ip)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2a0a;strokeColor=#FFC107;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="3230" width="360" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: output → capture -->
+        <mxCell id="s6_arrow_cap" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;" edge="1" source="s6_tf_output" target="s6_capture" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- sed #1 box -->
+        <mxCell id="s6_sed1" value="&lt;font face=&quot;Consolas&quot; style=&quot;font-size:12px;&quot; color=&quot;#FFC107&quot;&gt;&lt;b&gt;sed #1&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#FFC107;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;sed -i &quot;s/bastion_server \&lt;br&gt;&amp;nbsp;&amp;nbsp;ansible_host=.*/bastion_server \&lt;br&gt;&amp;nbsp;&amp;nbsp;ansible_host=$BASTION_IP/&quot; \&lt;br&gt;&amp;nbsp;&amp;nbsp;inventory.ini&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Updates bastion public IP&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2a0a;strokeColor=#FFC107;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="3080" width="350" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- sed #2 box -->
+        <mxCell id="s6_sed2" value="&lt;font face=&quot;Consolas&quot; style=&quot;font-size:12px;&quot; color=&quot;#FFC107&quot;&gt;&lt;b&gt;sed #2&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#FFC107;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;sed -i &quot;s/app-server \&lt;br&gt;&amp;nbsp;&amp;nbsp;ansible_host=.*/app-server \&lt;br&gt;&amp;nbsp;&amp;nbsp;ansible_host=$APP_IP/&quot; \&lt;br&gt;&amp;nbsp;&amp;nbsp;inventory.ini&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Updates app private IP&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2a0a;strokeColor=#FFC107;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="3250" width="350" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- sed #3 box -->
+        <mxCell id="s6_sed3" value="&lt;font face=&quot;Consolas&quot; style=&quot;font-size:12px;&quot; color=&quot;#FFC107&quot;&gt;&lt;b&gt;sed #3&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#FFC107;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;sed -i &quot;s/opc@[0-9.]*/\&lt;br&gt;&amp;nbsp;&amp;nbsp;opc@$BASTION_IP/&quot; \&lt;br&gt;&amp;nbsp;&amp;nbsp;inventory.ini&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px;&quot;&gt;Updates ProxyCommand bastion IP&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2a0a;strokeColor=#FFC107;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="3420" width="350" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: capture → sed boxes -->
+        <mxCell id="s6_arr_sed1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="s6_capture" target="s6_sed1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s6_arr_sed2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="s6_capture" target="s6_sed2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s6_arr_sed3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="s6_capture" target="s6_sed3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Updated inventory.ini result -->
+        <mxCell id="s6_updated_inv" value="&lt;font face=&quot;Consolas&quot; color=&quot;#4CAF50&quot;&gt;&lt;b&gt;inventory.ini (updated)&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#4CAF50;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:10px;&quot;&gt;[bastion]&lt;br&gt;bastion_server ansible_host=&lt;b&gt;NEW_BASTION_IP&lt;/b&gt;&lt;br&gt;&lt;br&gt;[app]&lt;br&gt;app-server ansible_host=&lt;b&gt;NEW_APP_IP&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;ProxyCommand=&quot;ssh -W %h:%p&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;opc@&lt;b&gt;NEW_BASTION_IP&lt;/b&gt;&quot;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="960" y="3110" width="360" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: sed → updated inventory -->
+        <mxCell id="s6_arr_inv1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" source="s6_sed1" target="s6_updated_inv" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s6_arr_inv2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="s6_sed2" target="s6_updated_inv" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s6_arr_inv3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FFC107;strokeWidth=2;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" source="s6_sed3" target="s6_updated_inv" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ansible-playbook reads updated inventory -->
+        <mxCell id="s6_ansible_run" value="&lt;font face=&quot;Consolas&quot; color=&quot;#4CAF50&quot;&gt;&lt;b&gt;ansible-playbook&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#4CAF50;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;ansible-playbook \&lt;br&gt;&amp;nbsp;&amp;nbsp;-i inventory.ini \&lt;br&gt;&amp;nbsp;&amp;nbsp;harden.yml&lt;br&gt;&lt;br&gt;ansible-playbook \&lt;br&gt;&amp;nbsp;&amp;nbsp;-i inventory.ini \&lt;br&gt;&amp;nbsp;&amp;nbsp;deploy_app.yml&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=2;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1410" y="3110" width="280" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: inventory → ansible -->
+        <mxCell id="s6_arr_ansible" value="reads" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=2;fontColor=#81C784;fontSize=11;fontFamily=Consolas;" edge="1" source="s6_updated_inv" target="s6_ansible_run" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Final success box -->
+        <mxCell id="s6_success" value="&lt;font style=&quot;font-size:16px;&quot; color=&quot;#4CAF50&quot;&gt;&lt;b&gt;APP DEPLOYED&lt;/b&gt;&lt;/font&gt;&lt;hr size=&quot;1&quot; style=&quot;border-color:#4CAF50;&quot;&gt;&lt;font face=&quot;Consolas&quot; style=&quot;font-size:11px;&quot;&gt;FedTracker API running&lt;br&gt;Hardened OL8 server&lt;br&gt;Zero manual SSH config&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1b3a1b;strokeColor=#4CAF50;strokeWidth=3;fontColor=#e0e0e0;arcSize=8;verticalAlign=top;spacingTop=4;spacingLeft=8;spacingRight=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="3125" width="250" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: ansible → success -->
+        <mxCell id="s6_arr_success" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4CAF50;strokeWidth=3;" edge="1" source="s6_ansible_run" target="s6_success" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Key insight label -->
+        <mxCell id="s6_insight" value="&lt;font style=&quot;font-size:12px;&quot; color=&quot;#FFC107&quot;&gt;&lt;b&gt;KEY INSIGHT:&lt;/b&gt; The sed commands are the glue between Terraform (infrastructure) and Ansible (configuration).&lt;br&gt;Without this handoff, Ansible would target stale IPs from the previous deployment.&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="960" y="3340" width="730" height="46" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- LEGEND / FOOTER                                               -->
+        <!-- ============================================================ -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444444;strokeWidth=1;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="1650" y="3420" width="560" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_title" value="&lt;font style=&quot;font-size:13px;&quot; color=&quot;#999999&quot;&gt;&lt;b&gt;LEGEND&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1665" y="3428" width="70" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_blue" value="&lt;font color=&quot;#0096D6&quot;&gt;&#9632;&lt;/font&gt; Terraform" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#b0b0b0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1665" y="3454" width="100" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_green" value="&lt;font color=&quot;#4CAF50&quot;&gt;&#9632;&lt;/font&gt; Ansible" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#b0b0b0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1665" y="3480" width="80" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_teal" value="&lt;font color=&quot;#00B4AA&quot;&gt;&#9632;&lt;/font&gt; Docker / Podman" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#b0b0b0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1665" y="3506" width="140" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_purple" value="&lt;font color=&quot;#9B59B6&quot;&gt;&#9632;&lt;/font&gt; Generate-Config" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#b0b0b0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="3454" width="140" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_red" value="&lt;font color=&quot;#FF5722&quot;&gt;&#9632;&lt;/font&gt; Destroy" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#b0b0b0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="3480" width="80" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_yellow" value="&lt;font color=&quot;#FFC107&quot;&gt;&#9632;&lt;/font&gt; Handoff (sed)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#b0b0b0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1850" y="3506" width="120" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_filemap" value="&lt;font color=&quot;#CCCCCC&quot;&gt;&#9632;&lt;/font&gt; File Map (Section 0)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#b0b0b0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="2040" y="3454" width="170" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_project" value="&lt;font style=&quot;font-size:11px;&quot; color=&quot;#666666&quot;&gt;OCI Federal Lab &amp;mdash; Tool Workflow Architecture &amp;mdash; Phase 1, Days 1-4&lt;/font&gt;" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="2020" y="3428" width="430" height="26" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

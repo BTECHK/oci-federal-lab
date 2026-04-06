@@ -1,0 +1,865 @@
+<mxfile host="app.diagrams.net" modified="2026-04-02T00:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram name="Local Environment &amp; OSI Model" id="local-env-osi">
+    <mxGraphModel dx="2800" dy="4200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2800" pageHeight="4200" math="0" shadow="0" background="#1a1a2e">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============================================================ -->
+        <!-- TITLE -->
+        <!-- ============================================================ -->
+        <mxCell id="title1" value="&lt;font style=&quot;font-size:28px;color:#FFFFFF;&quot;&gt;&lt;b&gt;OCI Federal Lab — Local Development Environment &amp;amp; OSI Networking Model&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="2000" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="title2" value="&lt;font style=&quot;font-size:14px;color:#AAAAAA;&quot;&gt;How your Windows laptop, WSL2, Docker, and networking layers connect to OCI cloud infrastructure&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="400" y="65" width="2000" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Divider line -->
+        <mxCell id="divider" value="" style="endArrow=none;dashed=1;dashPattern=5 5;strokeColor=#555555;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1380" y="100" as="sourcePoint" />
+            <mxPoint x="1380" y="3900" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Section headers -->
+        <mxCell id="leftHeader" value="&lt;font style=&quot;font-size:20px;color:#FFFFFF;&quot;&gt;&lt;b&gt;VIRTUALIZATION &amp;amp; CONTAINER ABSTRACTION STACK&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="80" y="100" width="1250" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="rightHeader" value="&lt;font style=&quot;font-size:20px;color:#FFFFFF;&quot;&gt;&lt;b&gt;OSI MODEL &amp;amp; DATA FLOW&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="100" width="1300" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- LEFT HALF: VIRTUALIZATION STACK (bottom to top layout) -->
+        <!-- ============================================================ -->
+
+        <!-- ==================== -->
+        <!-- LAYER 1: HARDWARE (bottom) -->
+        <!-- ==================== -->
+        <mxCell id="hwGroup" value="&lt;font style=&quot;font-size:16px;color:#FFFFFF;&quot;&gt;&lt;b&gt;HARDWARE LAYER&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#606060;strokeColor=#888888;strokeWidth=2;verticalAlign=top;spacingTop=5;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="3100" width="1250" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="hwCPU" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Intel/AMD CPU&lt;/b&gt;&lt;br&gt;x86_64 processor&lt;br&gt;VT-x/AMD-V enabled&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a4a4a;strokeColor=#777777;strokeWidth=1;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="110" y="3150" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="hwRAM" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;RAM&lt;/b&gt;&lt;br&gt;Physical memory&lt;br&gt;Shared across VMs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a4a4a;strokeColor=#777777;strokeWidth=1;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="330" y="3150" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="hwSSD" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;SSD / NVMe&lt;/b&gt;&lt;br&gt;Physical storage&lt;br&gt;Backs all filesystems&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a4a4a;strokeColor=#777777;strokeWidth=1;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="550" y="3150" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="hwNIC" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;NIC (WiFi/Ethernet)&lt;/b&gt;&lt;br&gt;Physical network adapter&lt;br&gt;Connects to router/ISP&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a4a4a;strokeColor=#777777;strokeWidth=1;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="770" y="3150" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="hwNote" value="&lt;font color=&quot;#CCCCCC&quot;&gt;&lt;i&gt;Everything runs on this physical hardware&lt;/i&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="110" y="3240" width="900" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- LAYER 2: WINDOWS 11 HOST OS -->
+        <!-- ==================== -->
+        <mxCell id="winGroup" value="&lt;font style=&quot;font-size:16px;color:#FFFFFF;&quot;&gt;&lt;b&gt;WINDOWS 11 HOST OS&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0096D6;strokeColor=#0077AA;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=6;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="80" y="2550" width="1250" height="520" as="geometry" />
+        </mxCell>
+
+        <mxCell id="winKernel" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Windows Kernel (NT)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;NT kernel — not POSIX&lt;br&gt;No fork(), no Unix sockets&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2600" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="winFS" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;NTFS Filesystem&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;C:\Users\k_a_s\...&lt;br&gt;ACLs via icacls (not chmod)&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="2600" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="winHyperV" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Hyper-V Hypervisor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;Built into Windows 11 Pro&lt;br&gt;Type-1 hypervisor (bare-metal)&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="2600" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="winNet" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Network: Windows TCP/IP Stack&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;Shares localhost with Docker containers&lt;br&gt;NAT gateway for WSL2 (172.x.x.x)&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2690" width="380" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Windows Tools -->
+        <mxCell id="winToolsLabel" value="&lt;font style=&quot;font-size:13px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Windows-Native Tools:&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2770" width="200" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="toolPS" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;PowerShell&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E3A5F;strokeColor=#2980b9;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2800" width="120" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="toolGitBash" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Git Bash&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E3A5F;strokeColor=#2980b9;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="245" y="2800" width="120" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="toolVSCode" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;VS Code&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E3A5F;strokeColor=#2980b9;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="2800" width="120" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="toolOCICLI" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;OCI CLI&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E3A5F;strokeColor=#2980b9;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="515" y="2800" width="120" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="toolTerraform" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Terraform&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E3A5F;strokeColor=#2980b9;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="650" y="2800" width="120" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- SSH Key callout for Windows -->
+        <mxCell id="winSSHNote" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;SSH keys on Windows: use &lt;b&gt;icacls&lt;/b&gt; to set NTFS ACLs&lt;br&gt;chmod does NOT work on NTFS — permissions are ignored&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=20;position=0.5;position2=1;base=20;rounded=1;fillColor=#333344;strokeColor=#FFD700;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="790" y="2770" width="350" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- LAYER 3: HYPER-V LAYER (contains WSL2 + Docker Desktop) -->
+        <!-- ==================== -->
+        <mxCell id="hypervGroup" value="&lt;font style=&quot;font-size:16px;color:#FFFFFF;&quot;&gt;&lt;b&gt;HYPER-V LAYER — Virtual Machines&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC7000;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=6;opacity=85;" vertex="1" parent="1">
+          <mxGeometry x="80" y="840" width="1250" height="1680" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- VM 1: WSL2 (Ubuntu) -->
+        <!-- ==================== -->
+        <mxCell id="wslGroup" value="&lt;font style=&quot;font-size:15px;color:#FFFFFF;&quot;&gt;&lt;b&gt;VM 1: WSL2 (Ubuntu 22.04)&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4CAF50;strokeColor=#388E3C;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="110" y="900" width="560" height="720" as="geometry" />
+        </mxCell>
+
+        <mxCell id="wslKernel" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Real Linux Kernel (5.x)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;Full kernel — not emulated&lt;br&gt;Has fork(), Unix sockets, POSIX syscalls&lt;br&gt;&lt;b&gt;This is why Ansible works here&lt;/b&gt;&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="950" width="500" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- WSL Tools -->
+        <mxCell id="wslToolsLabel" value="&lt;font style=&quot;font-size:13px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Linux-Native Tools (require real kernel):&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1045" width="350" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="wslAnsible" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Ansible&lt;/b&gt;&lt;br&gt;(apt install)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#4CAF50;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1075" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="wslSSH" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;SSH&lt;/b&gt;&lt;br&gt;(chmod 600)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#4CAF50;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="275" y="1075" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="wslApt" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;apt&lt;/b&gt;&lt;br&gt;(pkg mgr)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#4CAF50;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="410" y="1075" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="wslPython" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;python3&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#4CAF50;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="535" y="1075" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- WSL Filesystem -->
+        <mxCell id="wslFSLabel" value="&lt;font style=&quot;font-size:13px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Filesystem:&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1140" width="120" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="wslExt4" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;&lt;b&gt;ext4 native:&lt;/b&gt; ~/  (fast, real POSIX perms)&lt;br&gt;SSH keys here: &lt;b&gt;~/.ssh/&lt;/b&gt; with chmod 600&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#4CAF50;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1170" width="350" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="wslMnt" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;&lt;b&gt;/mnt/c/ mount:&lt;/b&gt; maps to C:\ (NTFS, slower)&lt;br&gt;Cross-filesystem access to Windows files&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#4CAF50;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1230" width="350" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- WSL Network -->
+        <mxCell id="wslNet" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Network:&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Separate IP: 172.x.x.x&lt;br&gt;NAT'd through Windows host&lt;br&gt;Can reach internet via Windows TCP/IP stack&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1B5E20;strokeColor=#4CAF50;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1300" width="350" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- WSL SSH Config callout -->
+        <mxCell id="wslSSHConfig" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;~/.ssh/config:&lt;/b&gt;&lt;br&gt;Host bastion&lt;br&gt;  HostName 203.0.113.50&lt;br&gt;  User opc&lt;br&gt;  IdentityFile ~/.ssh/oci_lab_key&lt;br&gt;&lt;br&gt;Host app-server&lt;br&gt;  HostName 10.0.2.99&lt;br&gt;  User opc&lt;br&gt;  &lt;b&gt;ProxyCommand&lt;/b&gt; ssh -W %h:%p bastion&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2e1a;strokeColor=#4CAF50;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1400" width="350" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- VM 2: Docker Desktop VM -->
+        <!-- ==================== -->
+        <mxCell id="dockerVMGroup" value="&lt;font style=&quot;font-size:15px;color:#FFFFFF;&quot;&gt;&lt;b&gt;VM 2: Docker Desktop VM&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00B4AA;strokeColor=#008C84;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="700" y="900" width="600" height="1580" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dockerKernel" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Lightweight Linux Kernel&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;Minimal kernel — just enough for containers&lt;br&gt;containerd runtime manages containers&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#008C84;strokeColor=#006B66;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="950" width="540" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dockerContainerd" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;containerd&lt;/b&gt; — container runtime&lt;br&gt;Manages container lifecycle (create, start, stop)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#008C84;strokeColor=#006B66;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="1035" width="540" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Port Mapping -->
+        <mxCell id="dockerPortMap" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Port Mapping Chain:&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Container :8000 → Docker VM :8000 → Windows localhost:8000&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#008C84;strokeColor=#006B66;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="1100" width="540" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Docker Network -->
+        <mxCell id="dockerNet" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Network:&lt;/b&gt; Bridged to Windows localhost&lt;br&gt;&lt;font style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;docker run -p 8000:8000 maps directly to host&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#008C84;strokeColor=#006B66;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="1170" width="540" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- CONTAINER LAYER (inside Docker VM) -->
+        <!-- ==================== -->
+        <mxCell id="containerGroup" value="&lt;font style=&quot;font-size:14px;color:#FFFFFF;&quot;&gt;&lt;b&gt;CONTAINER LAYER — FedTracker App&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#005F5A;strokeColor=#00B4AA;strokeWidth=2;verticalAlign=top;spacingTop=5;arcSize=8;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
+          <mxGeometry x="740" y="1260" width="530" height="640" as="geometry" />
+        </mxCell>
+
+        <mxCell id="containerTitle" value="&lt;font color=&quot;#00E5CC&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;Container Image Layers (bottom → top):&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="760" y="1295" width="350" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Container layers (stacked) -->
+        <mxCell id="layerBase" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Base Image:&lt;/b&gt; oraclelinux:9-slim&lt;br&gt;Minimal Oracle Linux 9 (FedRAMP-aligned)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3a5a;strokeColor=#6a6a9a;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1330" width="470" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="layerSysPkg" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;System Packages:&lt;/b&gt; python3, pip&lt;br&gt;RUN dnf install python3 python3-pip&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3a6a;strokeColor=#6a6aaa;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1395" width="470" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="layerAppPkg" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;App Packages:&lt;/b&gt; fastapi, uvicorn&lt;br&gt;RUN pip install -r requirements.txt&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3a7a;strokeColor=#6a6aba;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1460" width="470" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="layerAppCode" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;App Code:&lt;/b&gt; main.py&lt;br&gt;COPY ./app /app&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3a8a;strokeColor=#6a6aca;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1525" width="470" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="layerUser" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;User:&lt;/b&gt; appuser (non-root)&lt;br&gt;USER appuser — security best practice&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3a9a;strokeColor=#6a6ada;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1590" width="470" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="layerPort" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;EXPOSE 8000&lt;/b&gt;&lt;br&gt;CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3aaa;strokeColor=#6a6aea;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1655" width="470" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Container endpoints -->
+        <mxCell id="containerEndpoints" value="&lt;font color=&quot;#00E5CC&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;&lt;b&gt;Endpoints:&lt;/b&gt;&lt;br&gt;GET /health      → {&quot;status&quot;: &quot;healthy&quot;}&lt;br&gt;GET /personnel   → [{...employee data...}]&lt;br&gt;GET /compliance  → FedRAMP status&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2e2e;strokeColor=#00B4AA;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1730" width="470" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- Container test command -->
+        <mxCell id="containerTest" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;Test from Windows: &lt;b&gt;curl http://localhost:8000/health&lt;/b&gt;&lt;br&gt;Works because Docker maps port through to Windows localhost&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2a3a;strokeColor=#555577;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="1830" width="470" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- KEY CALLOUTS (LEFT HALF) -->
+        <!-- ==================== -->
+        <mxCell id="callout1" value="&lt;font color=&quot;#FF6B6B&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Git Bash is NOT Linux&lt;/b&gt; — it is a translation layer on Windows.&lt;br&gt;Looks like bash, but no fork(), no real kernel.&lt;br&gt;Ansible will FAIL if you try to run it from Git Bash.&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=30;position=0.3;position2=1;base=25;rounded=1;fillColor=#3a1a1a;strokeColor=#FF6B6B;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2850" width="420" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="callout2" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;WSL2 IS Linux&lt;/b&gt; — full kernel, real syscalls.&lt;br&gt;That is why Ansible &lt;b&gt;only&lt;/b&gt; works here.&lt;br&gt;Use &lt;font style=&quot;font-family:Consolas;&quot;&gt;ProxyCommand&lt;/font&gt; (not ProxyJump) for SSH.&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=30;position=0.7;position2=0;base=25;rounded=1;fillColor=#1a3a1a;strokeColor=#90EE90;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="110" y="1640" width="380" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="callout3" value="&lt;font color=&quot;#00E5CC&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Docker Desktop looks Windows-native&lt;/b&gt;, but containers&lt;br&gt;actually run inside a hidden Hyper-V VM.&lt;br&gt;The Docker CLI on Windows talks to a daemon in the VM.&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=30;position=0.3;position2=0;base=25;rounded=1;fillColor=#1a2e2e;strokeColor=#00E5CC;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="110" y="1940" width="440" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="callout4" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Shared filesystem — same files, two paths:&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;Windows: C:\Users\k_a_s\...\oci-federal-lab&lt;br&gt;WSL2:&amp;nbsp;&amp;nbsp; /mnt/c/Users/k_a_s/.../oci-federal-lab&lt;/font&gt;&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=30;position=0.5;position2=1;base=25;rounded=1;fillColor=#2e2e1a;strokeColor=#FFD700;strokeWidth=2;align=left;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2050" width="500" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows between layers -->
+        <!-- Hardware to Windows -->
+        <mxCell id="arrowHWtoWin" value="" style="endArrow=block;endFill=1;strokeColor=#AAAAAA;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="705" y="3100" as="sourcePoint" />
+            <mxPoint x="705" y="3075" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrowHWtoWinLabel" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:11px;&quot;&gt;runs on&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="715" y="3080" width="60" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Windows to Hyper-V -->
+        <mxCell id="arrowWinToHV" value="" style="endArrow=block;endFill=1;strokeColor=#AAAAAA;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="705" y="2550" as="sourcePoint" />
+            <mxPoint x="705" y="2525" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrowWinToHVLabel" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:11px;&quot;&gt;Hyper-V manages VMs&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="715" y="2525" width="150" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- RIGHT HALF: OSI MODEL -->
+        <!-- ============================================================ -->
+
+        <!-- ==================== -->
+        <!-- OSI Layer 7 — Application -->
+        <!-- ==================== -->
+        <mxCell id="osiL7Group" value="&lt;font style=&quot;font-size:15px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Layer 7 — APPLICATION&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E84D4D;strokeColor=#CC3333;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="160" width="680" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="l7curl" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;curl&lt;/b&gt;&lt;br&gt;HTTP requests to&lt;br&gt;/health, /personnel&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CC3333;strokeColor=#AA2222;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="210" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l7fastapi" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;FastAPI&lt;/b&gt;&lt;br&gt;Serves endpoints&lt;br&gt;/health, /personnel&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CC3333;strokeColor=#AA2222;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1605" y="210" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l7ansible" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Ansible Playbooks&lt;/b&gt;&lt;br&gt;Install packages&lt;br&gt;Copy files, configure&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CC3333;strokeColor=#AA2222;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1770" y="210" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l7terraform" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Terraform&lt;/b&gt;&lt;br&gt;OCI provider&lt;br&gt;REST API calls&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CC3333;strokeColor=#AA2222;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1945" y="210" width="140" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l7docker" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;docker build / docker run&lt;/b&gt;&lt;br&gt;Build images, run containers&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CC3333;strokeColor=#AA2222;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="290" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l7proto" value="&lt;font color=&quot;#FFCCCC&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Protocols:&lt;/b&gt; HTTP / HTTPS&lt;br&gt;Application-level commands and responses&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="360" width="350" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- OSI Layer 6 — Presentation -->
+        <!-- ==================== -->
+        <mxCell id="osiL6Group" value="&lt;font style=&quot;font-size:15px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Layer 6 — PRESENTATION&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC7000;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="490" width="680" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="l6tls" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;TLS/SSL Encryption&lt;/b&gt;&lt;br&gt;HTTPS to OCI API endpoints&lt;br&gt;Terraform/OCI CLI use TLS 1.2+&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CC7000;strokeColor=#AA5500;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="540" width="280" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l6json" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;JSON Encoding/Decoding&lt;/b&gt;&lt;br&gt;API request/response payloads&lt;br&gt;Terraform state files&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CC7000;strokeColor=#AA5500;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1740" y="540" width="280" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l6ssh" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;SSH Encryption&lt;/b&gt; — Ansible → bastion → app server&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CC7000;strokeColor=#AA5500;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="618" width="400" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- OSI Layer 5 — Session -->
+        <!-- ==================== -->
+        <mxCell id="osiL5Group" value="&lt;font style=&quot;font-size:15px;color:#1a1a2e;&quot;&gt;&lt;b&gt;Layer 5 — SESSION&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFC107;strokeColor=#CC9900;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="690" width="680" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="l5ssh" value="&lt;font color=&quot;#1a1a2e&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;SSH Sessions&lt;/b&gt;&lt;br&gt;Ansible opens session → runs tasks → closes&lt;br&gt;ProxyCommand chains: local → bastion → app&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8AD00;strokeColor=#CC9900;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="740" width="310" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l5https" value="&lt;font color=&quot;#1a1a2e&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;HTTPS Sessions&lt;/b&gt;&lt;br&gt;Terraform → OCI API&lt;br&gt;Keep-alive connections&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8AD00;strokeColor=#CC9900;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1770" y="740" width="240" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l5docker" value="&lt;font color=&quot;#1a1a2e&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Docker API Socket&lt;/b&gt; — CLI talks to daemon in VM&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8AD00;strokeColor=#CC9900;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="818" width="400" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- OSI Layer 4 — Transport -->
+        <!-- ==================== -->
+        <mxCell id="osiL4Group" value="&lt;font style=&quot;font-size:15px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Layer 4 — TRANSPORT&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4CAF50;strokeColor=#388E3C;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="890" width="680" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="l4ssh" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;TCP port 22&lt;/b&gt;&lt;br&gt;SSH — Ansible, manual SSH&lt;br&gt;Bastion + app server&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="940" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l4app" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;TCP port 8000&lt;/b&gt;&lt;br&gt;FastAPI app server&lt;br&gt;docker -p 8000:8000&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="940" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l4https" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;TCP port 443&lt;/b&gt;&lt;br&gt;HTTPS — Terraform → OCI API&lt;br&gt;docker push → OCIR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E7D32;strokeColor=#1B5E20;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="940" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l4firewall" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;&lt;b&gt;firewalld operates HERE&lt;/b&gt; — allows/blocks by TCP port&lt;br&gt;On OCI compute instances: firewall-cmd --add-port=8000/tcp&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2e1a;strokeColor=#FFD700;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1025" width="540" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- OSI Layer 3 — Network -->
+        <!-- ==================== -->
+        <mxCell id="osiL3Group" value="&lt;font style=&quot;font-size:15px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Layer 3 — NETWORK&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0096D6;strokeColor=#0077AA;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1130" width="680" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="l3ips" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;IP Addresses:&lt;/b&gt;&lt;br&gt;Bastion (public):  203.0.113.50&lt;br&gt;App server (private): 10.0.2.99&lt;br&gt;Your home IP: assigned by ISP&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1180" width="310" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l3vcn" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;VCN Routing:&lt;/b&gt;&lt;br&gt;Public subnet → Internet Gateway&lt;br&gt;Private subnet → NAT Gateway&lt;br&gt;Route tables configured by Terraform&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1770" y="1180" width="310" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="l3seclist" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Security Lists:&lt;/b&gt; Terraform configures these&lt;br&gt;Source IP + port filtering (stateful rules)&lt;br&gt;Ingress: allow SSH from your IP only&lt;br&gt;Egress: allow all outbound&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1280" width="400" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l3route" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Your ISP assigns your home IP&lt;/b&gt;&lt;br&gt;→ routes to OCI data center&lt;br&gt;(Ashburn, VA — us-ashburn-1)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1375" width="350" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- OSI Layer 2 — Data Link -->
+        <!-- ==================== -->
+        <mxCell id="osiL2Group" value="&lt;font style=&quot;font-size:15px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Layer 2 — DATA LINK&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9C27B0;strokeColor=#7B1FA2;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1500" width="680" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="l2ethernet" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;Ethernet Frames&lt;/b&gt;&lt;br&gt;On your local network (LAN)&lt;br&gt;Encapsulate IP packets for local delivery&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B1FA2;strokeColor=#6A1B9A;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1550" width="280" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l2mac" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;MAC Addresses&lt;/b&gt;&lt;br&gt;Your NIC, your router&lt;br&gt;ARP resolves IP → MAC&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B1FA2;strokeColor=#6A1B9A;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1740" y="1550" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="l2vnic" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;&quot;&gt;&lt;b&gt;VNICs&lt;/b&gt; on OCI&lt;br&gt;instances&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B1FA2;strokeColor=#6A1B9A;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1960" y="1550" width="120" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== -->
+        <!-- OSI Layer 1 — Physical -->
+        <!-- ==================== -->
+        <mxCell id="osiL1Group" value="&lt;font style=&quot;font-size:15px;color:#FFFFFF;&quot;&gt;&lt;b&gt;Layer 1 — PHYSICAL&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#606060;strokeColor=#888888;strokeWidth=3;verticalAlign=top;spacingTop=5;arcSize=8;opacity=90;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1690" width="680" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="l1path" value="&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;&lt;b&gt;Physical path:&lt;/b&gt;&lt;br&gt;Your WiFi/Ethernet → Router → ISP → Internet backbone → OCI Data Center (Ashburn, VA)&lt;br&gt;Fiber optic cables, switches, routers along the way&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a4a4a;strokeColor=#777777;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1740" width="640" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- TOOL-TO-OSI MAPPING (right side, below OSI stack) -->
+        <!-- ============================================================ -->
+        <mxCell id="mappingHeader" value="&lt;font style=&quot;font-size:17px;color:#FFFFFF;&quot;&gt;&lt;b&gt;TOOL → OSI LAYER MAPPING&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1860" width="680" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="mappingBox" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2a3e;strokeColor=#555577;strokeWidth=2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="1900" width="680" height="380" as="geometry" />
+        </mxCell>
+
+        <mxCell id="map1" value="&lt;font color=&quot;#E84D4D&quot; style=&quot;font-family:Consolas;font-size:13px;&quot;&gt;&lt;b&gt;Terraform&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt;  →  &lt;/font&gt;&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L3&lt;/b&gt; (creates networks, routes, security lists)&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt; + &lt;/font&gt;&lt;font color=&quot;#E84D4D&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L7&lt;/b&gt; (API calls to OCI)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1915" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="map2" value="&lt;font color=&quot;#E84D4D&quot; style=&quot;font-family:Consolas;font-size:13px;&quot;&gt;&lt;b&gt;Ansible&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt;    →  &lt;/font&gt;&lt;font color=&quot;#E84D4D&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L7&lt;/b&gt; (runs tasks on servers)&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt; + &lt;/font&gt;&lt;font color=&quot;#FFC107&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L5&lt;/b&gt; (SSH session management)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1950" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="map3" value="&lt;font color=&quot;#E84D4D&quot; style=&quot;font-family:Consolas;font-size:13px;&quot;&gt;&lt;b&gt;Docker&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt;     →  &lt;/font&gt;&lt;font color=&quot;#E84D4D&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L7&lt;/b&gt; (build/run commands)&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt; + &lt;/font&gt;&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L4&lt;/b&gt; (port mapping -p 8000:8000)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="1985" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="map4" value="&lt;font color=&quot;#E84D4D&quot; style=&quot;font-family:Consolas;font-size:13px;&quot;&gt;&lt;b&gt;curl&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt;       →  &lt;/font&gt;&lt;font color=&quot;#E84D4D&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L7&lt;/b&gt; (HTTP request/response)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2020" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="map5" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-family:Consolas;font-size:13px;&quot;&gt;&lt;b&gt;firewalld&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt;  →  &lt;/font&gt;&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L3&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt; / &lt;/font&gt;&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L4&lt;/b&gt; (IP + port filtering)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2055" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="map6" value="&lt;font color=&quot;#FF8C00&quot; style=&quot;font-family:Consolas;font-size:13px;&quot;&gt;&lt;b&gt;SSH&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt;        →  &lt;/font&gt;&lt;font color=&quot;#FFC107&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L5&lt;/b&gt; (session)&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt; + &lt;/font&gt;&lt;font color=&quot;#FF8C00&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L6&lt;/b&gt; (encryption)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2090" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="map7" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:13px;&quot;&gt;&lt;b&gt;VCN/Subnets&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt;  →  &lt;/font&gt;&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L3&lt;/b&gt; (IP routing between subnets)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2125" width="640" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="map8" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:13px;&quot;&gt;&lt;b&gt;Security Lists&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt;  →  &lt;/font&gt;&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L3&lt;/b&gt;&lt;/font&gt;&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:13px;&quot;&gt; / &lt;/font&gt;&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;L4&lt;/b&gt; (source IP + port rules)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2160" width="640" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Colored dots legend -->
+        <mxCell id="legendNote" value="&lt;font color=&quot;#888888&quot; style=&quot;font-size:11px;&quot;&gt;Colors match OSI layer: &lt;font color=&quot;#E84D4D&quot;&gt;L7&lt;/font&gt; &lt;font color=&quot;#FF8C00&quot;&gt;L6&lt;/font&gt; &lt;font color=&quot;#FFC107&quot;&gt;L5&lt;/font&gt; &lt;font color=&quot;#4CAF50&quot;&gt;L4&lt;/font&gt; &lt;font color=&quot;#0096D6&quot;&gt;L3&lt;/font&gt; &lt;font color=&quot;#9C27B0&quot;&gt;L2&lt;/font&gt; &lt;font color=&quot;#606060&quot;&gt;L1&lt;/font&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2200" width="500" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- DATA FLOW TRACE -->
+        <!-- ============================================================ -->
+        <mxCell id="flowHeader" value="&lt;font style=&quot;font-size:17px;color:#FFFFFF;&quot;&gt;&lt;b&gt;DATA FLOW TRACE: &quot;What happens when Ansible runs a playbook?&quot;&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="2310" width="680" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flowBox" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1e3a;strokeColor=#FFD700;strokeWidth=2;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="2350" width="680" height="500" as="geometry" />
+        </mxCell>
+
+        <!-- Flow steps -->
+        <mxCell id="flow1" value="&lt;font style=&quot;font-size:13px;&quot;&gt;&lt;font color=&quot;#E84D4D&quot;&gt;&lt;b&gt;1. L7 Application&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;Ansible reads inventory file, builds SSH command&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;ansible-playbook -i inventory deploy_app.yml&lt;/font&gt;&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1a1a;strokeColor=#E84D4D;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2365" width="640" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow2" value="&lt;font style=&quot;font-size:13px;&quot;&gt;&lt;font color=&quot;#FFC107&quot;&gt;&lt;b&gt;2. L5 Session&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;Opens SSH session to bastion via &lt;font style=&quot;font-family:Consolas;&quot;&gt;ProxyCommand&lt;/font&gt;&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2e1a;strokeColor=#FFC107;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2427" width="640" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow3" value="&lt;font style=&quot;font-size:13px;&quot;&gt;&lt;font color=&quot;#FF8C00&quot;&gt;&lt;b&gt;3. L6 Presentation&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;SSH encrypts the connection (Ed25519/RSA key exchange)&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e1e0a;strokeColor=#FF8C00;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2479" width="640" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow4" value="&lt;font style=&quot;font-size:13px;&quot;&gt;&lt;font color=&quot;#4CAF50&quot;&gt;&lt;b&gt;4. L4 Transport&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;TCP connection established to &lt;font style=&quot;font-family:Consolas;&quot;&gt;bastion:22&lt;/font&gt; (3-way handshake)&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2e1a;strokeColor=#4CAF50;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2531" width="640" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow5" value="&lt;font style=&quot;font-size:13px;&quot;&gt;&lt;font color=&quot;#0096D6&quot;&gt;&lt;b&gt;5. L3 Network&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;Packet routed: &lt;font style=&quot;font-family:Consolas;&quot;&gt;your IP → ISP → internet → OCI IGW → bastion (203.0.113.50)&lt;/font&gt;&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0a1e2e;strokeColor=#0096D6;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2583" width="640" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow6" value="&lt;font style=&quot;font-size:13px;&quot;&gt;&lt;font color=&quot;#FFC107&quot;&gt;&lt;b&gt;6. L5 Session (hop 2)&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;SSH jumps: bastion opens second SSH session to &lt;font style=&quot;font-family:Consolas;&quot;&gt;app-server:22&lt;/font&gt;&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2e1a;strokeColor=#FFC107;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2635" width="640" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow7" value="&lt;font style=&quot;font-size:13px;&quot;&gt;&lt;font color=&quot;#0096D6&quot;&gt;&lt;b&gt;7. L3 Network (internal)&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;Packet routed: &lt;font style=&quot;font-family:Consolas;&quot;&gt;bastion (10.0.1.x) → app-server (10.0.2.x)&lt;/font&gt; via VCN routing&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0a1e2e;strokeColor=#0096D6;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2687" width="640" height="45" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow8" value="&lt;font style=&quot;font-size:13px;&quot;&gt;&lt;font color=&quot;#E84D4D&quot;&gt;&lt;b&gt;8. L7 Application (remote)&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot;&gt;Ansible runs task on app server: &lt;font style=&quot;font-family:Consolas;&quot;&gt;dnf install python3&lt;/font&gt;&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1a1a;strokeColor=#E84D4D;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2739" width="640" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Flow arrows (vertical connecting line) -->
+        <mxCell id="flowArrow1" value="" style="endArrow=block;endFill=1;strokeColor=#FFD700;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1435" y="2395" as="sourcePoint" />
+            <mxPoint x="1435" y="2775" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="flowArrowLabel" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:11px;&quot;&gt;packet&lt;br&gt;flow&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="2570" width="35" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Return path note -->
+        <mxCell id="flowReturn" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Return path:&lt;/b&gt; Response travels back up through L3 → L4 → L5 → L6 → L7&lt;br&gt;Ansible collects output and reports &quot;changed&quot; or &quot;ok&quot; in the terminal&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e2e1a;strokeColor=#FFD700;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2800" width="640" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- CONNECTING ARROWS between left and right halves -->
+        <!-- ============================================================ -->
+
+        <!-- Terraform arrow to L3/L7 -->
+        <mxCell id="toolArrowTF" value="" style="endArrow=block;endFill=1;strokeColor=#E84D4D;strokeWidth=1;dashed=1;dashPattern=4 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="toolTerraform">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1420" y="400" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1350" y="2818" />
+              <mxPoint x="1350" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Ansible arrow to L7/L5 -->
+        <mxCell id="toolArrowAnsible" value="" style="endArrow=block;endFill=1;strokeColor=#4CAF50;strokeWidth=1;dashed=1;dashPattern=4 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="1075" as="sourcePoint" />
+            <mxPoint x="1420" y="270" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="200" y="860" />
+              <mxPoint x="680" y="860" />
+              <mxPoint x="680" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- FOOTER / LEGEND -->
+        <!-- ============================================================ -->
+        <mxCell id="footer" value="&lt;font style=&quot;font-size:12px;color:#666666;&quot;&gt;OCI Federal Lab — Local Development Environment Architecture | Created for interview preparation and learning reference&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="400" y="3870" width="2000" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Color legend at bottom -->
+        <mxCell id="legendBox" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2a3e;strokeColor=#555577;strokeWidth=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="2880" width="680" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="legendTitle" value="&lt;font style=&quot;font-size:14px;color:#FFFFFF;&quot;&gt;&lt;b&gt;COLOR LEGEND&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="2885" width="680" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#606060;strokeColor=#888888;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2915" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;Hardware / Physical (L1)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="2915" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0096D6;strokeColor=#0077AA;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2940" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;Windows 11 / Network L3&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="2940" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC7000;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1440" y="2965" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;Hyper-V / Presentation L6&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="2965" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4CAF50;strokeColor=#388E3C;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="2915" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;WSL2 / Transport L4&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1730" y="2915" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00B4AA;strokeColor=#008C84;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="2940" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;Docker Desktop VM&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1730" y="2940" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E84D4D;strokeColor=#CC3333;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="2965" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;Application L7&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1730" y="2965" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg7" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9C27B0;strokeColor=#7B1FA2;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1960" y="2915" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg7t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;Data Link L2&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1990" y="2915" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg8" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFC107;strokeColor=#CC9900;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1960" y="2940" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg8t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;Session L5&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1990" y="2940" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg9" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFD700;strokeColor=#CC9900;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1960" y="2965" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg9t" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:12px;&quot;&gt;Data Flow Trace&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1990" y="2965" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Additional note about the relationship -->
+        <mxCell id="relNote" value="&lt;font color=&quot;#888888&quot; style=&quot;font-size:11px;&quot;&gt;&lt;i&gt;Left half shows WHERE tools run (which abstraction layer). Right half shows HOW data moves (which OSI layer).&lt;br&gt;Example: Ansible runs in WSL2 (left, green VM) and operates at L7+L5 (right, red+yellow layers).&lt;/i&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="3000" width="680" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- ABSTRACTION STACK LABELS (left side, vertical) -->
+        <!-- ============================================================ -->
+        <mxCell id="stackLabel" value="&lt;font style=&quot;font-size:14px;color:#888888;&quot;&gt;&lt;b&gt;A&lt;br&gt;B&lt;br&gt;S&lt;br&gt;T&lt;br&gt;R&lt;br&gt;A&lt;br&gt;C&lt;br&gt;T&lt;br&gt;I&lt;br&gt;O&lt;br&gt;N&lt;br&gt;&lt;br&gt;▲&lt;br&gt;&lt;br&gt;H&lt;br&gt;I&lt;br&gt;G&lt;br&gt;H&lt;br&gt;E&lt;br&gt;R&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="20" y="1400" width="40" height="600" as="geometry" />
+        </mxCell>
+
+        <!-- OSI direction label -->
+        <mxCell id="osiLabel" value="&lt;font style=&quot;font-size:14px;color:#888888;&quot;&gt;&lt;b&gt;O&lt;br&gt;S&lt;br&gt;I&lt;br&gt;&lt;br&gt;▲&lt;br&gt;&lt;br&gt;H&lt;br&gt;I&lt;br&gt;G&lt;br&gt;H&lt;br&gt;E&lt;br&gt;R&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="2130" y="600" width="40" height="400" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- LEFT SIDE: Layer-to-layer arrows with "runs on" labels -->
+        <!-- ============================================================ -->
+
+        <!-- Arrow: Container → Docker VM -->
+        <mxCell id="arrowContainerToDockerVM" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:10px;&quot;&gt;runs inside&lt;/font&gt;" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="1240" width="80" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- Additional details: Windows-to-Hyper-V relationship -->
+        <!-- ============================================================ -->
+        <mxCell id="hypervExplainer" value="&lt;font color=&quot;#FF8C00&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Both WSL2 and Docker Desktop run as Hyper-V VMs.&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC;&quot;&gt;Hyper-V is built into Windows 11 Pro — no separate install needed.&lt;br&gt;Each VM gets its own Linux kernel and isolated memory space.&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e1e0a;strokeColor=#FF8C00;strokeWidth=1;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2170" width="540" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- Quick reference: key paths -->
+        <!-- ============================================================ -->
+        <mxCell id="pathsBox" value="&lt;font style=&quot;font-size:13px;color:#FFFFFF;&quot;&gt;&lt;b&gt;KEY PATHS QUICK REFERENCE&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2270" width="540" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="pathsContent" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2a3e;strokeColor=#555577;strokeWidth=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2300" width="540" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="path1" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Windows project dir:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;C:\Users\k_a_s\OneDrive\Desktop\github\oci-federal-lab&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="125" y="2310" width="510" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="path2" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;WSL2 project dir:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;/mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="125" y="2355" width="510" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="path3" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;WSL2 SSH keys:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;~/.ssh/oci_lab_key  (chmod 600 — real POSIX permissions)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="125" y="2400" width="510" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="path4" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Windows SSH keys:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;C:\Users\k_a_s\.ssh\  (icacls for permissions)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="125" y="2445" width="510" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- FILE PATH ANNOTATIONS — WSL2 SECTION -->
+        <!-- ============================================================ -->
+
+        <!-- WSL2: SSH key path callout -->
+        <mxCell id="fpWSLSSHKey" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;SSH Key (ext4 native):&lt;/b&gt;&lt;br&gt;~/.ssh/oci-federal-lab/&lt;br&gt;oci-fedlab-bastion-ssh-key-2026-03-26.key&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#FFD700&quot;&gt;Stored in ext4 — NOT /mnt/c/&lt;br&gt;chmod 600 works here&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1170" width="340" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- WSL2: Ansible runs FROM here callout -->
+        <mxCell id="fpWSLAnsible" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Ansible runs FROM WSL2:&lt;/b&gt;&lt;br&gt;ansible-playbook \&lt;br&gt;&amp;nbsp; -i /mnt/c/Users/k_a_s/OneDrive/Desktop/&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;github/oci-federal-lab/&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;ansible/inventory.ini \&lt;br&gt;&amp;nbsp; ansible/playbooks/harden.yml&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1290" width="340" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- WSL2: Cross-mount reads callout -->
+        <mxCell id="fpWSLMount" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Cross-mount path:&lt;/b&gt;&lt;br&gt;/mnt/c/Users/k_a_s/OneDrive/Desktop/&lt;br&gt;&amp;nbsp; github/oci-federal-lab/&lt;br&gt;&lt;font color=&quot;#FFD700&quot;&gt;NTFS via 9P — slower than ext4&lt;br&gt;Reads .tf, .yml, .py from Windows&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1410" width="340" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- FILE PATH ANNOTATIONS — WINDOWS SECTION -->
+        <!-- ============================================================ -->
+
+        <!-- Windows: Project repo callout -->
+        <mxCell id="fpWinRepo" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Project Repo (NTFS):&lt;/b&gt;&lt;br&gt;C:\Users\k_a_s\OneDrive\Desktop\&lt;br&gt;&amp;nbsp; github\oci-federal-lab\&lt;br&gt;&lt;font color=&quot;#AAAAAA&quot;&gt;Git clone lives here — OneDrive synced&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#87CEEB;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2690" width="310" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Windows: Terraform runs here callout -->
+        <mxCell id="fpWinTerraform" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Terraform (Git Bash):&lt;/b&gt;&lt;br&gt;cd phases/phase-1-fedtracker-migration/&lt;br&gt;&amp;nbsp;&amp;nbsp; terraform/&lt;br&gt;terraform plan / terraform apply&lt;br&gt;&lt;font color=&quot;#FF6B6B&quot;&gt;terraform.tfvars is gitignored!&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#87CEEB;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="850" y="2690" width="310" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Windows: Docker Desktop reads callout -->
+        <mxCell id="fpWinDocker" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Docker Desktop reads:&lt;/b&gt;&lt;br&gt;phases/phase-1-fedtracker-migration/&lt;br&gt;&amp;nbsp;&amp;nbsp; docker/Dockerfile&lt;br&gt;&lt;font color=&quot;#AAAAAA&quot;&gt;Reads from NTFS via Windows filesystem&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#87CEEB;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="850" y="2790" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- Windows: VS Code edits callout -->
+        <mxCell id="fpWinVSCode" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;VS Code edits all:&lt;/b&gt;&lt;br&gt;*.tf, *.yml, *.py, Dockerfile&lt;br&gt;&lt;font color=&quot;#AAAAAA&quot;&gt;Save on Windows → WSL2 sees changes&lt;br&gt;via /mnt/c/ mount instantly&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#87CEEB;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="520" y="2790" width="310" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- FILE FLOW ARROWS -->
+        <!-- ============================================================ -->
+
+        <!-- Flow 1: Windows files -> /mnt/c/ mount -> WSL reads inventory.ini -->
+        <mxCell id="fileFlowWinToWSL" value="" style="endArrow=block;endFill=1;strokeColor=#FFD700;strokeWidth=2;dashed=1;dashPattern=8 4;curved=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="2550" as="sourcePoint" />
+            <mxPoint x="560" y="1520" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="490" y="2200" />
+              <mxPoint x="490" y="1800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fileFlowWinToWSLLabel" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-family:Consolas;font-size:10px;&quot;&gt;&lt;b&gt;Windows .tf/.yml/.py&lt;br&gt;→ /mnt/c/ mount&lt;br&gt;→ WSL2 reads&lt;br&gt;&amp;nbsp;&amp;nbsp; inventory.ini&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="365" y="1960" width="145" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Flow 2: WSL SSH keys -> SSH tunnel -> OCI bastion -> OCI app server -->
+        <mxCell id="fileFlowSSHTunnel" value="" style="endArrow=block;endFill=1;strokeColor=#90EE90;strokeWidth=2;dashed=1;dashPattern=8 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="850" y="1225" as="sourcePoint" />
+            <mxPoint x="1420" y="760" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1100" y="1225" />
+              <mxPoint x="1100" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fileFlowSSHTunnelLabel" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:10px;&quot;&gt;&lt;b&gt;WSL2 SSH keys&lt;br&gt;→ SSH tunnel&lt;br&gt;→ OCI bastion&lt;br&gt;→ OCI app server&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1105" y="920" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Flow 3: Docker Desktop reads Dockerfile from Windows filesystem -->
+        <mxCell id="fileFlowDockerRead" value="" style="endArrow=block;endFill=1;strokeColor=#00E5CC;strokeWidth=2;dashed=1;dashPattern=8 4;curved=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1000" y="2550" as="sourcePoint" />
+            <mxPoint x="1000" y="1900" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1070" y="2300" />
+              <mxPoint x="1070" y="2050" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fileFlowDockerReadLabel" value="&lt;font color=&quot;#00E5CC&quot; style=&quot;font-family:Consolas;font-size:10px;&quot;&gt;&lt;b&gt;Docker Desktop&lt;br&gt;reads Dockerfile&lt;br&gt;from Windows FS&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="2140" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ============================================================ -->
+        <!-- FILE LOCATIONS SUMMARY TABLE -->
+        <!-- ============================================================ -->
+
+        <!-- Place the table below the existing content, at the bottom of the canvas -->
+        <mxCell id="fileLocHeader" value="&lt;font style=&quot;font-size:18px;color:#FFFFFF;&quot;&gt;&lt;b&gt;FILE LOCATIONS — WHERE EVERYTHING LIVES&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="80" y="3340" width="1250" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Table container -->
+        <mxCell id="fileLocBox" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e1e3a;strokeColor=#FFD700;strokeWidth=2;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="80" y="3385" width="1250" height="420" as="geometry" />
+        </mxCell>
+
+        <!-- Table header row -->
+        <mxCell id="fileLocTH1" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;FILE&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2e2e1a;strokeColor=#FFD700;strokeWidth=1;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3400" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocTH2" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;LIVES ON&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2e2e1a;strokeColor=#FFD700;strokeWidth=1;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3400" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocTH3" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:13px;&quot;&gt;&lt;b&gt;ACCESSED VIA&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2e2e1a;strokeColor=#FFD700;strokeWidth=1;fontFamily=Consolas;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3400" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Row 1: *.tf files -->
+        <mxCell id="fileLocR1C1" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;*.tf files&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3435" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR1C2" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Windows (NTFS)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3435" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR1C3" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Git Bash / VS Code&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3435" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Row 2: terraform.tfvars -->
+        <mxCell id="fileLocR2C1" value="&lt;font color=&quot;#FF6B6B&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;terraform.tfvars&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a1a1a;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3470" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR2C2" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Windows (NTFS)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a1a1a;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3470" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR2C3" value="&lt;font color=&quot;#FF6B6B&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;&lt;b&gt;Git Bash (gitignored! contains secrets)&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a1a1a;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3470" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Row 3: inventory.ini -->
+        <mxCell id="fileLocR3C1" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;inventory.ini&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3505" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR3C2" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Windows (NTFS)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3505" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR3C3" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;WSL2 via /mnt/c/&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3505" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Row 4: harden.yml -->
+        <mxCell id="fileLocR4C1" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;harden.yml&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3540" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR4C2" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Windows (NTFS)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3540" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR4C3" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;WSL2 via /mnt/c/&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3540" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Row 5: deploy_app.yml -->
+        <mxCell id="fileLocR5C1" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;deploy_app.yml&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3575" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR5C2" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Windows (NTFS)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3575" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR5C3" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;WSL2 via /mnt/c/&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3575" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Row 6: SSH keys (.key) -->
+        <mxCell id="fileLocR6C1" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;SSH keys (.key)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3610" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR6C2" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;&lt;b&gt;WSL2 (ext4)&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3610" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR6C3" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;&lt;b&gt;chmod 600 works here (real POSIX)&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3610" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Row 7: main.py -->
+        <mxCell id="fileLocR7C1" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;main.py&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3645" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR7C2" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Windows (NTFS)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3645" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR7C3" value="&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Ansible copies to OCI compute instance&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3645" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Row 8: Dockerfile -->
+        <mxCell id="fileLocR8C1" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Dockerfile&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3680" width="360" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR8C2" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Windows (NTFS)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="3680" width="300" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="fileLocR8C3" value="&lt;font color=&quot;#00E5CC&quot; style=&quot;font-family:Consolas;font-size:12px;&quot;&gt;Docker Desktop reads it from Windows FS&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#444466;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="3680" width="550" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Table legend note -->
+        <mxCell id="fileLocNote" value="&lt;font color=&quot;#888888&quot; style=&quot;font-size:11px;&quot;&gt;&lt;i&gt;Color coding: &lt;font color=&quot;#0096D6&quot;&gt;Blue = Windows/NTFS&lt;/font&gt; | &lt;font color=&quot;#4CAF50&quot;&gt;Green = WSL2/ext4&lt;/font&gt; | &lt;font color=&quot;#FF6B6B&quot;&gt;Red = contains secrets&lt;/font&gt; | &lt;font color=&quot;#00E5CC&quot;&gt;Teal = Docker&lt;/font&gt;&lt;/i&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="100" y="3730" width="1210" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Key insight callout below table -->
+        <mxCell id="fileLocInsight" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;KEY INSIGHT:&lt;/b&gt; Most files live on Windows NTFS, but SSH keys MUST live on WSL2 ext4 for chmod 600 to work.&lt;br&gt;Ansible runs from WSL2 and reads Windows files via the /mnt/c/ cross-mount. This is the bridge between the two worlds.&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=20;position=0.5;position2=0;base=25;rounded=1;fillColor=#2e2e1a;strokeColor=#FFD700;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="200" y="3760" width="900" height="70" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
