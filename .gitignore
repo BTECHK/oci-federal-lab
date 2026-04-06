@@ -78,3 +78,6 @@ nul
 # OCI audit logs and error dumps
 logs and errors/
 logs-and-errors/
+
+# Continue-here planning file
+.continue-here.md

@@ -1,4 +1,4 @@
-# AFS Cloud Engineer Interview Lab — Master Project Design
+# Federal Cloud Engineer Lab — Master Project Design
 ## Three Independent Hands-On Labs for Interview Preparation
 
 **Date:** 2026-03-18 | **Updated:** 2026-03-20

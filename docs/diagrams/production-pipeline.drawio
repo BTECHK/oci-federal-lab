@@ -69,7 +69,7 @@
         </mxCell>
 
         <!-- Lab callout -->
-        <mxCell id="col1_lab" value="&#x1F3D7;&#xFE0F; In Kyle's Lab:&#xa;This is what Kyle does manually &#x2014;&#xa;git add, commit, push, and merge&#xa;from his laptop terminal." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+        <mxCell id="col1_lab" value="&#x1F3D7;&#xFE0F; In Your Lab:&#xa;This is what you do manually &#x2014;&#xa;git add, commit, push, and merge&#xa;from your laptop terminal." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
           <mxGeometry x="50" y="740" width="430" height="80" as="geometry" />
         </mxCell>
 
@@ -193,7 +193,7 @@
         </mxCell>
 
         <!-- Lab callout -->
-        <mxCell id="col2_lab" value="&#x1F3D7;&#xFE0F; In Kyle's Lab:&#xa;He runs docker build and pytest&#xa;manually from his terminal.&#xa;Jenkins automates all of this." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+        <mxCell id="col2_lab" value="&#x1F3D7;&#xFE0F; In Your Lab:&#xa;You run docker build and pytest&#xa;manually from your terminal.&#xa;Jenkins automates all of this." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
           <mxGeometry x="590" y="750" width="430" height="80" as="geometry" />
         </mxCell>
 
@@ -355,7 +355,7 @@
         </mxCell>
 
         <!-- Lab callout -->
-        <mxCell id="col3_lab" value="&#x1F3D7;&#xFE0F; In Kyle's Lab:&#xa;OCIR (500MB free tier).&#xa;Production: Artifactory manages&#xa;ALL artifact types in one place." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+        <mxCell id="col3_lab" value="&#x1F3D7;&#xFE0F; In Your Lab:&#xa;OCIR (500MB free tier).&#xa;Production: Artifactory manages&#xa;ALL artifact types in one place." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
           <mxGeometry x="1130" y="700" width="430" height="80" as="geometry" />
         </mxCell>
 
@@ -689,7 +689,7 @@
         </mxCell>
 
         <!-- Lab callout -->
-        <mxCell id="col6_lab" value="&#x1F3D7;&#xFE0F; In Kyle's Lab:&#xa;curl + docker logs for monitoring.&#xa;Production: Prometheus + Grafana +&#xa;PagerDuty with on-call rotation." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
+        <mxCell id="col6_lab" value="&#x1F3D7;&#xFE0F; In Your Lab:&#xa;curl + docker logs for monitoring.&#xa;Production: Prometheus + Grafana +&#xa;PagerDuty with on-call rotation." style="rounded=1;whiteSpace=wrap;fillColor=#1a0a30;strokeColor=#533483;fontColor=#c0a0e0;fontSize=12;fontFamily=Consolas;arcSize=10;align=left;spacingLeft=12;" vertex="1" parent="1">
           <mxGeometry x="2830" y="710" width="500" height="80" as="geometry" />
         </mxCell>
 
@@ -754,12 +754,12 @@
         <mxCell id="table_bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0f1a2e;strokeColor=#533483;strokeWidth=2;arcSize=3;" vertex="1" parent="1">
           <mxGeometry x="20" y="1320" width="3360" height="610" as="geometry" />
         </mxCell>
-        <mxCell id="table_title" value="LAB-TO-PRODUCTION MAPPING &amp;mdash; What Kyle Builds vs. What Enterprises Run" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontFamily=Consolas;fontStyle=1;fontColor=#e0e0e0;" vertex="1" parent="1">
+        <mxCell id="table_title" value="LAB-TO-PRODUCTION MAPPING &amp;mdash; What You Build vs. What Enterprises Run" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontFamily=Consolas;fontStyle=1;fontColor=#e0e0e0;" vertex="1" parent="1">
           <mxGeometry x="40" y="1330" width="3320" height="40" as="geometry" />
         </mxCell>
 
         <!-- Table Headers -->
-        <mxCell id="th_lab" value="Kyle's Lab (this project)" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=16;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="th_lab" value="Your Lab (this project)" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=16;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="100" y="1385" width="1500" height="40" as="geometry" />
         </mxCell>
         <mxCell id="th_prod" value="Production Equivalent" style="rounded=1;whiteSpace=wrap;fillColor=#1a0050;strokeColor=#9C27B0;fontColor=#CE93D8;fontSize=16;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
@@ -958,12 +958,12 @@
         <mxCell id="ftable_bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#0f1a2e;strokeColor=#666688;strokeWidth=2;arcSize=3;dashed=1;dashPattern=6 3;" vertex="1" parent="1">
           <mxGeometry x="20" y="1940" width="3360" height="470" as="geometry" />
         </mxCell>
-        <mxCell id="ftable_title" value="LAB FILES &#x2192; PRODUCTION FILES &amp;mdash; How Kyle's Actual Files Map to Enterprise Equivalents" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontFamily=Consolas;fontStyle=1;fontColor=#e0e0e0;" vertex="1" parent="1">
+        <mxCell id="ftable_title" value="LAB FILES &#x2192; PRODUCTION FILES &amp;mdash; How Your Actual Files Map to Enterprise Equivalents" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontFamily=Consolas;fontStyle=1;fontColor=#e0e0e0;" vertex="1" parent="1">
           <mxGeometry x="40" y="1950" width="3320" height="40" as="geometry" />
         </mxCell>
 
         <!-- File Table Headers -->
-        <mxCell id="fth_lab" value="Lab File (Kyle's project)" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=15;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
+        <mxCell id="fth_lab" value="Lab File (your project)" style="rounded=1;whiteSpace=wrap;fillColor=#0d2137;strokeColor=#0096D6;fontColor=#80d0ff;fontSize=15;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="100" y="2000" width="1500" height="38" as="geometry" />
         </mxCell>
         <mxCell id="fth_prod" value="Production Equivalent" style="rounded=1;whiteSpace=wrap;fillColor=#1a0050;strokeColor=#9C27B0;fontColor=#CE93D8;fontSize=15;fontFamily=Consolas;fontStyle=1;arcSize=8;" vertex="1" parent="1">
@@ -1048,7 +1048,7 @@
         </mxCell>
 
         <!-- File table footer note -->
-        <mxCell id="ftable_footer" value="Every file Kyle touches in the lab teaches the same concept used in production &amp;mdash; the tooling scales, but the patterns stay the same." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontFamily=Consolas;fontColor=#888aaa;fontStyle=2;" vertex="1" parent="1">
+        <mxCell id="ftable_footer" value="Every file you touch in the lab teaches the same concept used in production &amp;mdash; the tooling scales, but the patterns stay the same." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontFamily=Consolas;fontColor=#888aaa;fontStyle=2;" vertex="1" parent="1">
           <mxGeometry x="40" y="2370" width="3320" height="30" as="geometry" />
         </mxCell>
 

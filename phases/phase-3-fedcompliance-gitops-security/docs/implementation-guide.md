@@ -1,4 +1,4 @@
-# AFS Cloud Engineer Interview Lab — Phase 3 Implementation Guide
+# Federal Cloud Engineer Lab — Phase 3 Implementation Guide
 ## CI/CD Pipeline Modernization & AI-Augmented Operations on OCI
 
 **Goal:** Build a production-grade CI/CD pipeline with security scanning and SBOM generation, deploy to Kubernetes via Helm and ArgoCD GitOps, implement API authentication, and add AI-powered security pattern detection.
@@ -303,7 +303,7 @@ ls ~/oci-federal-lab-phase3/terraform/modules/
 
 > **🧠 ELI5 — Terraform Modules:** In Phases 1 and 2, all your Terraform resources lived in flat files in one directory — `network.tf`, `compute.tf`, `database.tf` all side by side. This works for small projects, but imagine handing your code to a teammate who needs to build a second environment. They'd have to copy every file, change variable names, and hope nothing breaks. A Terraform **module** is like a reusable recipe card. You write the recipe once (in a `modules/network/` folder), then "call" it from your environment config: "use the network recipe, but plug in these specific values." The module handles the details; the caller just provides ingredients. Now you can create dev, staging, and prod environments by calling the same modules with different values — no copy-paste, no drift.
 
-> **💼 Interview Insight — Terraform Modules:** "Modules are the primary way teams enforce consistency at scale. At AFS, you would likely consume a pre-approved 'network module' that already has DISA STIG-compliant security group rules baked in. Your job is to call it with the right inputs, not reinvent the network every time. Flat files copied between projects lead to configuration drift where dev and prod gradually diverge in ways nobody notices until a security audit."
+> **💼 Interview Insight — Terraform Modules:** "Modules are the primary way teams enforce consistency at scale. In federal consulting, you would likely consume a pre-approved 'network module' that already has DISA STIG-compliant security group rules baked in. Your job is to call it with the right inputs, not reinvent the network every time. Flat files copied between projects lead to configuration drift where dev and prod gradually diverge in ways nobody notices until a security audit."
 
 **Module anatomy — every module has exactly three files:**
 
@@ -1750,7 +1750,7 @@ WantedBy=multi-user.target
 ### Step 22.11 — Build the FedCompliance FastAPI Application
 📍 **Editor** (build by hand — new application, full section-by-section)
 
-> **🧠 ELI5 — FedCompliance:** This is the application that will travel through the entire Phase 3 pipeline. It simulates a compliance management tool: it tracks security controls, runs compliance scans, and generates reports — the kind of tool a Cloud Engineer at AFS might build for a federal client who needs to demonstrate CMMC or NIST compliance. Today you build it manually and deploy it with Ansible. Days 2–4 will scan it for vulnerabilities, package it in a Helm chart, and deliver it via GitOps.
+> **🧠 ELI5 — FedCompliance:** This is the application that will travel through the entire Phase 3 pipeline. It simulates a compliance management tool: it tracks security controls, runs compliance scans, and generates reports — the kind of tool a cloud engineer in federal consulting might build for a federal client who needs to demonstrate CMMC or NIST compliance. Today you build it manually and deploy it with Ansible. Days 2–4 will scan it for vulnerabilities, package it in a Helm chart, and deliver it via GitOps.
 
 **Project structure for FedCompliance:**
 
@@ -2636,7 +2636,7 @@ app = FastAPI(
     description=(
         "Compliance management API for federal environments. "
         "Tracks CMMC and NIST controls, runs compliance scans, and generates reports. "
-        "Phase 3 of the AFS Cloud Engineer Interview Lab."
+        "Phase 3 of the Federal Cloud Engineer Lab."
     ),
     version="3.0.0",
     docs_url="/docs",        # Swagger UI at /docs
@@ -8149,7 +8149,7 @@ Your Phase 3 lab already has OCI Vault configured (Day 1, Step 22.9). Container 
 > **🧠 ELI5 — OCI DevOps vs Jenkins:** Jenkins is the Swiss Army knife of CI/CD — infinitely flexible, runs anywhere, but you manage the server, plugins, and Java runtime. OCI DevOps is Oracle's managed CI/CD service: you define build pipelines and deployment pipelines, Oracle runs them. It's integrated with OCIR, OKE, and OCI Functions out of the box. The trade-off: less flexibility, zero server management.
 
 **Why Jenkins was chosen for this lab:**
-- The target job description (AFS Cloud Engineer) specifies **CloudBees/Jenkins** experience
+- The target job description (federal cloud engineer) specifies **CloudBees/Jenkins** experience
 - Jenkins teaches pipeline-as-code concepts (Jenkinsfile) that transfer to any CI/CD system
 - Self-managing Jenkins demonstrates Linux admin skills (Java, systemd, plugin management)
 

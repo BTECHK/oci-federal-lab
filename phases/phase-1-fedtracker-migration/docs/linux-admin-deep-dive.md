@@ -1,7 +1,7 @@
-# AFS Cloud Engineer Interview Lab — Linux Admin Deep Dive
+# Federal Cloud Engineer Lab — Linux Admin Deep Dive
 ## Days 6-7: Oracle Linux Mastery for Federal Environments
 
-**Goal:** Build deep Linux administration skills that directly map to AFS Cloud Engineer / Linux Admin daily work. Every section includes intentional break-fix exercises and interview talking points.
+**Goal:** Build deep Linux administration skills that directly map to federal cloud engineer daily work. Every section includes intentional break-fix exercises and interview talking points.
 **Prerequisite:** Phase 1 Days 1-5 complete (FedTracker app deployed, basic hardening done)
 **Environment:** Same Phase 1 Oracle Linux 9 VM (or rebuild via Terraform if torn down)
 **Total Cost:** $0.00 (OCI Always Free tier)
@@ -10,7 +10,7 @@
 
 ## WHAT YOU'RE BUILDING
 
-These two days transform you from "I can use Linux" to "I can administer, troubleshoot, and harden Linux in a federal environment." Every section maps directly to skills the AFS hiring manager will probe.
+These two days transform you from "I can use Linux" to "I can administer, troubleshoot, and harden Linux in a federal environment." Every section maps directly to skills a federal hiring manager will probe.
 
 | Topic | What You'll Do | Interview Question It Answers |
 |-------|---------------|------------------------------|
@@ -1204,7 +1204,7 @@ sudo setfacl -x u:sre-admin /data/appdata/compliance-reports
 
 **[VM TERMINAL]**
 
-These exercises simulate real scenarios you'll face at AFS. Each follows the pattern: **symptom → diagnosis → root cause → fix → verification**.
+These exercises simulate real scenarios you'll face in federal environments. Each follows the pattern: **symptom → diagnosis → root cause → fix → verification**.
 
 #### Lab 1: "The Application is Returning 502 Errors"
 
@@ -1790,7 +1790,7 @@ curl -s http://localhost:8000/health | python3 -m json.tool
 | Services needing restart | `sudo needs-restarting -s` (services), `-r` (reboot check) |
 | Zero-downtime kernel patch | `sudo uptrack-upgrade -y` (Oracle Ksplice) |
 
-#### Skills Mapped to AFS Job Description
+#### Skills Mapped to Federal Cloud Engineer Job Description
 
 | JD Requirement | Where You Practiced It |
 |---------------|----------------------|

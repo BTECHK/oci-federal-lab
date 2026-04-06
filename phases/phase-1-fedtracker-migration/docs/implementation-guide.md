@@ -1,4 +1,4 @@
-# AFS Cloud Engineer Interview Lab — Phase 1 Implementation Guide
+# Federal Cloud Engineer Lab — Phase 1 Implementation Guide
 ## Legacy-to-Cloud Migration on OCI
 
 **Goal:** Simulate a real legacy-to-cloud migration — build a "legacy" app locally, containerize it, push to OCI Container Registry, and deploy on OCI compute. Then automate with Terraform, Ansible, Jenkins, and assess FedRAMP readiness with an AI-powered compliance agent — while learning REST API fundamentals by building a FastAPI app from scratch.
@@ -106,7 +106,7 @@ Internet
 └────────────────────────────────────────────────────────┘
 ```
 
-> **Why start with a mess?** Every production environment you'll encounter at AFS has legacy debt. Starting manually teaches you what automation replaces. When an interviewer asks "why use Terraform?", you'll have a real answer: "because I built it by hand first and it took hours — Terraform does it in minutes and is repeatable."
+> **Why start with a mess?** Every production environment you'll encounter in federal projects has legacy debt. Starting manually teaches you what automation replaces. When an interviewer asks "why use Terraform?", you'll have a real answer: "because I built it by hand first and it took hours — Terraform does it in minutes and is repeatable."
 
 ---
 
@@ -622,7 +622,7 @@ uname -m
 
 ## PHASE 2: ORACLE LINUX ADMIN FUNDAMENTALS (2 hrs)
 
-> This is the most important phase for interview prep. Every command here maps directly to questions you'll be asked about Linux administration at AFS. You're building hands-on muscle memory so you can answer "how would you..." questions with "I would..." backed by experience.
+> This is the most important phase for interview prep. Every command here maps directly to questions you'll be asked about Linux administration in federal environments. You're building hands-on muscle memory so you can answer "how would you..." questions with "I would..." backed by experience.
 >
 > 📍 **Where work happens:** VM Terminal (SSH into your Oracle Linux VM).
 >

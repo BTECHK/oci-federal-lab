@@ -18,7 +18,7 @@ This is a learning lab, not a production application. The "product" is the infra
 
 ## Goals
 
-- Demonstrate hands-on proficiency with every tool in the AFS Cloud Engineer / Linux Admin JD
+- Demonstrate hands-on proficiency with every tool in federal cloud engineer job descriptions
 - Build muscle memory on Oracle Linux administration (SELinux, LVM, systemd, firewalld, PAM, sysctl)
 - Write Terraform, Ansible, Bash, Python, and Jenkinsfiles by hand (not copy-paste)
 - Build FastAPI applications section-by-section to understand API design fundamentals

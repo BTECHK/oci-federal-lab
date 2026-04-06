@@ -11,7 +11,7 @@ INVENTORY="phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini"
 # Must run from repo root
 if [ ! -d "$TERRAFORM_DIR" ]; then
   echo "ERROR: Run this from the repo root directory."
-  echo "  cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab"
+  echo "  cd /mnt/c/Users/<your-windows-username>/OneDrive/Desktop/github/oci-federal-lab"
   exit 1
 fi
 
@@ -41,12 +41,12 @@ cat > "$SSH_CONFIG" <<EOF
 Host p1-bastion
     HostName $BASTION_IP
     User opc
-    IdentityFile ~/.ssh/oci-federal-lab/oci-fedlab-bastion-ssh-key-2026-03-26.key
+    IdentityFile ~/.ssh/oci-federal-lab/<your-bastion-ssh-key>.key
 
 Host p1-app-server
     HostName $APP_IP
     User opc
-    IdentityFile ~/.ssh/oci-federal-lab/oci-fedlab-privsubnet-appserver-private-ssh-key-2026-03-26.key
+    IdentityFile ~/.ssh/oci-federal-lab/<your-appserver-ssh-key>.key
     ProxyJump p1-bastion
 EOF
 chmod 600 "$SSH_CONFIG"

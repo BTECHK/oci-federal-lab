@@ -1,6 +1,6 @@
 #!/bin/bash
 # WSL2 Setup Script — installs Terraform and OCI CLI
-# Run from WSL2: bash /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab/tools/setup-wsl2.sh
+# Run from WSL2: bash /mnt/c/Users/<your-windows-username>/OneDrive/Desktop/github/oci-federal-lab/tools/setup-wsl2.sh
 
 set -e
 
@@ -37,4 +37,4 @@ echo "Docker:     $(command -v docker && echo OK || echo 'MISSING — enable WSL
 echo "OCI CLI:    $(command -v oci && echo OK || echo MISSING)"
 echo ""
 echo "Done. Run everything from:"
-echo "  cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab"
+echo "  cd /mnt/c/Users/<your-windows-username>/OneDrive/Desktop/github/oci-federal-lab"

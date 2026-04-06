@@ -1,7 +1,7 @@
 #!/bin/bash
 # Destroy & Rebuild with Timing — captures real metrics for interview prep
 # Run from repo root:
-#   cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
+#   cd /mnt/c/Users/<your-windows-username>/OneDrive/Desktop/github/oci-federal-lab
 #   bash tools/rebuild-and-time.sh
 
 set -e

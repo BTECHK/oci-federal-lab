@@ -67,7 +67,7 @@
         <mxCell id="winKernel" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Windows Kernel (NT)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;NT kernel — not POSIX&lt;br&gt;No fork(), no Unix sockets&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="110" y="2600" width="280" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="winFS" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;NTFS Filesystem&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;C:\Users\k_a_s\...&lt;br&gt;ACLs via icacls (not chmod)&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;" vertex="1" parent="1">
+        <mxCell id="winFS" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;NTFS Filesystem&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;C:\Users\&lt;your-windows-username&gt;\...&lt;br&gt;ACLs via icacls (not chmod)&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="420" y="2600" width="280" height="70" as="geometry" />
         </mxCell>
         <mxCell id="winHyperV" value="&lt;font color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Hyper-V Hypervisor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;Built into Windows 11 Pro&lt;br&gt;Type-1 hypervisor (bare-metal)&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#006699;strokeColor=#005588;strokeWidth=1;" vertex="1" parent="1">
@@ -239,7 +239,7 @@
           <mxGeometry x="110" y="1940" width="440" height="80" as="geometry" />
         </mxCell>
 
-        <mxCell id="callout4" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Shared filesystem — same files, two paths:&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;Windows: C:\Users\k_a_s\...\oci-federal-lab&lt;br&gt;WSL2:&amp;nbsp;&amp;nbsp; /mnt/c/Users/k_a_s/.../oci-federal-lab&lt;/font&gt;&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=30;position=0.5;position2=1;base=25;rounded=1;fillColor=#2e2e1a;strokeColor=#FFD700;strokeWidth=2;align=left;spacingLeft=15;" vertex="1" parent="1">
+        <mxCell id="callout4" value="&lt;font color=&quot;#FFD700&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Shared filesystem — same files, two paths:&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-family:Consolas;&quot;&gt;Windows: C:\Users\&lt;your-windows-username&gt;\...\oci-federal-lab&lt;br&gt;WSL2:&amp;nbsp;&amp;nbsp; /mnt/c/Users/&lt;your-windows-username&gt;/.../oci-federal-lab&lt;/font&gt;&lt;/font&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=30;position=0.5;position2=1;base=25;rounded=1;fillColor=#2e2e1a;strokeColor=#FFD700;strokeWidth=2;align=left;spacingLeft=15;" vertex="1" parent="1">
           <mxGeometry x="110" y="2050" width="500" height="80" as="geometry" />
         </mxCell>
 
@@ -631,16 +631,16 @@
         <mxCell id="pathsContent" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2a3e;strokeColor=#555577;strokeWidth=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="110" y="2300" width="540" height="210" as="geometry" />
         </mxCell>
-        <mxCell id="path1" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Windows project dir:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;C:\Users\k_a_s\OneDrive\Desktop\github\oci-federal-lab&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="path1" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Windows project dir:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;C:\Users\&lt;your-windows-username&gt;\OneDrive\Desktop\github\oci-federal-lab&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="125" y="2310" width="510" height="35" as="geometry" />
         </mxCell>
-        <mxCell id="path2" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;WSL2 project dir:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;/mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="path2" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;WSL2 project dir:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;/mnt/c/Users/&lt;your-windows-username&gt;/OneDrive/Desktop/github/oci-federal-lab&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="125" y="2355" width="510" height="35" as="geometry" />
         </mxCell>
         <mxCell id="path3" value="&lt;font color=&quot;#4CAF50&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;WSL2 SSH keys:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;~/.ssh/oci_lab_key  (chmod 600 — real POSIX permissions)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="125" y="2400" width="510" height="35" as="geometry" />
         </mxCell>
-        <mxCell id="path4" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Windows SSH keys:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;C:\Users\k_a_s\.ssh\  (icacls for permissions)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+        <mxCell id="path4" value="&lt;font color=&quot;#0096D6&quot; style=&quot;font-size:12px;&quot;&gt;&lt;b&gt;Windows SSH keys:&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;C:\Users\&lt;your-windows-username&gt;\.ssh\  (icacls for permissions)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=0;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="125" y="2445" width="510" height="35" as="geometry" />
         </mxCell>
 
@@ -649,17 +649,17 @@
         <!-- ============================================================ -->
 
         <!-- WSL2: SSH key path callout -->
-        <mxCell id="fpWSLSSHKey" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;SSH Key (ext4 native):&lt;/b&gt;&lt;br&gt;~/.ssh/oci-federal-lab/&lt;br&gt;oci-fedlab-bastion-ssh-key-2026-03-26.key&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#FFD700&quot;&gt;Stored in ext4 — NOT /mnt/c/&lt;br&gt;chmod 600 works here&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+        <mxCell id="fpWSLSSHKey" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;SSH Key (ext4 native):&lt;/b&gt;&lt;br&gt;~/.ssh/oci-federal-lab/&lt;br&gt;&lt;your-bastion-ssh-key&gt;.key&lt;br&gt;&lt;br&gt;&lt;font color=&quot;#FFD700&quot;&gt;Stored in ext4 — NOT /mnt/c/&lt;br&gt;chmod 600 works here&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
           <mxGeometry x="510" y="1170" width="340" height="110" as="geometry" />
         </mxCell>
 
         <!-- WSL2: Ansible runs FROM here callout -->
-        <mxCell id="fpWSLAnsible" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Ansible runs FROM WSL2:&lt;/b&gt;&lt;br&gt;ansible-playbook \&lt;br&gt;&amp;nbsp; -i /mnt/c/Users/k_a_s/OneDrive/Desktop/&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;github/oci-federal-lab/&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;ansible/inventory.ini \&lt;br&gt;&amp;nbsp; ansible/playbooks/harden.yml&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+        <mxCell id="fpWSLAnsible" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Ansible runs FROM WSL2:&lt;/b&gt;&lt;br&gt;ansible-playbook \&lt;br&gt;&amp;nbsp; -i /mnt/c/Users/&lt;your-windows-username&gt;/OneDrive/Desktop/&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;github/oci-federal-lab/&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;ansible/inventory.ini \&lt;br&gt;&amp;nbsp; ansible/playbooks/harden.yml&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
           <mxGeometry x="510" y="1290" width="340" height="110" as="geometry" />
         </mxCell>
 
         <!-- WSL2: Cross-mount reads callout -->
-        <mxCell id="fpWSLMount" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Cross-mount path:&lt;/b&gt;&lt;br&gt;/mnt/c/Users/k_a_s/OneDrive/Desktop/&lt;br&gt;&amp;nbsp; github/oci-federal-lab/&lt;br&gt;&lt;font color=&quot;#FFD700&quot;&gt;NTFS via 9P — slower than ext4&lt;br&gt;Reads .tf, .yml, .py from Windows&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+        <mxCell id="fpWSLMount" value="&lt;font color=&quot;#90EE90&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Cross-mount path:&lt;/b&gt;&lt;br&gt;/mnt/c/Users/&lt;your-windows-username&gt;/OneDrive/Desktop/&lt;br&gt;&amp;nbsp; github/oci-federal-lab/&lt;br&gt;&lt;font color=&quot;#FFD700&quot;&gt;NTFS via 9P — slower than ext4&lt;br&gt;Reads .tf, .yml, .py from Windows&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a2a1a;strokeColor=#90EE90;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
           <mxGeometry x="510" y="1410" width="340" height="100" as="geometry" />
         </mxCell>
 
@@ -668,7 +668,7 @@
         <!-- ============================================================ -->
 
         <!-- Windows: Project repo callout -->
-        <mxCell id="fpWinRepo" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Project Repo (NTFS):&lt;/b&gt;&lt;br&gt;C:\Users\k_a_s\OneDrive\Desktop\&lt;br&gt;&amp;nbsp; github\oci-federal-lab\&lt;br&gt;&lt;font color=&quot;#AAAAAA&quot;&gt;Git clone lives here — OneDrive synced&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#87CEEB;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
+        <mxCell id="fpWinRepo" value="&lt;font color=&quot;#87CEEB&quot; style=&quot;font-family:Consolas;font-size:11px;&quot;&gt;&lt;b&gt;Project Repo (NTFS):&lt;/b&gt;&lt;br&gt;C:\Users\&lt;your-windows-username&gt;\OneDrive\Desktop\&lt;br&gt;&amp;nbsp; github\oci-federal-lab\&lt;br&gt;&lt;font color=&quot;#AAAAAA&quot;&gt;Git clone lives here — OneDrive synced&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a1a2e;strokeColor=#87CEEB;strokeWidth=1;dashed=1;dashPattern=6 3;align=left;spacingLeft=10;fontFamily=Consolas;" vertex="1" parent="1">
           <mxGeometry x="520" y="2690" width="310" height="80" as="geometry" />
         </mxCell>
 
