@@ -65,6 +65,9 @@ Thumbs.db
 # Large binary files
 *.pdf
 
+# Large generated reports (OpenSCAP, etc.)
+**/screenshots/*.html
+
 # Claude Code / planning
 .claude_session_context.md
 .claude/

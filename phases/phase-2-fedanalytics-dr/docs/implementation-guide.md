@@ -731,11 +731,13 @@ Host p2-app-server
     HostName ${APP_IP}
     User opc
     IdentityFile ~/.ssh/oci_key
-    ProxyJump p2-bastion
+    ProxyCommand ssh -W %h:%p p2-bastion
 SSHEOF
 ```
 
 > **Why `-p2` suffix?** If you still have Phase 1 SSH config entries, the `-p2` suffix prevents conflicts. You can use `ssh p2-app-server` to connect to this Phase 2 environment.
+>
+> **Why `ProxyCommand` instead of `ProxyJump`?** ProxyJump (`-J`) only works reliably with default key names. `ProxyCommand` with `-W %h:%p` explicitly uses whatever IdentityFile you set for the bastion — more portable across WSL2, Git Bash, and native Linux.
 
 ```bash
 # Test SSH connectivity
@@ -743,7 +745,7 @@ ssh p2-bastion "hostname && echo 'Bastion OK'"
 # Expected: bastion hostname printed
 
 ssh p2-app-server "hostname && echo 'App Server OK'"
-# Expected: app-server hostname printed (via bastion ProxyJump)
+# Expected: app-server hostname printed (via ProxyCommand through bastion)
 ```
 
 <sub><em style="color: #999; font-size: 0.65em;">
