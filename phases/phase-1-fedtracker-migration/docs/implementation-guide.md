@@ -6428,6 +6428,99 @@ ss -tlnp | grep 8000
 > podman run -v /opt/fedtracker/data:/data:Z fedtracker:1.0
 > ```
 
+### Step 14.6 — Docker Compose: Multi-Container Orchestration
+📍 **Local Terminal (WSL2)**
+
+> **🧠 ELI5 — What is Docker Compose?** So far you've been running containers one at a time with `podman run` or `docker run`. That works for a single container. But what happens when your app needs a database, a cache, and a web server all running together? You'd need three separate `docker run` commands with networking, volume mounts, and environment variables — and you'd have to remember the exact flags every time.
+>
+> Docker Compose solves this by describing all your containers in a single YAML file. Instead of 3 commands with 15 flags each, you run `docker compose up` and everything starts together with the right networking, volumes, and dependencies. Think of it as a recipe card vs remembering the recipe from memory.
+
+> **Podman Compose vs Docker Compose:** On Oracle Linux, `podman-compose` provides the same functionality using Podman's daemonless engine. Docker Compose works on your Windows/Mac workstation. Same YAML file, both tools.
+
+Create a `docker-compose.yml` in your project's `docker/` directory:
+
+```bash
+cd ~/oci-federal-lab/phases/phase-1-fedtracker-migration/docker
+```
+
+```yaml
+# docker-compose.yml — FedTracker local development stack
+# Usage: docker compose up -d
+# Stop:  docker compose down
+
+services:
+  fedtracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fedtracker-app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_TYPE=sqlite
+      - SQLITE_PATH=/app/fedtracker.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+```
+
+<sub><em>
+
+| Key | What It Does |
+|-----|-------------|
+| `services:` | Top-level block — each entry is one container. You could add `db:`, `redis:`, `nginx:` for a multi-service stack |
+| `build: context: .` | Build the image from the Dockerfile in the current directory (instead of pulling a pre-built image) |
+| `container_name` | Fixed name instead of Compose's auto-generated `docker-fedtracker-1` |
+| `ports: "8000:8000"` | Map host port 8000 → container port 8000 (same as `docker run -p 8000:8000`) |
+| `environment:` | Set environment variables inside the container (same as `docker run -e`) |
+| `healthcheck:` | Docker periodically runs this command inside the container. If it fails 3 times, the container is marked unhealthy |
+| `restart: unless-stopped` | Auto-restart on crash. Stops only when you explicitly `docker compose down` |
+
+</em></sub>
+
+**Run it:**
+
+```bash
+# Build and start in detached mode
+docker compose up -d --build
+
+# Check status
+docker compose ps
+# Expected: fedtracker-app  running (healthy)
+
+# View logs
+docker compose logs -f fedtracker
+# Ctrl+C to stop following
+
+# Test it
+curl http://localhost:8000/health
+curl http://localhost:8000/personnel
+
+# Tear down (stops and removes containers)
+docker compose down
+```
+
+<sub><em>
+
+| Command | Flag(s) | What It Does |
+|---------|---------|-------------|
+| `docker compose up` | `-d` = detached (background), `--build` = rebuild image first | Starts all services defined in `docker-compose.yml`. Without `--build`, it reuses the cached image |
+| `docker compose ps` | | Shows status of all services (like `docker ps` but scoped to this compose file) |
+| `docker compose logs` | `-f` = follow (live stream) | Aggregates logs from all services. Without `-f`, shows existing logs and exits |
+| `docker compose down` | | Stops containers, removes them, removes the default network. Volumes survive unless you add `-v` |
+
+</em></sub>
+
+> **💼 Interview Insight — When to Use Compose:** "I use Docker Compose for local development when I need multiple services running together — the app plus a database, or a frontend plus backend plus cache. For production deployment to Kubernetes, the same container images get described in Helm charts instead. Compose is the local equivalent of what Helm does in production. In Phase 3, you'll see that progression: Compose locally → Helm charts in k3s."
+
+> **On the VM (Podman equivalent):** If you want to run Compose on Oracle Linux, install `podman-compose` via `pip3 install podman-compose`. The same `docker-compose.yml` works — just run `podman-compose up -d` instead. We don't do this in the lab because the VM deployment uses Podman directly, but it's worth knowing for interview discussions.
+
+---
+
 ### Phase 14 Troubleshooting
 
 | Check | Expected | If It Fails |
@@ -6437,6 +6530,7 @@ ss -tlnp | grep 8000
 | `podman pull` from OCIR succeeds | Image downloaded on VM | Auth token expired? Wrong region in URL? Try `podman login iad.ocir.io` again |
 | `podman run` starts container | Running, port 8000 mapped | Port in use? `sudo systemctl stop fedtracker`. ARM mismatch? Check `podman inspect --format '{{.Architecture}}'` |
 | `curl localhost:8000/health` | Healthy response | Container crashed? `podman logs fedtracker-app`. Common: missing env var, wrong port |
+| `docker compose up -d` starts | Container running (healthy) | Docker Desktop not running? Port 8000 in use? Check `docker compose logs` for errors |
 
 ---
 

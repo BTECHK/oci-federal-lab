@@ -171,6 +171,20 @@ Client (curl/browser)
                                          the same path
 ```
 
+> **🧠 ELI5 — Reading the Request Path:** Follow the arrows from top to bottom — this is what happens every time someone calls your API:
+>
+> | Step | Component | What Happens | Phase Where You Built This |
+> |------|-----------|-------------|---------------------------|
+> | 1 | **Client** | Sends HTTP request with `X-API-Key` header | — |
+> | 2 | **OCI API Gateway** | Receives request, applies rate limiting (e.g., 100 req/min per client). If over limit, returns `429 Too Many Requests` without ever hitting your app | Phase 2 |
+> | 3 | **k3s NodePort/Ingress** | Routes traffic from the gateway to the correct pod inside the Kubernetes cluster | Phase 2 (k3s setup) → Phase 3 (Helm) |
+> | 4 | **Auth Middleware** | FastAPI middleware reads `X-API-Key` header, validates it against the database. Invalid key = `401 Unauthorized` | Phase 3 (this phase) |
+> | 5 | **Endpoint Handler** | Business logic runs — compliance scan, report generation, control listing | Phase 3 (this phase) |
+> | 6 | **Oracle Autonomous DB** | Reads/writes compliance data, API key records, audit log entries | Phase 2 (Terraform) |
+> | 7 | **Response** | JSON response flows back through the same path to the client | — |
+>
+> **Why layered security matters:** Each layer catches different threats. The API Gateway stops abuse (DDoS, rate limit violations) before your app sees it. The auth middleware stops unauthorized access. The endpoint handler validates business logic. The DB enforces data integrity. No single layer handles everything — defense in depth.
+
 > **Why this progression?** Phase 1 deployed manually (SSH + systemctl). Phase 2 deployed to k3s with raw manifests. Phase 3 starts the same way (Day 2), then upgrades to Helm + ArgoCD (Day 3). Each phase adds a layer of abstraction — but you always build the lower layer first so you understand what the abstraction replaces. An interviewer who asks "what does Helm actually do?" will get a real answer because you deployed without it first.
 
 ---
@@ -192,7 +206,7 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 
 ## API PILLAR — PHASE 3: API AUTHENTICATION & REQUEST LIFECYCLE
 
-> Phase 1 taught REST fundamentals (HTTP verbs, Pydantic, status codes). Phase 2 introduced webhooks and API Gateway. Phase 3 completes the API pillar with **authentication** — how APIs verify who is calling them and what they're allowed to do. This is the most interview-relevant API topic for federal/enterprise roles.
+> Phase 1 taught REST fundamentals (HTTP verbs, Pydantic, status codes). Phase 2 introduced webhooks (event-driven API patterns with HMAC signature validation) and OCI API Gateway (managed entry point with rate limiting). Phase 3 completes the API pillar with **authentication** — how APIs verify who is calling them and what they're allowed to do. The full request path diagram above shows all three phases working together: API Gateway (Phase 2) → k3s routing (Phase 2/3) → auth middleware (Phase 3) → endpoint logic. This is the most interview-relevant API topic for federal/enterprise roles.
 
 ### API Authentication Methods — ELI5
 
@@ -7330,6 +7344,244 @@ oci os object list --bucket-name app_logs --prefix compliance/ --output table
 
 ---
 
+## PHASE 25B: BREAK-FIX EXERCISES — KUBERNETES, PIPELINE & SECURITY (1-1.5 hrs)
+
+> **Why break-fix exercises?** In Phase 1, you broke the firewall, file permissions, and the systemd service on purpose — then diagnosed and fixed them. Those exercises built the troubleshooting muscle memory that interviewers test. Phase 3 introduces more complex systems (Kubernetes, CI/CD pipelines, Helm, ArgoCD) that fail in more complex ways. These exercises simulate the real failures you'll encounter in production federal environments.
+>
+> 📍 **Where work happens:** Bastion Terminal (k3s, Jenkins), App Node Terminal, Local Terminal.
+>
+> 🛠️ **Approach:** Each exercise follows the same pattern: (1) break something deliberately, (2) observe the symptoms, (3) diagnose using the tools you've learned, (4) fix it, (5) verify the fix.
+
+---
+
+### Exercise 1: Pod in CrashLoopBackOff
+📍 **Bastion Terminal**
+
+> **🧠 ELI5 — CrashLoopBackOff:** Kubernetes tries to run your pod. It crashes. Kubernetes restarts it. It crashes again. Kubernetes waits longer, restarts it. Crashes. The wait time doubles each time (exponential backoff) — 10s, 20s, 40s, up to 5 minutes. This is the most common pod failure state, and knowing how to diagnose it quickly is essential.
+
+**Break it:**
+
+```bash
+# Corrupt the FedCompliance startup command
+kubectl -n fedcompliance set env deployment/fedcompliance SQLITE_PATH=/nonexistent/path/db.sqlite
+# This forces a restart with a bad path — the app will crash trying to create the DB
+```
+
+**Observe the symptoms:**
+
+```bash
+# Watch the pod cycle through CrashLoopBackOff
+kubectl -n fedcompliance get pods -w
+# Expected: STATUS changes from Running → Error → CrashLoopBackOff
+# Ctrl+C after you see CrashLoopBackOff
+
+# Check pod events
+kubectl -n fedcompliance describe pod -l app=fedcompliance | tail -20
+# Look for: "Back-off restarting failed container"
+```
+
+**Diagnose:**
+
+```bash
+# Read the container logs — this is always the first step
+kubectl -n fedcompliance logs -l app=fedcompliance --previous
+# The --previous flag shows logs from the CRASHED container (not the new one trying to start)
+# Expected: Python traceback showing the bad SQLITE_PATH
+```
+
+<sub><em>
+
+| Command | Flag(s) | What It Does |
+|---------|---------|-------------|
+| `kubectl get pods -w` | `-w` = watch (live updates) | Shows pod status in real time. You'll see the status cycle through Error → CrashLoopBackOff |
+| `kubectl describe pod -l app=X` | `-l` = label selector | Shows events, conditions, and container state. The Events section at the bottom tells you what Kubernetes tried to do |
+| `kubectl logs --previous` | `--previous` = previous container instance | When a container crashes and restarts, `kubectl logs` shows the NEW container's logs (which may be empty). `--previous` shows the CRASHED container's logs — where the error actually is |
+
+</em></sub>
+
+**Fix it:**
+
+```bash
+# Restore the correct path
+kubectl -n fedcompliance set env deployment/fedcompliance SQLITE_PATH=/app/fedcompliance.db
+# Kubernetes rolls out a new pod with the correct env var
+
+# Verify
+kubectl -n fedcompliance get pods -w
+# Expected: New pod reaches Running status, stays there
+curl -s http://localhost:30080/health | python3 -m json.tool
+```
+
+> **💼 Interview Insight — CrashLoopBackOff:** "When I see CrashLoopBackOff, my first command is always `kubectl logs --previous` — the crashed container's logs tell you exactly what went wrong. Common causes: missing environment variables, bad config paths, database connection failures, or insufficient memory (OOMKilled). The `describe pod` events section tells you if it's a Kubernetes-level issue (image pull failure, resource limits) vs an application-level issue (crash on startup)."
+
+---
+
+### Exercise 2: Pipeline Security Gate Blocks Deployment
+📍 **Browser (Jenkins UI)** + **Bastion Terminal**
+
+> **🧠 ELI5 — Why Gates Fail:** Your Jenkins pipeline has a Trivy security scan that blocks deployment if CRITICAL CVEs are found. In production, this is how you prevent shipping known vulnerabilities. In this exercise, you deliberately introduce a vulnerable base image and watch the gate catch it.
+
+**Break it:**
+
+```bash
+# Edit the Dockerfile to use an old, vulnerable base image
+cd ~/fedcompliance-app
+# Save the original
+cp Dockerfile Dockerfile.backup
+
+# Switch to an older image with known CVEs
+sed -i 's|FROM oraclelinux:9-slim|FROM python:3.9-slim-buster|' Dockerfile
+# python:3.9-slim-buster has known HIGH/CRITICAL CVEs in system libraries
+
+# Commit and push to trigger the pipeline
+git add Dockerfile
+git commit -m "test: use older base image (break-fix exercise)"
+git push
+```
+
+**Observe:**
+
+```bash
+# Watch the Jenkins pipeline in the browser
+# Navigate to: http://<BASTION_IP>:8080 → fedcompliance pipeline → latest build
+# Expected: Stage 3 (Trivy Scan) turns RED — build fails before reaching deployment
+
+# Check the Trivy output in Jenkins console log
+# Click the failed build → "Console Output"
+# Look for: "CRITICAL" and "HIGH" vulnerability counts
+```
+
+**Fix it:**
+
+```bash
+# Restore the secure base image
+cp Dockerfile.backup Dockerfile
+git add Dockerfile
+git commit -m "fix: restore oraclelinux:9-slim base image"
+git push
+# Pipeline re-runs with clean scan — deployment proceeds
+```
+
+> **💼 Interview Insight — Security Gates:** "In our pipeline, Trivy runs as a blocking gate — not just a report. If it finds CRITICAL or HIGH CVEs in the container image, the build fails before the image is ever pushed to the registry. The insecure image never reaches production. This is shift-left security — catching vulnerabilities at build time, not in production."
+
+---
+
+### Exercise 3: Helm Rollback After Bad Config
+📍 **Bastion Terminal**
+
+> **🧠 ELI5 — Why Helm Rollback Exists:** You push a config change that breaks the app. In the old world (raw `kubectl apply`), you'd have to remember what the previous config looked like, find the old YAML, and re-apply it. Helm keeps a history of every release — you just say "go back to revision 3" and it restores everything.
+
+**Break it:**
+
+```bash
+# Deploy a bad config change via Helm
+helm -n fedcompliance upgrade fedcompliance-app ./helm/fedcompliance \
+  --set replicas=2 \
+  --set image.tag=nonexistent-tag-12345
+# This sets a tag that doesn't exist in OCIR — pods will fail with ImagePullBackOff
+```
+
+**Observe:**
+
+```bash
+# Check pod status
+kubectl -n fedcompliance get pods
+# Expected: New pods stuck in ImagePullBackOff, old pods terminating
+
+# Check Helm release history
+helm -n fedcompliance history fedcompliance-app
+# Shows: current release = FAILED, previous = DEPLOYED
+```
+
+**Diagnose:**
+
+```bash
+# Check why the pod can't start
+kubectl -n fedcompliance describe pod -l app=fedcompliance | grep -A5 "Events"
+# Expected: "Failed to pull image" with the nonexistent tag
+```
+
+**Fix it:**
+
+```bash
+# Roll back to the last working release
+helm -n fedcompliance rollback fedcompliance-app
+# Helm restores the previous revision's configuration
+
+# Verify
+kubectl -n fedcompliance get pods
+# Expected: Pods running with the correct image tag
+curl -s http://localhost:30080/health | python3 -m json.tool
+
+# Check history — rollback creates a new revision pointing to the old config
+helm -n fedcompliance history fedcompliance-app
+```
+
+<sub><em>
+
+| Command | What It Does |
+|---------|-------------|
+| `helm upgrade --set image.tag=X` | Updates the release with a new value. If the value is bad, pods fail |
+| `helm history` | Shows every revision — number, status (DEPLOYED/FAILED/SUPERSEDED), timestamp |
+| `helm rollback <release>` | Restores the previous working revision. Creates a NEW revision that points to the old config (Helm never deletes history) |
+
+</em></sub>
+
+> **💼 Interview Insight — Rollback Strategy:** "Helm release history is our safety net. Every `helm upgrade` creates a numbered revision. If the new revision fails, `helm rollback` restores the previous working state in seconds. We keep at least 10 revisions (`--history-max 10`). In a federal change management process, each revision maps to an approved change request — the history is your audit trail."
+
+---
+
+### Exercise 4: ArgoCD Out-of-Sync Detection
+📍 **Bastion Terminal**
+
+> **🧠 ELI5 — What "Out of Sync" Means:** ArgoCD watches your git repo and compares it to what's running in the cluster. If someone changes the cluster directly (bypassing git), ArgoCD flags it as "OutOfSync" — the cluster doesn't match the source of truth. This is how GitOps enforces that ALL changes go through git.
+
+**Break it:**
+
+```bash
+# Make a direct change to the cluster, bypassing git
+kubectl -n fedcompliance scale deployment/fedcompliance --replicas=5
+# This creates a "drift" — the cluster has 5 replicas but git says 2
+```
+
+**Observe:**
+
+```bash
+# Check ArgoCD status
+argocd app get fedcompliance-app
+# Expected: Status = OutOfSync, Health = Healthy
+# The app still works (5 replicas), but ArgoCD knows it doesn't match git
+
+# In ArgoCD UI (browser): the app card shows yellow "OutOfSync" badge
+```
+
+**Fix it (two options):**
+
+```bash
+# Option A: Let ArgoCD fix it (restore git state)
+argocd app sync fedcompliance-app
+# ArgoCD re-applies the git config — replicas go back to 2
+
+# Option B: If the change was intentional, update git
+# Edit values.yaml → replicas: 5 → git push
+# ArgoCD syncs and status returns to "Synced"
+```
+
+> **💼 Interview Insight — GitOps Drift Detection:** "ArgoCD gives us continuous drift detection. If someone runs `kubectl scale` directly — whether it's a well-meaning engineer or a compromised account — ArgoCD flags it within seconds. In our setup, ArgoCD auto-syncs to restore the git state, so manual changes are automatically reverted. This enforces the principle that git is the single source of truth for cluster state."
+
+---
+
+### Break-Fix Exercises Complete ✅
+
+| Exercise | What Broke | Skill Tested | Interview Topic |
+|----------|-----------|-------------|-----------------|
+| 1. CrashLoopBackOff | Bad environment variable | Pod debugging with `kubectl logs --previous` | "How do you diagnose a crashing pod?" |
+| 2. Pipeline gate | Vulnerable base image | Security gate enforcement | "How do you prevent vulnerable images in production?" |
+| 3. Helm rollback | Bad image tag | Release management and rollback | "How do you roll back a bad deployment?" |
+| 4. ArgoCD drift | Direct kubectl change | GitOps drift detection | "What happens when someone changes the cluster manually?" |
+
+---
+
 ## PHASE 26: END-TO-END VALIDATION & TEARDOWN (4-6 hrs)
 
 **Day 5 - What you are doing:** You are not building new infrastructure. You are proving the entire system works as designed, hardening the developer workflow with pre-commit secrets scanning, documenting what you built, and then destroying everything cleanly in the correct order.
@@ -8208,3 +8460,192 @@ Jenkins (your lab):                    OCI DevOps:
 > | `dnf update` manual patching | OCI OS Management Hub | Free on paid tenancy | Linux Admin Deep Dive Step 9 (hands-on) |
 >
 > **The progression:** Phase 1 teaches you to do it by hand. Phase 2 automates with open-source tools. Phase 3 adds enterprise patterns. These appendices show what the cloud provider handles when you're ready to let go of the knobs.
+
+---
+
+### Appendix E: OCI Load Balancer — 3-Tier Architecture (Terraform)
+
+> **🧠 ELI5 — Why a Load Balancer?** Your k3s NodePort works for a lab, but in production you'd never expose a NodePort directly to the internet. A load balancer sits in the public subnet, accepts traffic on port 443 (HTTPS), and distributes it across your k3s nodes in the private subnet. If one node dies, the LB stops sending traffic to it — users never notice.
+>
+> This completes the **3-tier architecture** every hiring manager expects to see:
+>
+> ```
+> Tier 1 (Presentation):  OCI Load Balancer (public subnet, HTTPS)
+>                              │
+> Tier 2 (Application):   k3s pods across 2 nodes (private subnet)
+>                              │
+> Tier 3 (Data):          Oracle Autonomous DB (OCI-managed)
+> ```
+>
+> In Phase 2, you set up the load balancer manually via the OCI Console to understand the concepts. Here in Phase 3, you manage it as Terraform code — the production pattern.
+
+**Cost:** OCI provides 1 Always Free flexible load balancer (10 Mbps bandwidth). Additional LBs or higher bandwidth require paid tenancy.
+
+**Terraform resource (`modules/network/load_balancer.tf`):**
+
+```hcl
+# load_balancer.tf — OCI Flexible Load Balancer for k3s cluster
+# 3-tier architecture: LB (public) → k3s nodes (private) → ADB (managed)
+
+resource "oci_load_balancer_load_balancer" "k3s_lb" {
+  compartment_id = var.compartment_id
+  display_name   = "fedcompliance-lb"
+  shape          = "flexible"
+
+  shape_details {
+    minimum_bandwidth_in_mbps = 10    # Always Free minimum
+    maximum_bandwidth_in_mbps = 10    # Always Free maximum
+  }
+
+  subnet_ids = [oci_core_subnet.public.id]
+
+  freeform_tags = {
+    "project"   = "oci-federal-lab"
+    "phase"     = "phase-3"
+    "component" = "load-balancer"
+  }
+}
+
+# Backend set — the group of k3s nodes that receive traffic
+resource "oci_load_balancer_backend_set" "k3s_backends" {
+  load_balancer_id = oci_load_balancer_load_balancer.k3s_lb.id
+  name             = "k3s-backend-set"
+  policy           = "ROUND_ROBIN"
+
+  health_checker {
+    protocol          = "HTTP"
+    port              = 30080                    # NodePort for FedCompliance
+    url_path          = "/health"
+    return_code       = 200
+    interval_ms       = 10000                    # Check every 10 seconds
+    timeout_in_millis = 3000
+    retries           = 3
+  }
+}
+
+# Backend 1 — k3s node 1
+resource "oci_load_balancer_backend" "node_1" {
+  load_balancer_id = oci_load_balancer_load_balancer.k3s_lb.id
+  backendset_name  = oci_load_balancer_backend_set.k3s_backends.name
+  ip_address       = module.compute.node_1_private_ip
+  port             = 30080
+}
+
+# Backend 2 — k3s node 2
+resource "oci_load_balancer_backend" "node_2" {
+  load_balancer_id = oci_load_balancer_load_balancer.k3s_lb.id
+  backendset_name  = oci_load_balancer_backend_set.k3s_backends.name
+  ip_address       = module.compute.node_2_private_ip
+  port             = 30080
+}
+
+# Listener — accepts HTTPS traffic on port 443
+resource "oci_load_balancer_listener" "https" {
+  load_balancer_id         = oci_load_balancer_load_balancer.k3s_lb.id
+  default_backend_set_name = oci_load_balancer_backend_set.k3s_backends.name
+  name                     = "https-listener"
+  port                     = 443
+  protocol                 = "HTTP"    # Use "HTTP" for lab; production would use SSL with a certificate
+
+  # In production, add:
+  # ssl_configuration {
+  #   certificate_ids          = [oci_certificates_management_certificate.app.id]
+  #   verify_peer_certificate  = false
+  # }
+}
+
+output "load_balancer_ip" {
+  description = "Public IP of the load balancer"
+  value       = oci_load_balancer_load_balancer.k3s_lb.ip_address_details[0].ip_address
+}
+```
+
+<sub><em>
+
+| Resource | What It Does |
+|----------|-------------|
+| `oci_load_balancer_load_balancer` | Creates the LB itself in the public subnet. `flexible` shape lets you set bandwidth (10 Mbps for free tier) |
+| `oci_load_balancer_backend_set` | Defines the group of servers + health check. `ROUND_ROBIN` distributes requests evenly. The health checker hits `/health` every 10 seconds — if a node fails 3 checks, it's removed from rotation |
+| `oci_load_balancer_backend` | Registers each k3s node as a target. Traffic goes to the NodePort (30080) on each node's private IP |
+| `oci_load_balancer_listener` | The public-facing entry point. Port 443 accepts incoming requests and forwards to the backend set |
+
+</em></sub>
+
+**Full 3-tier request path (production architecture):**
+
+```
+Client (browser/curl)
+    │  HTTPS request
+    ▼
+┌─────────────────────────┐
+│ OCI Load Balancer       │  Tier 1: Public subnet
+│ (10 Mbps, round-robin)  │  - HTTPS termination
+│ Health check: /health   │  - Distributes across healthy nodes
+└────────────┬────────────┘
+             │
+    ┌────────┴────────┐
+    ▼                 ▼
+┌──────────┐   ┌──────────┐
+│ k3s      │   │ k3s      │  Tier 2: Private subnet
+│ node-1   │   │ node-2   │  - FedCompliance pods
+│ :30080   │   │ :30080   │  - Helm-managed, ArgoCD-synced
+└────┬─────┘   └────┬─────┘
+     │               │
+     └───────┬───────┘
+             ▼
+┌─────────────────────────┐
+│ Oracle Autonomous DB    │  Tier 3: OCI-managed
+│ (compliance data)       │  - Automatic backups
+│                         │  - Encryption at rest
+└─────────────────────────┘
+```
+
+> **💼 Interview Insight — 3-Tier Architecture:** "My lab uses a standard 3-tier architecture. The OCI Load Balancer in the public subnet handles HTTPS termination and distributes traffic across k3s nodes using round-robin with health checks. The application tier runs in a private subnet — pods are Helm-managed and ArgoCD-synced. The database tier is Oracle Autonomous DB, fully managed with automatic backups. All three tiers are Terraform-coded. If a node fails the health check, the LB removes it from rotation within 30 seconds — users see zero downtime."
+
+> **💼 Interview Insight — Load Balancer vs API Gateway vs Ingress Controller:**
+>
+> | Component | Layer | Purpose | When to Use |
+> |-----------|-------|---------|-------------|
+> | **OCI Load Balancer** | L4/L7 | Traffic distribution, health checks, SSL termination | Always — it's the front door to your infrastructure |
+> | **OCI API Gateway** | L7 | Rate limiting, auth, routing, request transformation | When you need API-specific policies per route |
+> | **K8s Ingress Controller** | L7 | In-cluster HTTP routing (path-based, host-based) | When you have multiple services inside the cluster |
+>
+> "In a production setup, you'd chain them: Load Balancer → API Gateway → Ingress Controller → Pods. Each layer handles different concerns. In our lab, the LB distributes traffic and the API Gateway handles rate limiting. For a single-service deployment, you could skip the Ingress Controller and route directly to the NodePort."
+
+---
+
+### Appendix F: API Types — REST vs GraphQL vs gRPC vs Webhooks
+
+> This project deliberately focuses on **REST** as the primary API pattern — it's the foundation of every cloud service, and the pattern you'll use in 90% of federal work. But interviewers will ask about the alternatives. This appendix gives you the mental model to discuss all four patterns confidently.
+
+> **💼 Interview Insight — API Types Comparison:**
+>
+> | Aspect | REST | GraphQL | gRPC | Webhooks |
+> |--------|------|---------|------|----------|
+> | **Protocol** | HTTP/1.1 or HTTP/2 | HTTP/1.1 (typically POST) | HTTP/2 (always) | HTTP/1.1 (POST callback) |
+> | **Data format** | JSON (typically) | JSON (always) | Protocol Buffers (binary) | JSON (typically) |
+> | **Schema** | OpenAPI/Swagger (optional) | SDL schema (required) | .proto files (required) | No standard schema |
+> | **Strengths** | Simple, cacheable, universal | Client picks exact fields needed | Fast, strongly typed, streaming | Real-time event notification |
+> | **Weaknesses** | Over-fetching, multiple round trips | Complex caching, N+1 query problem | Not browser-friendly, tooling overhead | Delivery not guaranteed |
+> | **Best for** | CRUD APIs, public APIs, microservices | Complex nested data, mobile apps | Internal microservice communication | Event-driven architectures |
+> | **Federal use** | Standard for all external APIs | Growing in data-heavy agencies | DoD service mesh (Istio/Envoy) | Cloud events, CI/CD triggers |
+
+> **Where each appears in this project:**
+>
+> | Pattern | Where You Built It | Phase |
+> |---------|-------------------|-------|
+> | **REST** | FedTracker (CRUD), FedAnalytics (ingest/metrics), FedCompliance (scan/report/auth) | 1, 2, 3 |
+> | **Webhooks** | FedAnalytics POST /webhook — receives OCI Events with HMAC signature validation | 2 |
+> | **gRPC** | Not implemented — discussed here. gRPC is the protocol used internally by Kubernetes (kubectl → API server), Envoy proxies, and service mesh sidecars. You interact with it indirectly every time you run `kubectl` | — |
+> | **GraphQL** | Not implemented — discussed here. GraphQL would be a natural fit for the compliance data model (deeply nested controls → findings → evidence), but REST is sufficient for the lab scope | — |
+
+> **🧠 ELI5 — When to Use What:**
+>
+> - **REST:** "I need a standard API that any client can call." → Default choice. Use it unless you have a specific reason not to.
+> - **GraphQL:** "My clients need different subsets of deeply nested data, and I don't want 15 different REST endpoints." → Mobile apps querying compliance hierarchies, dashboard APIs that aggregate multiple data sources.
+> - **gRPC:** "I need fast, strongly-typed communication between internal services with streaming support." → Microservice-to-microservice calls, real-time data feeds, anything latency-sensitive. Not for browser clients (requires gRPC-Web proxy).
+> - **Webhooks:** "I need to know when something happens in another system without polling." → Cloud events (file uploaded, resource created), CI/CD triggers, audit notifications.
+
+> **💼 Interview Insight — The Right Answer:** "We use REST for all external-facing APIs because it's universally supported and cacheable. For internal microservice communication in high-throughput scenarios, I'd consider gRPC — it's what Kubernetes uses internally, and Istio service mesh routes gRPC natively. For event-driven workflows like our OCI Events → webhook integration, webhooks are the right pattern. GraphQL is powerful for complex data queries but adds schema management overhead — I'd use it for data-heavy dashboards, not simple CRUD. The key is matching the protocol to the use case, not picking one for everything."
+
+> **Why we focused on REST:** The original project design chose REST as the primary pattern because: (1) every cloud CLI and SDK is a REST client under the hood, (2) it's the most likely pattern in the job description, (3) mastering REST deeply (proper status codes, Pydantic validation, HATEOAS concepts, OpenAPI docs) is more valuable than shallow exposure to four patterns. The webhooks in Phase 2 and API Gateway routing demonstrate event-driven and managed API patterns without forcing a protocol change.
