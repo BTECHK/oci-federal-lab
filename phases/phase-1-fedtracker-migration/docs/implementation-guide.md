@@ -2732,10 +2732,10 @@ Now transfer the private key you downloaded to the VM:
 ```bash
 # Transfer the API key from your local machine to the VM
 # In WSL2, Windows paths are at /mnt/c/Users/<username>/
-scp -i ~/.ssh/legacy-server.key /mnt/c/Users/k_a_s/Downloads/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/
+scp -i ~/.ssh/legacy-server.key /mnt/c/Users/<YOUR_USERNAME>/Downloads/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/
 ```
 
-> **Windows note:** If you saved the key somewhere other than Downloads, adjust the path. In WSL2, Windows paths are at `/mnt/c/Users/<username>/`: `scp -i ~/.ssh/legacy-server.key /mnt/c/Users/k_a_s/path/to/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/`
+> **Windows note:** If you saved the key somewhere other than Downloads, adjust the path. In WSL2, Windows paths are at `/mnt/c/Users/<username>/`: `scp -i ~/.ssh/legacy-server.key /mnt/c/Users/<YOUR_USERNAME>/path/to/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/`
 
 📍 **VM Terminal**
 
@@ -3051,15 +3051,15 @@ Now save the Day 1 code to your GitHub repo so it survives when you tear down th
 
 ```bash
 # Create the app directory in your local repo
-mkdir -p ~/Desktop/github/oci-federal-lab/app
+mkdir -p ~/Desktop/github/oci-federal-lab/phases/phase-1-fedtracker-migration/app
 
 # Copy the three app files from the VM to your local repo
-scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/main.py /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab/app/
-scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/health_check.sh /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab/app/
-scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/oci_reporter.py /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab/phases/phase-1-fedtracker-migration/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/main.py ~/Desktop/github/oci-federal-lab/phases/phase-1-fedtracker-migration/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/health_check.sh ~/Desktop/github/oci-federal-lab/phases/phase-1-fedtracker-migration/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/oci_reporter.py ~/Desktop/github/oci-federal-lab/phases/phase-1-fedtracker-migration/app/
 
 # Commit and push
-cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
+cd ~/Desktop/github/oci-federal-lab
 git add phases/phase-1-fedtracker-migration/app/
 git commit -m "Day 1: FedTracker app code (main.py, health_check.sh, oci_reporter.py)"
 git push
@@ -3104,7 +3104,7 @@ docker --version
 📍 **Local Terminal** (WSL2)
 
 ```bash
-cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
+cd ~/Desktop/github/oci-federal-lab
 
 # Create requirements.txt — lists the Python packages the app needs
 cat > phases/phase-1-fedtracker-migration/docker/requirements.txt << 'EOF'
@@ -3127,7 +3127,7 @@ LABEL maintainer="lab-operator" \
       app="fedtracker" \
       version="1.0"
 
-# Install Python 3.11
+# Install Python 3.9 (default on Oracle Linux 9 — do NOT install 3.11, it breaks system tools)
 RUN microdnf install -y python3 python3-pip && \
     microdnf clean all
 
@@ -3167,7 +3167,7 @@ DOCKEOF
 📍 **Local Terminal** (WSL2)
 
 ```bash
-cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
+cd ~/Desktop/github/oci-federal-lab
 
 # Build the container image
 # The build context is the docker/ directory, but main.py is in app/
@@ -3240,7 +3240,7 @@ docker images | grep fedtracker
 **Add the Docker files to your git commit:**
 
 ```bash
-cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
+cd ~/Desktop/github/oci-federal-lab
 git add phases/phase-1-fedtracker-migration/docker/
 git commit -m "Day 1: Add Dockerfile and requirements.txt for FedTracker container
 
@@ -3295,7 +3295,7 @@ sudo firewall-cmd --remove-port=8000/tcp --permanent
 sudo firewall-cmd --reload
 ```
 
-> **⚠️ If `firewall-cmd` itself errors** with `ModuleNotFoundError: No module named 'gi'`, your system `python3` is pointing at 3.11 instead of 3.9. Fix it first: `sudo alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 2 && sudo alternatives --set python3 /usr/bin/python3.9`. See [KNOWN-ISSUES.md](KNOWN-ISSUES.md) for details.
+> **⚠️ If `firewall-cmd` itself errors** with `ModuleNotFoundError: No module named 'gi'`, a separate Python version was installed that overrode the system Python 3.9. This should not happen if you followed Step 2.2. Verify with `python3 --version` — it must show 3.9.x. If it does not, do NOT use `alternatives --set` (that can break other tools). Instead, remove the conflicting Python package (`sudo dnf remove python3.11`) and verify `python3 --version` returns to 3.9.
 
 **See the failure:**
 
@@ -3934,23 +3934,25 @@ ssh -i ~/.ssh/app-server.key -J opc@<BASTION_PUBLIC_IP> opc@<APP_SERVER_PRIVATE_
 ```bash
 cat >> ~/.ssh/config << 'SSHEOF'
 
-Host bastion
+Host p1-bastion
     HostName <BASTION_PUBLIC_IP>
     User opc
     IdentityFile ~/.ssh/bastion.key
 
-Host app-server
+Host p1-app-server
     HostName <APP_SERVER_PRIVATE_IP>
     User opc
     IdentityFile ~/.ssh/app-server.key
-    ProxyJump bastion
+    ProxyCommand ssh -i ~/.ssh/bastion.key -W %h:%p opc@<BASTION_PUBLIC_IP>
 SSHEOF
 ```
+
+> **Why `ProxyCommand` instead of `ProxyJump`?** ProxyJump (`-J`) only works with default key names. When you have custom key paths (which you do), `ProxyCommand` with `-W %h:%p` is more reliable — it explicitly specifies which key to use for the bastion hop.
 
 Now you can simply type:
 
 ```bash
-ssh app-server
+ssh p1-app-server
 # Connects through bastion automatically
 ```
 
@@ -3993,10 +3995,10 @@ getenforce
 
 ---
 
-### Step 8.10 — Prepare the App Server
+### Step 8.11 — Prepare the App Server
 📍 **VM Terminal (app-server)**
 
-> The app-server is a fresh VM — it doesn't have `clouduser`, Python 3.11, or any of the Day 1 setup from the legacy server. Before Phase 9, you need to replicate that setup. A helper script automates this.
+> The app-server is a fresh VM — it doesn't have `clouduser`, Python packages (FastAPI, uvicorn, etc.), or any of the Day 1 setup from the legacy server. Before Phase 9, you need to replicate that setup. A helper script automates this.
 
 ```bash
 # SSH to the app-server
@@ -5539,15 +5541,14 @@ ssh -i ~/.ssh/fedtracker -J opc@$(terraform output -raw bastion_public_ip) opc@$
 > This installs Ubuntu on WSL2. After rebooting, open "Ubuntu" from the Start menu to set up your Linux username/password. Then install Ansible **inside WSL2**:
 
 ```bash
-# WSL2 (Ubuntu) — install pip if not present, then install Ansible
-sudo apt update && sudo apt install -y python3-pip
-pip3 install ansible
+# WSL2 (Ubuntu) — install Ansible from the system package manager (NOT pip)
+sudo apt update && sudo apt install -y ansible
 
 # macOS
 brew install ansible
 
-# Linux
-python3 -m pip install ansible
+# Linux (Debian/Ubuntu)
+sudo apt install -y ansible
 
 # Verify (run from WSL2 on Windows)
 ansible --version
@@ -5570,17 +5571,18 @@ ansible --version
 # Update IPs after each terraform apply
 
 [bastion]
-bastion ansible_host=<BASTION_PUBLIC_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/fedtracker
+bastion_server ansible_host=<BASTION_PUBLIC_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/fedtracker
 
 [app]
 app-server ansible_host=<APP_SERVER_PRIVATE_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/fedtracker
 
 [app:vars]
-# App servers are in a private subnet — connect through bastion
-ansible_ssh_common_args='-o ProxyJump=opc@<BASTION_PUBLIC_IP>'
+# App servers are in a private subnet — connect through bastion via ProxyCommand
+ansible_ssh_common_args='-o ProxyCommand="ssh -i ~/.ssh/fedtracker -W %h:%p opc@<BASTION_PUBLIC_IP>"'
+ansible_python_interpreter=/usr/bin/python3
 ```
 
-> **Why `ansible_ssh_common_args` with ProxyJump?** The app server has no public IP — Ansible can't SSH to it directly. This tells Ansible to tunnel through the bastion, exactly like the `ssh -J` command you used manually.
+> **Why `ProxyCommand` instead of `ProxyJump`?** The app server has no public IP — Ansible can't SSH to it directly. `ProxyCommand` with `-W %h:%p` tunnels through the bastion and explicitly specifies the key to use for the hop. ProxyJump (`-J`) only works reliably with default key names.
 
 > **Important:** Replace the IP placeholders with your actual IPs from `terraform output`.
 
@@ -6050,6 +6052,9 @@ echo "App Server: $APP_IP"
 > **Important:** The new VMs have different IPs. Your inventory has three places with the old IPs — the bastion host, the app server host, and the bastion IP buried inside the ProxyCommand string. Update all three:
 
 ```bash
+# Capture the OLD bastion IP before overwriting (needed for the ProxyCommand update)
+OLD_BASTION_IP=$(grep 'bastion_server ansible_host=' ../ansible/inventory/inventory.ini | sed 's/.*ansible_host=\([^ ]*\).*/\1/')
+
 # Update bastion public IP (the ansible_host= value on the bastion_server line)
 sed -i "s/bastion_server ansible_host=[^ ]*/bastion_server ansible_host=$BASTION_IP/" \
   ../ansible/inventory/inventory.ini
@@ -6058,8 +6063,8 @@ sed -i "s/bastion_server ansible_host=[^ ]*/bastion_server ansible_host=$BASTION
 sed -i "s/app-server ansible_host=[^ ]*/app-server ansible_host=$APP_IP/" \
   ../ansible/inventory/inventory.ini
 
-# Update bastion IP inside the ProxyCommand string (opc@OLD_IP → opc@NEW_IP)
-sed -i "s/opc@[^\"]*\"/opc@$BASTION_IP\"/" \
+# Update bastion IP inside the ProxyCommand string (old IP → new IP)
+sed -i "s/opc@${OLD_BASTION_IP}/opc@${BASTION_IP}/g" \
   ../ansible/inventory/inventory.ini
 
 # Verify all three IPs updated correctly
@@ -6249,7 +6254,7 @@ git push
 > **⚠️ Why rebuild?** On Day 1, you built with `docker build` (x86, for your local machine). The OCI VM is ARM (Ampere A1 Flex). If you push the x86 image and try to `podman run` it on ARM, you'll get `exec format error`. You must rebuild for the target architecture.
 
 ```bash
-cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
+cd ~/Desktop/github/oci-federal-lab
 
 # Rebuild for ARM (matches your OCI VM architecture)
 docker buildx build --platform linux/arm64 -t fedtracker:1.0-arm64 phases/phase-1-fedtracker-migration/docker/
@@ -6305,10 +6310,10 @@ docker login iad.ocir.io
 ```bash
 # Tag the image for OCIR
 # Format: <region>.ocir.io/<namespace>/<repo-name>:<tag>
-docker tag fedtracker:1.0-arm64 iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
+docker tag fedtracker:1.0-arm64 iad.ocir.io/<YOUR_OBJECT_STORAGE_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
 
 # Push to OCIR
-docker push iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
+docker push iad.ocir.io/<YOUR_OBJECT_STORAGE_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
 # Expected: Layers push successfully, image manifest written
 ```
 
@@ -6341,7 +6346,7 @@ podman login iad.ocir.io
 # Password: <Auth Token from Step 14.3 Step 1>
 
 # Pull the image you pushed from WSL2
-podman pull iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
+podman pull iad.ocir.io/<YOUR_OBJECT_STORAGE_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
 
 # Run the container
 podman run -d --name fedtracker-app \
@@ -6349,7 +6354,7 @@ podman run -d --name fedtracker-app \
   -e DB_TYPE=sqlite \
   -e SQLITE_PATH=/app/fedtracker.db \
   --restart=always \
-  iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
+  iad.ocir.io/<YOUR_OBJECT_STORAGE_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
 
 # Verify it's running
 podman ps
@@ -7863,8 +7868,8 @@ pipeline {
 
     environment {
         PROJECT_NAME = 'fedtracker'
-        TERRAFORM_DIR = 'terraform'
-        ANSIBLE_DIR = 'ansible'
+        TERRAFORM_DIR = 'phases/phase-1-fedtracker-migration/terraform'
+        ANSIBLE_DIR = 'phases/phase-1-fedtracker-migration/ansible'
     }
 
     stages {
@@ -7901,7 +7906,7 @@ pipeline {
         stage('Build Container') {
             steps {
                 echo 'Building container image...'
-                dir('app') {
+                dir('phases/phase-1-fedtracker-migration/app') {
                     sh '''
                         podman build -t ${PROJECT_NAME}:${BUILD_NUMBER} .
                         podman build -t ${PROJECT_NAME}:latest .
@@ -7917,7 +7922,7 @@ pipeline {
             steps {
                 echo 'Deploying to app server...'
                 sh '''
-                    ansible-playbook -i ${ANSIBLE_DIR}/inventory.ini \
+                    ansible-playbook -i ${ANSIBLE_DIR}/inventory/inventory.ini \
                         ${ANSIBLE_DIR}/playbooks/deploy_app.yml
                 '''
             }
@@ -7931,7 +7936,7 @@ pipeline {
                 echo 'Running smoke test...'
                 sh '''
                     sleep 15
-                    ssh app-server "curl -sf http://localhost:8000/health" || exit 1
+                    ssh p1-app-server "curl -sf http://localhost:8000/health" || exit 1
                     echo "Smoke test passed!"
                 '''
             }
@@ -8414,7 +8419,7 @@ git push
 
 Take one screenshot now and save it to `docs/screenshots/` in your repo:
 
-**Swagger UI + curl in split terminal:** Open `http://<PUBLIC_IP>:8000/docs` in your browser (the auto-generated API documentation) alongside a terminal showing a successful `curl http://<PUBLIC_IP>:8000/health` response. This single frame proves: "I built a real REST API, it's running on OCI, and it has proper documentation." Name it `phase-1-swagger-and-health.png`.
+**Swagger UI + curl in split terminal:** Set up SSH port forwarding (`ssh -L 8000:localhost:8000 p1-app-server`), then open `http://localhost:8000/docs` in your browser (the auto-generated API documentation) alongside a terminal showing a successful `curl http://localhost:8000/health` response. This single frame proves: "I built a real REST API, it's running on OCI, and it has proper documentation." Name it `phase-1-swagger-and-health.png`.
 
 > **Why this screenshot?** A hiring manager scanning your repo sees an interactive API surface with typed endpoints, request/response schemas, and a live health check — all in one glance. It's more compelling than terminal-only output because Swagger is visually self-explanatory.
 
