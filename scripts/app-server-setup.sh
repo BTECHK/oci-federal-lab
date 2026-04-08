@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # =============================================================
 # app-server-setup.sh — Prepare a fresh OCI compute instance for FedTracker
 # Replicates the Day 1 legacy-server setup on the new app-server.

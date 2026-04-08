@@ -8,6 +8,26 @@
 
 ---
 
+## ⚠️ BEFORE YOU BEGIN — DESTROY PHASE 2 INFRASTRUCTURE
+
+Phase 3 creates new infrastructure that would exceed the Always Free tier if Phase 2 resources still exist. **Tear down Phase 2 before starting.**
+
+```bash
+# From your Phase 2 terraform directory
+cd ~/fedanalytics/terraform
+terraform destroy
+# Type 'yes' when prompted — this removes all Phase 2 VMs, VCN, subnets, k3s cluster
+```
+
+**Verify cleanup:**
+- OCI Console → Compute → Instances → confirm no running instances
+- OCI Console → Networking → Virtual Cloud Networks → confirm no VCNs
+- OCI Console → Databases → Autonomous Databases → confirm no databases (or terminate manually)
+
+> Your Phase 2 code is safe in git. Only the cloud infrastructure is destroyed. You can rebuild Phase 2 anytime with `terraform apply`.
+
+---
+
 ## WHAT YOU'RE BUILDING
 
 Over 5 days you transform a manually-deployed compliance tool into a fully automated, security-scanned, GitOps-delivered application with AI-powered operations. Day 1 rebuilds infrastructure using Terraform modules and secrets management. Day 2 builds the CI/CD pipeline with container scanning and SBOM generation. Day 3 upgrades to Helm packaging and ArgoCD GitOps delivery. Day 4 adds AI-augmented security analysis and compliance-as-code. Day 5 validates everything end-to-end and tears down.
@@ -198,7 +218,7 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 | 📍 **OCI Console** | Oracle Cloud web UI | cloud.oracle.com — clicking buttons, navigating menus |
 | 📍 **Local Terminal** | Your machine's terminal | WSL2 on your laptop |
 | 📍 **Bastion Terminal** | SSH into bastion/Jenkins VM | `ssh opc@<bastion_ip>` — public subnet jump box |
-| 📍 **App Node Terminal** | SSH into k3s node via bastion | `ssh -J opc@<bastion_ip> opc@<private_ip>` — private subnet |
+| 📍 **App Node Terminal** | SSH into k3s node via bastion | `ssh p3-node1` or `ssh p3-node2` — private subnet (ProxyCommand handles jump) |
 | 📍 **Editor** | Your text editor | VS Code, nano, vim — editing files |
 | 📍 **Browser** | Web browser | Testing endpoints, Jenkins UI, ArgoCD UI, Swagger docs |
 
@@ -240,7 +260,7 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 
 ---
 
-## PHASE 22: ENVIRONMENT & SECURE FOUNDATIONS (6–8 hrs)
+## PHASE 30: ENVIRONMENT & SECURE FOUNDATIONS (6–8 hrs)
 
 > Day 1 of Phase 3 rebuilds your OCI environment from scratch using Terraform modules — a major step up from the flat `.tf` files used in Phases 1 and 2. You'll learn three new concepts today: Terraform modules (organizing infrastructure into reusable, composable units), OCI Vault (storing secrets outside your code), and Ansible Vault integration (pulling those secrets securely into playbooks). By the end of the day, you'll have a hardened 2-node k3s cluster running the FedCompliance app with zero secrets stored in plaintext.
 >
@@ -250,28 +270,28 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 
 ---
 
-### Step 22.1 — Create Project Directory Structure
+### Step 30.1 — Create Project Directory Structure
 📍 **Local Terminal**
 
 ```bash
-mkdir -p ~/oci-federal-lab-phase3/terraform/modules/network
-mkdir -p ~/oci-federal-lab-phase3/terraform/modules/compute
-mkdir -p ~/oci-federal-lab-phase3/terraform/modules/database
-mkdir -p ~/oci-federal-lab-phase3/terraform/environments/lab
-mkdir -p ~/oci-federal-lab-phase3/ansible/roles/hardening
-mkdir -p ~/oci-federal-lab-phase3/ansible/roles/deploy
-mkdir -p ~/oci-federal-lab-phase3/ansible/playbooks
-mkdir -p ~/oci-federal-lab-phase3/app/fedcompliance
-mkdir -p ~/oci-federal-lab-phase3/app/scripts
-mkdir -p ~/oci-federal-lab-phase3/k8s
-mkdir -p ~/oci-federal-lab-phase3/docs
-cd ~/oci-federal-lab-phase3
+mkdir -p ~/fedcompliance/terraform/modules/network
+mkdir -p ~/fedcompliance/terraform/modules/compute
+mkdir -p ~/fedcompliance/terraform/modules/database
+mkdir -p ~/fedcompliance/terraform/environments/lab
+mkdir -p ~/fedcompliance/ansible/roles/hardening
+mkdir -p ~/fedcompliance/ansible/roles/deploy
+mkdir -p ~/fedcompliance/ansible/playbooks
+mkdir -p ~/fedcompliance/app/fedcompliance
+mkdir -p ~/fedcompliance/app/scripts
+mkdir -p ~/fedcompliance/k8s
+mkdir -p ~/fedcompliance/docs
+cd ~/fedcompliance
 git init
 ```
 
 Create `.gitignore` immediately — before any sensitive files are created:
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/.gitignore`
+📍 **Editor** — create `~/fedcompliance/.gitignore`
 
 ```
 # Terraform state and credentials — NEVER commit these
@@ -306,13 +326,13 @@ secrets/
 **Verify:**
 
 ```bash
-ls ~/oci-federal-lab-phase3/terraform/modules/
+ls ~/fedcompliance/terraform/modules/
 # Expected: compute  database  network
 ```
 
 ---
 
-### Step 22.2 — Understand Terraform Modules (New Concept)
+### Step 30.2 — Understand Terraform Modules (New Concept)
 📍 **Editor** (read this before writing any code)
 
 > **🧠 ELI5 — Terraform Modules:** In Phases 1 and 2, all your Terraform resources lived in flat files in one directory — `network.tf`, `compute.tf`, `database.tf` all side by side. This works for small projects, but imagine handing your code to a teammate who needs to build a second environment. They'd have to copy every file, change variable names, and hope nothing breaks. A Terraform **module** is like a reusable recipe card. You write the recipe once (in a `modules/network/` folder), then "call" it from your environment config: "use the network recipe, but plug in these specific values." The module handles the details; the caller just provides ingredients. Now you can create dev, staging, and prod environments by calling the same modules with different values — no copy-paste, no drift.
@@ -348,7 +368,7 @@ module "network" {
 
 ---
 
-### Step 22.3 — Build Terraform Root Configuration
+### Step 30.3 — Build Terraform Root Configuration
 📍 **Editor** (build by hand)
 
 The root configuration lives in `terraform/environments/lab/`. This is the "caller" that wires together all three modules.
@@ -357,7 +377,7 @@ The root configuration lives in `terraform/environments/lab/`. This is the "call
 
 **Section 1:** Terraform version and provider pin
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/environments/lab/provider.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/environments/lab/provider.tf`
 
 ```hcl
 # Provider configuration for fedcompliance lab environment
@@ -384,7 +404,7 @@ provider "oci" {
 
 **Build `terraform/environments/lab/variables.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/environments/lab/variables.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/environments/lab/variables.tf`
 
 ```hcl
 # Root variables — values you supply via terraform.tfvars (never committed to git)
@@ -451,7 +471,7 @@ variable "db_wallet_password" {
 
 **Build `terraform/environments/lab/main.tf` — the module wiring file:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/environments/lab/main.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/environments/lab/main.tf`
 
 **Section 1:** Network module call
 
@@ -518,7 +538,7 @@ module "database" {
 
 **Build `terraform/environments/lab/outputs.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/environments/lab/outputs.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/environments/lab/outputs.tf`
 
 ```hcl
 # Root outputs — values you will use in Ansible inventory and app configuration
@@ -553,20 +573,20 @@ output "vcn_id" {
 **Verify root environment files:**
 
 ```bash
-ls ~/oci-federal-lab-phase3/terraform/environments/lab/
+ls ~/fedcompliance/terraform/environments/lab/
 # Expected: main.tf  outputs.tf  provider.tf  variables.tf
 ```
 
 ---
 
-### Step 22.4 — Build the Network Module
+### Step 30.4 — Build the Network Module
 📍 **Editor** (build by hand — new module pattern)
 
 > **🧠 ELI5 — Module variables.tf vs root variables.tf:** The root `variables.tf` defines what *you* (the human running Terraform) must supply — your tenancy OCID, SSH key, etc. A module's `variables.tf` defines what the *module caller* must supply — in this case `environments/lab/main.tf` is the caller. Think of it as a function's parameter list. If `main.tf` forgets to pass a required variable, Terraform errors immediately with "variable X has no value." This contract-based approach is what makes modules safe to share across teams.
 
 **Build `terraform/modules/network/variables.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/network/variables.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/network/variables.tf`
 
 ```hcl
 # Network module inputs
@@ -608,7 +628,7 @@ variable "private_cidr" {
 
 **Build `terraform/modules/network/main.tf` section by section:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/network/main.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/network/main.tf`
 
 **Section 1:** VCN and data source
 
@@ -822,7 +842,7 @@ resource "oci_core_subnet" "private" {
 
 **Build `terraform/modules/network/outputs.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/network/outputs.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/network/outputs.tf`
 
 ```hcl
 # Network module outputs
@@ -852,20 +872,20 @@ output "vcn_cidr" {
 **Verify network module:**
 
 ```bash
-ls ~/oci-federal-lab-phase3/terraform/modules/network/
+ls ~/fedcompliance/terraform/modules/network/
 # Expected: main.tf  outputs.tf  variables.tf
 ```
 
 ---
 
-### Step 22.5 — Build the Compute Module
+### Step 30.5 — Build the Compute Module
 📍 **Editor** (build by hand)
 
 The compute module creates three VMs: one bastion (public subnet) and two k3s nodes (private subnet). Returning concept from Phase 2 — same VM shapes, abbreviated ELI5.
 
 **Build `terraform/modules/compute/variables.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/compute/variables.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/compute/variables.tf`
 
 ```hcl
 # Compute module inputs
@@ -908,7 +928,7 @@ variable "private_subnet_id" {
 
 **Build `terraform/modules/compute/main.tf` section by section:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/compute/main.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/compute/main.tf`
 
 **Section 1:** Bastion VM (public subnet, Jenkins will install here on Day 2)
 
@@ -1045,7 +1065,7 @@ resource "oci_core_instance" "k3s_node2" {
 
 **Build `terraform/modules/compute/outputs.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/compute/outputs.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/compute/outputs.tf`
 
 ```hcl
 # Compute module outputs
@@ -1079,14 +1099,14 @@ output "k3s_node1_instance_id" {
 
 ---
 
-### Step 22.6 — Build the Database Module
+### Step 30.6 — Build the Database Module
 📍 **Editor** (build by hand)
 
 > Returning concept from Phases 1 and 2 — Oracle Autonomous DB setup. Abbreviated here: same resource type, new variable names.
 
 **Build `terraform/modules/database/variables.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/database/variables.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/database/variables.tf`
 
 ```hcl
 # Database module inputs
@@ -1116,7 +1136,7 @@ variable "db_wallet_password" {
 
 **Build `terraform/modules/database/main.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/database/main.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/database/main.tf`
 
 ```hcl
 # Database Module — main.tf
@@ -1147,7 +1167,7 @@ resource "oci_database_autonomous_database" "main" {
 
 **Build `terraform/modules/database/outputs.tf`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/modules/database/outputs.tf`
+📍 **Editor** — create `~/fedcompliance/terraform/modules/database/outputs.tf`
 
 ```hcl
 # Database module outputs
@@ -1172,13 +1192,13 @@ output "db_name" {
 **Verify all three modules are complete:**
 
 ```bash
-ls ~/oci-federal-lab-phase3/terraform/modules/network/
+ls ~/fedcompliance/terraform/modules/network/
 # Expected: main.tf  outputs.tf  variables.tf
 
-ls ~/oci-federal-lab-phase3/terraform/modules/compute/
+ls ~/fedcompliance/terraform/modules/compute/
 # Expected: main.tf  outputs.tf  variables.tf
 
-ls ~/oci-federal-lab-phase3/terraform/modules/database/
+ls ~/fedcompliance/terraform/modules/database/
 # Expected: main.tf  outputs.tf  variables.tf
 ```
 
@@ -1196,12 +1216,12 @@ ls ~/oci-federal-lab-phase3/terraform/modules/database/
 
 ---
 
-### Step 22.7 — Create terraform.tfvars and Deploy Infrastructure
+### Step 30.7 — Create terraform.tfvars and Deploy Infrastructure
 📍 **Editor** then **Local Terminal**
 
 Create `terraform/environments/lab/terraform.tfvars` — this file is in `.gitignore` and must never be committed.
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/terraform/environments/lab/terraform.tfvars`
+📍 **Editor** — create `~/fedcompliance/terraform/environments/lab/terraform.tfvars`
 
 ```hcl
 # terraform.tfvars — YOUR ACTUAL VALUES GO HERE
@@ -1231,7 +1251,7 @@ db_wallet_password  = "WalletP@ssw0rd1!"
 📍 **Local Terminal**
 
 ```bash
-cd ~/oci-federal-lab-phase3/terraform/environments/lab
+cd ~/fedcompliance/terraform/environments/lab
 
 # Initialize — downloads the OCI provider and resolves module source paths
 terraform init
@@ -1247,7 +1267,7 @@ Terraform will output your IPs when complete. Save them:
 
 ```bash
 # After apply completes, capture outputs to a file for use in Ansible
-terraform output -json > ~/oci-federal-lab-phase3/docs/tf_outputs.json
+terraform output -json > ~/fedcompliance/docs/tf_outputs.json
 
 # Display the IPs you need
 terraform output bastion_public_ip
@@ -1255,17 +1275,41 @@ terraform output k3s_node1_private_ip
 terraform output k3s_node2_private_ip
 ```
 
+**Set up SSH config aliases (consistent with Phase 1 `p1-*` and Phase 2 `p2-*` naming):**
+
+📍 **Editor** — append to `~/.ssh/config`
+
+```
+# ── Phase 3: FedCompliance ──────────────────────────────
+Host p3-bastion
+    HostName <BASTION_PUBLIC_IP>
+    User opc
+    IdentityFile ~/.ssh/id_rsa
+
+Host p3-node1
+    HostName <K3S_NODE1_PRIVATE_IP>
+    User opc
+    IdentityFile ~/.ssh/id_rsa
+    ProxyCommand ssh -W %h:%p p3-bastion
+
+Host p3-node2
+    HostName <K3S_NODE2_PRIVATE_IP>
+    User opc
+    IdentityFile ~/.ssh/id_rsa
+    ProxyCommand ssh -W %h:%p p3-bastion
+```
+
+> Replace `<BASTION_PUBLIC_IP>`, `<K3S_NODE1_PRIVATE_IP>`, `<K3S_NODE2_PRIVATE_IP>` with the values from `terraform output`.
+
 **Verify SSH access:**
 
 ```bash
 # Test bastion access
-ssh -i ~/.ssh/id_rsa opc@$(terraform output -raw bastion_public_ip)
+ssh p3-bastion
 # Expected: Oracle Linux 9 welcome banner, opc@fedcompliance-bastion prompt
 
-# Test k3s node access via bastion jump (from local terminal)
-BASTION_IP=$(terraform output -raw bastion_public_ip)
-NODE1_IP=$(terraform output -raw k3s_node1_private_ip)
-ssh -J opc@${BASTION_IP} opc@${NODE1_IP}
+# Test k3s node access through bastion (ProxyCommand handles the jump)
+ssh p3-node1
 # Expected: opc@fedcompliance-k3s-node-1 prompt
 ```
 
@@ -1279,27 +1323,28 @@ ssh -J opc@${BASTION_IP} opc@${NODE1_IP}
 | `terraform plan` | — | Dry run — shows what will be created/changed/destroyed |
 | `terraform apply` | — | Creates all resources; prompts for confirmation |
 | `terraform output` | `-json` | Prints all outputs as JSON; `-raw` prints a single value without quotes |
-| `ssh` | `-J user@host` | Jump proxy — SSH through bastion to reach private VMs |
+| `ssh p3-bastion` | — | Uses SSH config alias — no flags needed |
+| `ssh p3-node1` | — | Reaches private node via ProxyCommand through p3-bastion |
 
 </em></sub>
 
 ---
 
-### Step 22.8 — Run Ansible Hardening
+### Step 30.8 — Run Ansible Hardening
 📍 **Local Terminal** → **Bastion Terminal**
 
 > Returning concept from Phases 1 and 2 — Ansible hardening. Abbreviated: same playbook structure, new inventory IPs. Full ELI5 skipped.
 
 **Build the Ansible inventory:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/ansible/inventory.ini`
+📍 **Editor** — create `~/fedcompliance/ansible/inventory.ini`
 
 ```ini
 # Ansible inventory for Phase 3
 # IPs come from terraform output — update with your actual values
 
 [bastion]
-fedcompliance-bastion ansible_host=BASTION_PUBLIC_IP ansible_user=opc ansible_ssh_private_key_file=~/.ssh/id_rsa
+p3-bastion ansible_host=BASTION_PUBLIC_IP ansible_user=opc ansible_ssh_private_key_file=~/.ssh/id_rsa
 
 [k3s_servers]
 k3s-node-1 ansible_host=K3S_NODE1_PRIVATE_IP ansible_user=opc ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_ssh_common_args='-J opc@BASTION_PUBLIC_IP'
@@ -1319,7 +1364,7 @@ ansible_python_interpreter=/usr/bin/python3
 
 **Build `ansible/playbooks/harden.yml`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/ansible/playbooks/harden.yml`
+📍 **Editor** — create `~/fedcompliance/ansible/playbooks/harden.yml`
 
 ```yaml
 ---
@@ -1411,7 +1456,7 @@ ansible_python_interpreter=/usr/bin/python3
 📍 **Local Terminal**
 
 ```bash
-cd ~/oci-federal-lab-phase3
+cd ~/fedcompliance
 
 # Test connectivity first
 ansible all -i ansible/inventory.ini -m ping
@@ -1420,20 +1465,20 @@ ansible all -i ansible/inventory.ini -m ping
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/harden.yml
 
 # Verify SSH lockdown on node-1
-ssh -J opc@<BASTION_PUBLIC_IP> opc@<NODE1_PRIVATE_IP> "sudo sshd -T | grep permitrootlogin"
+ssh p3-node1 "sudo sshd -T | grep permitrootlogin"
 # Expected: permitrootlogin no
 ```
 
 ---
 
-### Step 22.9 — Set Up OCI Vault for Secrets Management (New Concept)
+### Step 30.9 — Set Up OCI Vault for Secrets Management (New Concept)
 📍 **OCI Console** then **Bastion Terminal**
 
 > **🧠 ELI5 — OCI Vault:** Right now, your database password lives in `terraform.tfvars` on your laptop. If a teammate clones the repo and you accidentally committed that file — or if your laptop is stolen — the password is exposed. OCI Vault is a dedicated secrets locker. You store the password in Vault (encrypted, access-controlled), and instead of passing the password in a config file, your application asks Vault "give me the DB password" at runtime. Vault checks whether that application (identified by its OCI Instance Principal — like a VM's built-in badge) has permission to read that secret. If yes, the secret is returned. If no, the request is denied and logged. The password never sits in a file.
 
 > **💼 Interview Insight — Secrets Management:** "The progression from hardcoded → environment variables → secrets manager is one of the most common security improvement conversations in federal cloud work. Hardcoded is always wrong. Environment variables are better but still expose secrets in process listings, container inspect output, and CI/CD logs. A dedicated secrets manager like OCI Vault, AWS Secrets Manager, or HashiCorp Vault adds access control (who can read which secret), audit logging (who read it and when), automatic rotation, and encryption at rest. In CMMC Level 2+, secret management is a control requirement — you need to demonstrate that credentials are protected and access is logged."
 
-**Step 22.9a — Create the Vault:**
+**Step 30.9a — Create the Vault:**
 
 📍 **OCI Console** → Identity & Security → Vault → Create Vault
 
@@ -1447,7 +1492,7 @@ Vault type:    Virtual Private Vault (DO NOT select "Default Shared" — it has 
 
 Wait for vault status to show "Active" before proceeding (~2 minutes).
 
-**Step 22.9b — Create an Encryption Key:**
+**Step 30.9b — Create an Encryption Key:**
 
 📍 **OCI Console** → Identity & Security → Vault → [your vault] → Keys → Create Key
 
@@ -1457,7 +1502,7 @@ Name:              fedcompliance-master-key
 Key shape:         AES, 256 bits
 ```
 
-**Step 22.9c — Store Secrets in Vault:**
+**Step 30.9c — Store Secrets in Vault:**
 
 📍 **OCI Console** → Identity & Security → Vault → [your vault] → Secrets → Create Secret
 
@@ -1479,7 +1524,7 @@ For each secret:
 
 Note the OCID of each secret after creation — you will reference them in Ansible.
 
-**Step 22.9d — Create IAM Policy Granting VM Access to Vault:**
+**Step 30.9d — Create IAM Policy Granting VM Access to Vault:**
 
 > **🧠 ELI5 — Instance Principals:** When a VM needs to call OCI APIs (like reading a Vault secret), it needs credentials. But you can not store OCI credentials on the VM — that's the whole problem you're solving. OCI solves this with **Instance Principals**: every OCI VM automatically has a cryptographic identity issued by Oracle. Think of it as a company badge that gets assigned when the VM is created. You write an IAM policy saying "any VM in this dynamic group can read secrets in this vault" — the VM proves its identity automatically via the instance principal, no password needed.
 
@@ -1544,7 +1589,7 @@ oci secrets secret-bundle get \
 
 ---
 
-### Step 22.10 — Integrate Ansible with OCI Vault (New Concept)
+### Step 30.10 — Integrate Ansible with OCI Vault (New Concept)
 📍 **Local Terminal** then **Bastion Terminal**
 
 > **🧠 ELI5 — Ansible Vault Integration:** Ansible has its own "Ansible Vault" feature (confusingly named) that encrypts variables inside your playbook files. But today you're doing something more powerful: pulling secrets directly from OCI Vault at playbook runtime. The pattern is: Ansible runs a lookup plugin that calls the OCI API to retrieve the secret value, and injects it into the playbook as a variable. Your playbook file contains only the secret's OCID — not the value. An attacker who gets your playbook sees only `ocid1.vaultsecret.oc1...` — useless without OCI credentials and the vault access policy.
@@ -1574,7 +1619,7 @@ ansible-galaxy collection list | grep oracle
 
 This playbook retrieves secrets from OCI Vault at runtime and uses them to configure the application — no secrets in the playbook file.
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/ansible/playbooks/deploy_fedcompliance.yml`
+📍 **Editor** — create `~/fedcompliance/ansible/playbooks/deploy_fedcompliance.yml`
 
 **Section 1:** Play header and OCI Vault secret lookups
 
@@ -1710,7 +1755,7 @@ This playbook retrieves secrets from OCI Vault at runtime and uses them to confi
 
 **Build `ansible/templates/fedcompliance.env.j2`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/ansible/templates/fedcompliance.env.j2`
+📍 **Editor** — create `~/fedcompliance/ansible/templates/fedcompliance.env.j2`
 
 ```ini
 # FedCompliance environment variables
@@ -1726,7 +1771,7 @@ LOG_LEVEL=INFO
 
 **Build `ansible/templates/fedcompliance.service.j2`:**
 
-📍 **Editor** — create `~/oci-federal-lab-phase3/ansible/templates/fedcompliance.service.j2`
+📍 **Editor** — create `~/fedcompliance/ansible/templates/fedcompliance.service.j2`
 
 ```ini
 # systemd service file for FedCompliance
@@ -1761,7 +1806,7 @@ WantedBy=multi-user.target
 
 ---
 
-### Step 22.11 — Build the FedCompliance FastAPI Application
+### Step 30.11 — Build the FedCompliance FastAPI Application
 📍 **Editor** (build by hand — new application, full section-by-section)
 
 > **🧠 ELI5 — FedCompliance:** This is the application that will travel through the entire Phase 3 pipeline. It simulates a compliance management tool: it tracks security controls, runs compliance scans, and generates reports — the kind of tool a cloud engineer in federal consulting might build for a federal client who needs to demonstrate CMMC or NIST compliance. Today you build it manually and deploy it with Ansible. Days 2–4 will scan it for vulnerabilities, package it in a Helm chart, and deliver it via GitOps.
@@ -1787,15 +1832,15 @@ app/fedcompliance/
 Create the directory structure:
 
 ```bash
-mkdir -p ~/oci-federal-lab-phase3/app/fedcompliance/routers
-mkdir -p ~/oci-federal-lab-phase3/app/fedcompliance/services
-mkdir -p ~/oci-federal-lab-phase3/app/fedcompliance/sql
+mkdir -p ~/fedcompliance/app/fedcompliance/routers
+mkdir -p ~/fedcompliance/app/fedcompliance/services
+mkdir -p ~/fedcompliance/app/fedcompliance/sql
 ```
 
 ---
 
-#### Step 22.11a — Build requirements.txt
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/requirements.txt`
+#### Step 30.11a — Build requirements.txt
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/requirements.txt`
 
 ```
 fastapi==0.110.0
@@ -1812,8 +1857,8 @@ httpx==0.27.0
 
 ---
 
-#### Step 22.11b — Build database.py
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/database.py`
+#### Step 30.11b — Build database.py
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/database.py`
 
 **Section 1:** Imports and configuration
 
@@ -1897,8 +1942,8 @@ def check_db_health() -> dict:
 
 ---
 
-#### Step 22.11c — Build models.py
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/models.py`
+#### Step 30.11c — Build models.py
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/models.py`
 
 **Section 1:** Imports
 
@@ -1970,8 +2015,8 @@ class ApiKey(Base):
 
 ---
 
-#### Step 22.11d — Build schemas.py
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/schemas.py`
+#### Step 30.11d — Build schemas.py
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/schemas.py`
 
 ```python
 # schemas.py — Pydantic request/response models
@@ -2097,8 +2142,8 @@ class HealthResponse(BaseModel):
 
 ---
 
-#### Step 22.11e — Build services/scanner.py
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/services/scanner.py`
+#### Step 30.11e — Build services/scanner.py
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/services/scanner.py`
 
 ```python
 # services/scanner.py — Compliance scan business logic
@@ -2206,8 +2251,8 @@ def get_latest_scan(db: Session, framework: str) -> ComplianceScan | None:
 
 ---
 
-#### Step 22.11f — Build routers/auth.py
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/routers/auth.py`
+#### Step 30.11f — Build routers/auth.py
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/routers/auth.py`
 
 **Section 1:** Imports and router setup
 
@@ -2334,8 +2379,8 @@ def require_api_key(
 
 ---
 
-#### Step 22.11g — Build routers/compliance.py
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/routers/compliance.py`
+#### Step 30.11g — Build routers/compliance.py
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/routers/compliance.py`
 
 **Section 1:** Imports and router setup
 
@@ -2583,8 +2628,8 @@ def get_compliance_report(db: Session = Depends(get_db)):
 
 ---
 
-#### Step 22.11h — Build main.py (Application Entry Point)
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/main.py`
+#### Step 30.11h — Build main.py (Application Entry Point)
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/main.py`
 
 **Section 1:** Imports and app configuration
 
@@ -2750,8 +2795,8 @@ def health_check():
 
 ---
 
-#### Step 22.11i — Create SQL Schema and Seed Data (Copy-Paste)
-📍 **Editor** — create `~/oci-federal-lab-phase3/app/fedcompliance/sql/seed.sql`
+#### Step 30.11i — Create SQL Schema and Seed Data (Copy-Paste)
+📍 **Editor** — create `~/fedcompliance/app/fedcompliance/sql/seed.sql`
 
 > This file is copy-paste — it's data, not logic. Read the inline comments to understand the structure.
 
@@ -2978,7 +3023,7 @@ COMMIT;
 **Verify app file structure:**
 
 ```bash
-find ~/oci-federal-lab-phase3/app/fedcompliance -type f | sort
+find ~/fedcompliance/app/fedcompliance -type f | sort
 # Expected:
 #   .../fedcompliance/database.py
 #   .../fedcompliance/main.py
@@ -2993,7 +3038,7 @@ find ~/oci-federal-lab-phase3/app/fedcompliance -type f | sort
 
 ---
 
-### Step 22.12 — Set Up 2-Node k3s Cluster
+### Step 30.12 — Set Up 2-Node k3s Cluster
 📍 **App Node Terminal** (abbreviated — returning concept from Phase 2)
 
 > Returning concept from Phase 2. Same server + agent pattern. Abbreviated — commands listed, ELI5 skipped.
@@ -3003,7 +3048,7 @@ find ~/oci-federal-lab-phase3/app/fedcompliance -type f | sort
 📍 **App Node Terminal (node-1)** — SSH in via bastion jump
 
 ```bash
-ssh -J opc@BASTION_IP opc@NODE1_PRIVATE_IP
+ssh p3-node1
 
 # Install k3s server (control plane + worker)
 # --disable traefik: we will use nginx ingress instead (Day 3)
@@ -3025,7 +3070,7 @@ sudo cat /var/lib/rancher/k3s/server/node-token
 📍 **App Node Terminal (node-2)**
 
 ```bash
-ssh -J opc@BASTION_IP opc@NODE2_PRIVATE_IP
+ssh p3-node2
 
 curl -sfL https://get.k3s.io | sh -s - agent \
   --server https://NODE1_PRIVATE_IP:6443 \
@@ -3051,13 +3096,12 @@ kubectl get nodes
 📍 **Bastion Terminal**
 
 ```bash
-# Copy kubeconfig from node-1
-# Replace <NODE1_PRIVATE_IP> with your actual node-1 private IP
-# Find it with: terraform output -raw k3s_node1_private_ip
-scp opc@<NODE1_PRIVATE_IP>:/etc/rancher/k3s/k3s.yaml ~/.kube/config
+# Copy kubeconfig from node-1 (bastion can reach node-1 directly on private subnet)
+NODE1_IP=$(grep "k3s-node-1" ~/fedcompliance/ansible/inventory.ini | grep -oP 'ansible_host=\K[0-9.]+')
+scp opc@${NODE1_IP}:/etc/rancher/k3s/k3s.yaml ~/.kube/config
 
 # Point kubeconfig at node-1's real IP (default is 127.0.0.1)
-sed -i "s/127.0.0.1/<NODE1_PRIVATE_IP>/g" ~/.kube/config
+sed -i "s/127.0.0.1/${NODE1_IP}/g" ~/.kube/config
 
 # Install kubectl (ARM binary)
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/arm64/kubectl"
@@ -3069,11 +3113,11 @@ kubectl get nodes
 
 ---
 
-### Step 22.13 — Deploy FedCompliance via Ansible
+### Step 30.13 — Deploy FedCompliance via Ansible
 📍 **Local Terminal**
 
 ```bash
-cd ~/oci-federal-lab-phase3
+cd ~/fedcompliance
 
 # Run the deploy playbook — pulls secrets from OCI Vault at runtime
 ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_fedcompliance.yml
@@ -3083,7 +3127,7 @@ ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_fedcompliance
 # The actual password is never shown in output
 
 # Seed the database with compliance control data
-ssh -J opc@BASTION_IP opc@NODE1_PRIVATE_IP \
+ssh p3-node1 \
   "sqlplus ADMIN/YOUR_DB_PASSWORD@FEDCOMP_low @/opt/fedcompliance/app/sql/seed.sql"
 ```
 
@@ -3123,18 +3167,18 @@ curl -X POST http://NODE1_PRIVATE_IP:8000/auth/validate \
 Open Swagger UI to explore all endpoints interactively:
 
 ```bash
-# Create SSH tunnel from your local machine
-ssh -L 8000:NODE1_PRIVATE_IP:8000 -J opc@BASTION_IP opc@NODE1_PRIVATE_IP -N &
+# Create SSH tunnel from your local machine (ProxyCommand handles the jump)
+ssh -L 8000:localhost:8000 p3-node1 -N &
 # Then open: http://localhost:8000/docs
 ```
 
 ---
 
-### Step 22.14 — Git Commit
+### Step 30.14 — Git Commit
 📍 **Local Terminal**
 
 ```bash
-cd ~/oci-federal-lab-phase3
+cd ~/fedcompliance
 
 git add phases/phase-3-fedcompliance-gitops-security/
 git add .gitignore
@@ -3169,7 +3213,7 @@ git push origin main
 
 ---
 
-### Phase 22 Complete
+### Phase 30 Complete
 
 **What you built:**
 
@@ -3194,7 +3238,7 @@ git push origin main
 
 ---
 
-## PHASE 23: THE PIPELINE + RAW K8S DEPLOY (6–8 hrs)
+## PHASE 31: THE PIPELINE + RAW K8S DEPLOY (6–8 hrs)
 
 > You have infrastructure standing from Day 1 (Terraform modules, OCI Vault, k3s cluster). Today you build the CI/CD pipeline that makes every future change automated, auditable, and security-gated. You install Jenkins, write a multi-stage Jenkinsfile by hand, add container security scanning with Trivy, generate a software bill of materials with Syft, wire up a manual approval gate, and end the day with your FedCompliance app running on k3s — deployed entirely through the pipeline via raw `kubectl apply`.
 >
@@ -3261,13 +3305,13 @@ Your Laptop (git push)
 
 ---
 
-### Step 23.1 — Install Jenkins (Returning Concept — Abbreviated)
+### Step 31.1 — Install Jenkins (Returning Concept — Abbreviated)
 
 📍 **Bastion Terminal**
 
 > **CloudBees CI — Returning from Phase 2 Migration**
 >
-> In Phase 2, you migrated from open-source Jenkins to CloudBees CI (or the open-source plugin equivalent). You configured RBAC, CasC, and audit trails. Phase 3 starts with a fresh environment, so you'll do a speed-run of that setup, then go deeper with **pipeline templates**, **cross-team visibility**, and **CasC bundle versioning** in Step 23.13.
+> In Phase 2, you migrated from open-source Jenkins to CloudBees CI (or the open-source plugin equivalent). You configured RBAC, CasC, and audit trails. Phase 3 starts with a fresh environment, so you'll do a speed-run of that setup, then go deeper with **pipeline templates**, **cross-team visibility**, and **CasC bundle versioning** in Step 31.13.
 >
 > Your Jenkinsfile syntax is 100% compatible — CloudBees runs standard Jenkins pipelines. The difference is the governance wrapper around it.
 
@@ -3340,7 +3384,7 @@ http://<BASTION_PUBLIC_IP>:8080
 
 > Expected: Jenkins unlock screen (paste password above) or Jenkins dashboard if already configured. Install suggested plugins and create an admin user if prompted.
 
-> **OCI Security List:** Port 8080 must be open in the Public Subnet Ingress rules. If set up in Phase 18, it is already open. Verify: OCI Console → Networking → VCN → Security Lists → Public Subnet.
+> **OCI Security List:** Port 8080 must be open in the Public Subnet Ingress rules. If set up in Phase 30, it is already open. Verify: OCI Console → Networking → VCN → Security Lists → Public Subnet.
 
 <sub><em style="color: #999; font-size: 0.65em;">
 
@@ -3358,7 +3402,7 @@ http://<BASTION_PUBLIC_IP>:8080
 
 ---
 
-### Step 23.2 — Install Trivy (Container Security Scanner)
+### Step 31.2 — Install Trivy (Container Security Scanner)
 
 📍 **Bastion Terminal**
 
@@ -3421,7 +3465,7 @@ ls ~/.cache/trivy/db/
 
 ---
 
-### Step 23.3 — Install Syft (SBOM Generator)
+### Step 31.3 — Install Syft (SBOM Generator)
 
 📍 **Bastion Terminal**
 
@@ -3485,7 +3529,7 @@ ls -lh /tmp/test-sbom.spdx.json
 
 ---
 
-### Step 23.4 — Configure Jenkins Credentials
+### Step 31.4 — Configure Jenkins Credentials
 
 📍 **Browser → Jenkins UI**
 
@@ -3572,7 +3616,7 @@ Jenkins → Manage Jenkins → Credentials → System → Global credentials (un
 
 ---
 
-### Step 23.5 — Create the K8s Raw Manifests (Returning Concept — Abbreviated)
+### Step 31.5 — Create the K8s Raw Manifests (Returning Concept — Abbreviated)
 
 📍 **Bastion Terminal** then 📍 **Editor**
 
@@ -3755,7 +3799,7 @@ done
 
 ---
 
-### Step 23.6 — Build the Jenkinsfile (NEW CONCEPT — Multi-Stage Pipeline with Approval Gate)
+### Step 31.6 — Build the Jenkinsfile (NEW CONCEPT — Multi-Stage Pipeline with Approval Gate)
 
 📍 **Editor** (build by hand — section by section)
 
@@ -4277,7 +4321,7 @@ grep -n "input(" ~/fedcompliance/Jenkinsfile
 
 ---
 
-### Step 23.7 — Configure the Jenkins Pipeline Job
+### Step 31.7 — Configure the Jenkins Pipeline Job
 
 📍 **Browser → Jenkins UI**
 
@@ -4310,7 +4354,7 @@ Jenkins → fedcompliance-pipeline → Configure → Pipeline section
 
 ---
 
-### Step 23.8 — Commit All Files and Trigger the First Pipeline Run
+### Step 31.8 — Commit All Files and Trigger the First Pipeline Run
 
 📍 **Bastion Terminal**
 
@@ -4372,7 +4416,7 @@ Jenkins → fedcompliance-pipeline → Build Now
 
 ---
 
-### Step 23.9 — Walk Through the Approval Gate
+### Step 31.9 — Walk Through the Approval Gate
 
 📍 **Browser → Jenkins UI**
 
@@ -4413,7 +4457,7 @@ Build #1 → Console Output → search for "Deployment APPROVED"
 
 ---
 
-### Step 23.10 — Verify the Deployment on k3s
+### Step 31.10 — Verify the Deployment on k3s
 
 📍 **App Node Terminal** (SSH to k3s server via bastion)
 
@@ -4474,7 +4518,7 @@ curl -s http://${K3S_IP}:30080/openapi.json | python3 -m json.tool | head -10
 
 ---
 
-### Step 23.11 — Review the Build Artifacts (Security Evidence Package)
+### Step 31.11 — Review the Build Artifacts (Security Evidence Package)
 
 📍 **Browser → Jenkins UI**
 
@@ -4536,7 +4580,7 @@ Key SBOM fields to know for interviews:
 
 ---
 
-### Step 23.12 — Git Commit Final Phase 23 Work
+### Step 31.12 — Git Commit Final Phase 31 Work
 
 📍 **Bastion Terminal**
 
@@ -4567,7 +4611,7 @@ git push origin main
 
 ---
 
-### Step 23.13 — Advanced CloudBees CI Governance (1.5 hrs)
+### Step 31.13 — Advanced CloudBees CI Governance (1.5 hrs)
 
 You migrated from open-source Jenkins to CloudBees CI in Phase 2 — you configured RBAC, CasC, and audit trails. Phase 3 goes deeper into the enterprise governance features that differentiate CloudBees from open-source Jenkins. These are the features that hiring managers ask about.
 
@@ -4802,7 +4846,7 @@ sudo grep "auditor" /var/log/jenkins/audit.log
 In Phase 2, you created a CasC YAML file. Now practice the GitOps workflow: change the YAML in git → Jenkins config updates.
 
 ```bash
-cd ~/fedcompliance-project  # or your repo directory
+cd ~/fedcompliance  # or your repo directory
 
 # Edit the CasC config — change the system message
 cat > phases/phase-3-fedcompliance-gitops-security/jenkins/casc/jenkins.yaml << 'CASCEOF'
@@ -4916,7 +4960,7 @@ git push origin main
 
 ---
 
-## PHASE 23 TROUBLESHOOTING
+## PHASE 31 TROUBLESHOOTING
 
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
@@ -4931,7 +4975,7 @@ git push origin main
 | **Stage 7 fails: "denied: requested access to resource is denied"** | OCIR username format is wrong | Correct OCIR username format: `<tenancy_namespace>/oracleidentitycloudservice/<your_email>` — not your console login username |
 | **Stage 8 fails: "unable to connect to the server"** | kubeconfig has `127.0.0.1` as the server address | Re-generate kubeconfig from k3s: `sudo cat /etc/rancher/k3s/k3s.yaml` → replace `127.0.0.1` with the k3s node private IP → re-upload to Jenkins credential `k3s-kubeconfig` |
 | **Stage 8 fails: "namespace fedcompliance not found"** | Deployment manifest applied before namespace was created | Verify Stage 8 applies `namespace.yaml` first: `kubectl apply -f k8s/namespace.yaml` must precede `kubectl apply -f k8s/deployment.yaml`. Check the ordering in your Jenkinsfile |
-| **Stage 8: pods stuck in `ImagePullBackOff`** | k3s nodes cannot authenticate to OCIR to pull the image | Create the OCIR pull secret in the namespace (see Step 23.5). Verify: `kubectl get secret ocir-pull-secret -n fedcompliance` |
+| **Stage 8: pods stuck in `ImagePullBackOff`** | k3s nodes cannot authenticate to OCIR to pull the image | Create the OCIR pull secret in the namespace (see Step 31.5). Verify: `kubectl get secret ocir-pull-secret -n fedcompliance` |
 | **Stage 8: `sed` did not replace IMAGE_TAG** | The placeholder was already replaced in a previous run | Restore it: `git checkout k8s/deployment.yaml` in the repo directory. Then verify: `grep 'IMAGE_TAG' k8s/deployment.yaml` should show the placeholder. Commit the restored file |
 | **Stage 8: rollout status times out (pods stay Pending)** | Node resource limits exceeded, or image pull failing | Check: `kubectl describe pod -n fedcompliance -l app=fedcompliance` — look for Events section. Common causes: ImagePullBackOff (fix pull secret) or Insufficient memory (reduce `resources.requests.memory`) |
 | **Stage 9: smoke test fails "Connection refused"** | Application pod not fully ready when curl runs | Increase sleep: `sleep(time: 30, unit: 'SECONDS')`. Or add before curl: `kubectl wait --for=condition=ready pod -l app=fedcompliance -n fedcompliance --timeout=60s` |
@@ -4940,7 +4984,7 @@ git push origin main
 
 ---
 
-### Phase 23 Complete
+### Phase 31 Complete
 
 **What you built:**
 - A 9-stage Jenkins pipeline written entirely by hand as a `Jenkinsfile` (pipeline-as-code, version-controlled)
@@ -4968,7 +5012,7 @@ git push origin main
 
 ---
 
-## PHASE 24: HELM + ARGOCD — PRODUCTION-GRADE DELIVERY (6-8 hrs)
+## PHASE 32: HELM + ARGOCD — PRODUCTION-GRADE DELIVERY (6-8 hrs)
 
 > **What this phase builds:** You will replace the raw `kubectl apply` + `sed -i IMAGE_TAG` pattern from Phase 23 with a proper Helm chart you write from scratch. Then you will install ArgoCD on k3s, write an Application manifest by hand, and establish a full GitOps loop: push a change to git → ArgoCD detects it → cluster auto-syncs. Finally you will update the Jenkins pipeline so it only handles build + push + git commit; ArgoCD owns the K8s deployment from that point forward.
 
@@ -4982,7 +5026,7 @@ git push origin main
 
 ---
 
-### Step 24.1 — Understand What Helm Replaces (The Before/After Mental Model)
+### Step 32.1 — Understand What Helm Replaces (The Before/After Mental Model)
 
 📍 **Bastion Terminal** — no commands yet, just analysis
 
@@ -5015,7 +5059,7 @@ Helm's answer to every row:
 | `sed -i` hack | `{{ .Values.image.tag }}` in `deployment.yaml` template; set via `--set` or `values.yaml` |
 | Apply order | `helm install` sends all templates atomically; Helm handles ordering for CRDs |
 | No release history | Every `helm install`/`helm upgrade` creates a numbered release stored in a K8s secret |
-| No rollback | `helm rollback <release> <revision>` — single command, tested in Step 24.6 |
+| No rollback | `helm rollback <release> <revision>` — single command, tested in Step 32.6 |
 | Values scattered | All tunable values in one `values.yaml`; templates reference them by path |
 | Multi-environment | Override values per environment: `helm upgrade --install -f values-prod.yaml` |
 
@@ -5023,7 +5067,7 @@ Helm's answer to every row:
 
 ---
 
-### Step 24.2 — Install Helm on the Bastion VM
+### Step 32.2 — Install Helm on the Bastion VM
 
 📍 **Bastion Terminal**
 
@@ -5077,7 +5121,7 @@ helm repo update
 
 ---
 
-### Step 24.3 — Understand Helm Chart Structure Before Writing Anything
+### Step 32.3 — Understand Helm Chart Structure Before Writing Anything
 
 📍 **Bastion Terminal** — read the scaffold first
 
@@ -5123,7 +5167,7 @@ rm -rf ~/example-chart
 
 ---
 
-### Step 24.4 — Create the FedCompliance Helm Chart By Hand
+### Step 32.4 — Create the FedCompliance Helm Chart By Hand
 
 📍 **Bastion Terminal**
 
@@ -5373,7 +5417,7 @@ cat > helm/fedcompliance/templates/secret.yaml << 'EOF'
 # IMPORTANT: In production, do NOT store actual secret values in values.yaml.
 # Use External Secrets Operator (OCI Vault), Sealed Secrets, or Helm Secrets plugin.
 # This is a placeholder secret for lab purposes only.
-# The real OCI Vault integration was built in Phase 20.
+# The real OCI Vault integration was built in Phase 30.
 #
 # b64enc is a Helm/Sprig template function — not a shell command.
 # Usage: {{ "plaintext value" | b64enc }}
@@ -5475,7 +5519,7 @@ Expected:
 
 ---
 
-### Step 24.5 — Lint and Dry-Run the Chart Before Installing
+### Step 32.5 — Lint and Dry-Run the Chart Before Installing
 
 📍 **Bastion Terminal**
 
@@ -5541,7 +5585,7 @@ helm install fedcompliance ~/fedcompliance/helm/fedcompliance \
 
 ---
 
-### Step 24.6 — Install the Helm Chart and Verify
+### Step 32.6 — Install the Helm Chart and Verify
 
 📍 **Bastion Terminal**
 
@@ -5610,11 +5654,11 @@ curl http://${K3S_IP}:30080/health
 
 ---
 
-### Step 24.7 — Helm Upgrade: Deploy a New Image Tag
+### Step 32.7 — Helm Upgrade: Deploy a New Image Tag
 
 📍 **Bastion Terminal**
 
-> This simulates what the Jenkins pipeline will do in Step 24.13 — build a new image, push to OCIR, then run `helm upgrade` to deploy it.
+> This simulates what the Jenkins pipeline will do in Step 32.13 — build a new image, push to OCIR, then run `helm upgrade` to deploy it.
 
 ```bash
 # Simulate pushing a new build by using a demo tag
@@ -5648,7 +5692,7 @@ helm history fedcompliance -n fedcompliance
 
 ---
 
-### Step 24.8 — Helm Rollback: Restore the Previous State
+### Step 32.8 — Helm Rollback: Restore the Previous State
 
 📍 **Bastion Terminal**
 
@@ -5701,7 +5745,7 @@ helm history fedcompliance -n fedcompliance
 
 ---
 
-### Step 24.9 — Install ArgoCD on k3s
+### Step 32.9 — Install ArgoCD on k3s
 
 📍 **Bastion Terminal**
 
@@ -5811,7 +5855,7 @@ argocd login ${K3S_IP}:${ARGOCD_PORT} \
 
 ---
 
-### Step 24.10 — Add Your Git Repository to ArgoCD
+### Step 32.10 — Add Your Git Repository to ArgoCD
 
 📍 **Bastion Terminal**
 
@@ -5861,7 +5905,7 @@ If STATUS is `Failed`, the MESSAGE column shows the specific error:
 
 ---
 
-### Step 24.11 — Create the ArgoCD Application Manifest By Hand
+### Step 32.11 — Create the ArgoCD Application Manifest By Hand
 
 📍 **Bastion Terminal**
 
@@ -5894,7 +5938,7 @@ spec:
   project: default
 
   source:
-    # Your git repository URL — must match exactly what you registered in Step 24.10
+    # Your git repository URL — must match exactly what you registered in Step 32.10
     repoURL: https://github.com/YOUR_GITHUB_USERNAME/fedcompliance.git
 
     # Branch, tag, or commit SHA to track.
@@ -5999,7 +6043,7 @@ argocd app get fedcompliance
 
 ---
 
-### Step 24.12 — Demo the GitOps Loop: Push a Change, Watch ArgoCD Auto-Sync
+### Step 32.12 — Demo the GitOps Loop: Push a Change, Watch ArgoCD Auto-Sync
 
 📍 **Bastion Terminal**
 
@@ -6046,13 +6090,13 @@ argocd app history fedcompliance
 
 ---
 
-### Step 24.13 — Update the Jenkins Pipeline for Helm + GitOps
+### Step 32.13 — Update the Jenkins Pipeline for Helm + GitOps
 
 📍 **Bastion Terminal**
 
 > In the GitOps model, Jenkins only needs to: build the image, scan it, push it to OCIR, then commit the new image tag to `values.yaml` in git. ArgoCD handles the K8s deployment. The pipeline no longer needs `kubectl` at all.
 >
-> **CloudBees CI note:** If you're running CloudBees CI (from Phase 2 migration), the approval gate in this pipeline is governed by your folder-based RBAC — only users with the `platform-deployer` role can approve deployments. The audit trail logs every approval with timestamp, user, and IP. Consider importing the shared library (`@Library('oci-shared-lib') _`) and using the `federalPipeline` template from Step 23.13 to enforce security stages.
+> **CloudBees CI note:** If you're running CloudBees CI (from Phase 2 migration), the approval gate in this pipeline is governed by your folder-based RBAC — only users with the `platform-deployer` role can approve deployments. The audit trail logs every approval with timestamp, user, and IP. Consider importing the shared library (`@Library('oci-shared-lib') _`) and using the `federalPipeline` template from Step 31.13 to enforce security stages.
 
 Pipeline changes from Phase 23:
 - **REMOVED:** Stage 8 (kubectl apply + sed IMAGE_TAG) — ArgoCD replaces this entirely
@@ -6077,7 +6121,7 @@ pipeline {
         GIT_REPO_URL  = "https://github.com/YOUR_GITHUB_USERNAME/fedcompliance.git"
         GIT_BRANCH    = "main"
 
-        // ArgoCD server address: k3s node IP + NodePort from Step 24.9
+        // ArgoCD server address: k3s node IP + NodePort from Step 32.9
         ARGOCD_APP    = "fedcompliance"
         ARGOCD_SERVER = "YOUR_K3S_NODE_IP:YOUR_ARGOCD_NODEPORT"
     }
@@ -6225,7 +6269,7 @@ Trivy:     PASSED (no CRITICAL/HIGH CVEs)
 SBOM:      fedcompliance-sbom-${BUILD_NUMBER}.spdx.json
 ArgoCD:    will auto-sync this commit to the fedcompliance namespace"
 
-                        // NOTE: YOUR_GITHUB_USERNAME below is replaced by the sed command in Step 24.12
+                        // NOTE: YOUR_GITHUB_USERNAME below is replaced by the sed command in Step 32.12
                         git remote set-url origin https://${GH_PAT}@github.com/YOUR_GITHUB_USERNAME/fedcompliance.git
                         git push origin ${GIT_BRANCH}
                         echo "Pushed to git. ArgoCD will detect and sync."
@@ -6288,7 +6332,7 @@ Add the two new Jenkins credentials this pipeline requires:
 # 2. "argocd-admin-password"
 #    Kind: Secret text
 #    ID: argocd-admin-password
-#    Secret: <ARGOCD_PASSWORD from Step 24.9>
+#    Secret: <ARGOCD_PASSWORD from Step 32.9>
 ```
 
 Update placeholder values in the Jenkinsfile (replace with your actual values):
@@ -6329,12 +6373,12 @@ git push origin main
 
 ---
 
-### Step 24.14 — Explore the ArgoCD UI
+### Step 32.14 — Explore the ArgoCD UI
 
 📍 **Browser** → `http://<k3s-node-ip>:<argocd-nodeport>`
 
 ```
-Login: admin / <password from Step 24.9>
+Login: admin / <password from Step 32.9>
 ```
 
 **What to look at and what each section means:**
@@ -6372,7 +6416,7 @@ kubectl get deployment fedcompliance -n fedcompliance \
 
 ---
 
-### Step 24.15 — Rolling Update via values.yaml Change
+### Step 32.15 — Rolling Update via values.yaml Change
 
 📍 **Bastion Terminal**
 
@@ -6418,7 +6462,7 @@ kubectl exec -n fedcompliance \
 
 ---
 
-## PHASE 24 COMMAND REFERENCE
+## PHASE 32 COMMAND REFERENCE
 
 ### Helm Commands
 
@@ -6459,7 +6503,7 @@ kubectl exec -n fedcompliance \
 
 ---
 
-## PHASE 24 COMPARISON TABLE
+## PHASE 32 COMPARISON TABLE
 
 > **💼 Interview Insight — "What is the difference between raw kubectl, Helm, and Helm+ArgoCD?":**
 
@@ -6478,7 +6522,7 @@ kubectl exec -n fedcompliance \
 
 ---
 
-## PHASE 24 TROUBLESHOOTING
+## PHASE 32 TROUBLESHOOTING
 
 | Symptom | Likely Cause | Fix |
 |---------|-------------|-----|
@@ -6500,7 +6544,7 @@ kubectl exec -n fedcompliance \
 
 ---
 
-## PHASE 24 COMPLETE ✅
+## PHASE 32 COMPLETE ✅
 
 **What you built:**
 
@@ -6534,7 +6578,7 @@ kubectl exec -n fedcompliance \
 
 ---
 
-## PHASE 25: AI-AUGMENTED OPERATIONS & COMPLIANCE (6-8 hrs)
+## PHASE 33: AI-AUGMENTED OPERATIONS & COMPLIANCE (6-8 hrs)
 
 **Day 4 - What you are building:** An AI layer on top of the pipeline and running cluster. You will write a Python OCI Function that ingests application logs, run classical machine-learning anomaly detection with scikit-learn IsolationForest, and build a compliance-as-code evidence collector that queries OCI APIs directly and outputs a CMMC control-mapping report. The compliance collector also becomes a new stage in your Jenkins pipeline.
 
@@ -6570,7 +6614,7 @@ Jenkins Stage 10: Compliance Evidence
 
 ---
 
-### Step 25.1 - Prepare the OCI Functions Application (Return Visit)
+### Step 33.1 - Prepare the OCI Functions Application (Return Visit)
 
 **Location:** Bastion VM - `~/oci-fn/`
 
@@ -6600,7 +6644,7 @@ ls
 
 ---
 
-### Step 25.2 - Write the Log Processor Function by Hand
+### Step 33.2 - Write the Log Processor Function by Hand
 
 **Location:** Bastion VM - `~/oci-fn/log-processor/log-processor/func.py`
 
@@ -6729,7 +6773,7 @@ oci>=2.126.0
 
 ---
 
-### Step 25.3 - Configure func.yaml and Deploy
+### Step 33.3 - Configure func.yaml and Deploy
 
 **Location:** Bastion VM - `~/oci-fn/log-processor/log-processor/func.yaml`
 
@@ -6764,7 +6808,7 @@ oci os object list --bucket-name app_logs --prefix summaries/ --output table
 
 ---
 
-### Step 25.4 - ELI5: What is IsolationForest?
+### Step 33.4 - ELI5: What is IsolationForest?
 
 > **ELI5 - IsolationForest**
 >
@@ -6778,7 +6822,7 @@ oci os object list --bucket-name app_logs --prefix summaries/ --output table
 
 ---
 
-### Step 25.5 - Write the Security Pattern Detector by Hand
+### Step 33.5 - Write the Security Pattern Detector by Hand
 
 **Location:** Bastion VM - `~/scripts/security_detector.py`
 
@@ -6965,7 +7009,7 @@ cat /tmp/digest.json
 
 ---
 
-### Step 25.6 - ELI5: What is Compliance-as-Code?
+### Step 33.6 - ELI5: What is Compliance-as-Code?
 
 > **ELI5 - Compliance-as-Code**
 >
@@ -6979,7 +7023,7 @@ cat /tmp/digest.json
 
 ---
 
-### Step 25.7 - Write the Compliance Evidence Collector by Hand
+### Step 33.7 - Write the Compliance Evidence Collector by Hand
 
 **Location:** Bastion VM - `~/scripts/compliance_collector.py`
 
@@ -7202,9 +7246,9 @@ cat /tmp/cmmc_evidence_report.json | python3 -m json.tool | head -40
 
 ---
 
-### Step 25.8 - Add Compliance Evidence as Jenkins Pipeline Stage
+### Step 33.8 - Add Compliance Evidence as Jenkins Pipeline Stage
 
-**Location:** Bastion VM - `~/fedcompliance-app/Jenkinsfile`
+**Location:** Bastion VM - `~/fedcompliance/Jenkinsfile`
 
 Open the Jenkinsfile and add Stage 10 after the existing Stage 9 (ArgoCD sync trigger):
 
@@ -7240,7 +7284,7 @@ Open the Jenkinsfile and add Stage 10 after the existing Stage 9 (ArgoCD sync tr
 **Commit and push:**
 
 ```bash
-cd ~/fedcompliance-app
+cd ~/fedcompliance
 git add Jenkinsfile
 git commit -m "ci: add Stage 10 compliance evidence collection"
 git push origin main
@@ -7250,7 +7294,7 @@ Trigger a build in Jenkins and confirm the `cmmc_evidence_report.json` artifact 
 
 ---
 
-### Step 25.9 - Verification Checklist
+### Step 33.9 - Verification Checklist
 
 ```bash
 # 1. OCI Function deployed
@@ -7271,7 +7315,7 @@ oci os object list --bucket-name app_logs --prefix compliance/ --output table
 
 ---
 
-### Step 25.10 - Interview Insight: Classical ML vs LLM
+### Step 33.10 - Interview Insight: Classical ML vs LLM
 
 > **Interview Insight - "Why not just use an LLM for log analysis?"**
 >
@@ -7287,7 +7331,7 @@ oci os object list --bucket-name app_logs --prefix compliance/ --output table
 
 ---
 
-### Step 25.11 - Interview Insight: What is Compliance-as-Code?
+### Step 33.11 - Interview Insight: What is Compliance-as-Code?
 
 > **Interview Insight - "What is compliance-as-code and have you implemented it?"**
 >
@@ -7299,7 +7343,7 @@ oci os object list --bucket-name app_logs --prefix compliance/ --output table
 
 ---
 
-### Step 25.12 - Phase 25 Troubleshooting
+### Step 33.12 - Phase 25 Troubleshooting
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|
@@ -7328,7 +7372,7 @@ oci os object list --bucket-name app_logs --prefix compliance/ --output table
 
 ---
 
-### Phase 25 Complete
+### Phase 33 Complete
 
 **What you built:**
 - An OCI Function (`log-processor`) written from scratch in Python 3.11 that ingests raw application logs from Object Storage, aggregates them into summary metrics, and writes structured JSON summaries back to the same bucket
@@ -7344,7 +7388,7 @@ oci os object list --bucket-name app_logs --prefix compliance/ --output table
 
 ---
 
-## PHASE 25B: BREAK-FIX EXERCISES — KUBERNETES, PIPELINE & SECURITY (1-1.5 hrs)
+## PHASE 33B: BREAK-FIX EXERCISES — KUBERNETES, PIPELINE & SECURITY (1-1.5 hrs)
 
 > **Why break-fix exercises?** In Phase 1, you broke the firewall, file permissions, and the systemd service on purpose — then diagnosed and fixed them. Those exercises built the troubleshooting muscle memory that interviewers test. Phase 3 introduces more complex systems (Kubernetes, CI/CD pipelines, Helm, ArgoCD) that fail in more complex ways. These exercises simulate the real failures you'll encounter in production federal environments.
 >
@@ -7425,7 +7469,7 @@ curl -s http://localhost:30080/health | python3 -m json.tool
 
 ```bash
 # Edit the Dockerfile to use an old, vulnerable base image
-cd ~/fedcompliance-app
+cd ~/fedcompliance
 # Save the original
 cp Dockerfile Dockerfile.backup
 
@@ -7582,7 +7626,7 @@ argocd app sync fedcompliance
 
 ---
 
-## PHASE 26: END-TO-END VALIDATION & TEARDOWN (4-6 hrs)
+## PHASE 34: END-TO-END VALIDATION & TEARDOWN (4-6 hrs)
 
 **Day 5 - What you are doing:** You are not building new infrastructure. You are proving the entire system works as designed, hardening the developer workflow with pre-commit secrets scanning, documenting what you built, and then destroying everything cleanly in the correct order.
 
@@ -7590,7 +7634,7 @@ argocd app sync fedcompliance
 
 ---
 
-### Phase 26 Architecture - Full E2E Flow
+### Phase 34 Architecture - Full E2E Flow
 
 ```
 Developer workstation
@@ -7631,7 +7675,7 @@ Object Storage (app_logs bucket)
 
 ---
 
-### Step 26.1 - ELI5: Pre-Commit Hooks and detect-secrets
+### Step 34.1 - ELI5: Pre-Commit Hooks and detect-secrets
 
 > **ELI5 - Pre-Commit Hooks**
 >
@@ -7653,9 +7697,9 @@ Object Storage (app_logs bucket)
 
 ---
 
-### Step 26.2 - Install and Configure Pre-Commit with detect-secrets
+### Step 34.2 - Install and Configure Pre-Commit with detect-secrets
 
-**Location:** Developer workstation (or bastion VM) - `~/fedcompliance-app/`
+**Location:** Developer workstation (or bastion VM) - `~/fedcompliance/`
 
 ```bash
 # Install both tools
@@ -7671,7 +7715,7 @@ detect-secrets --version
 **Create `.pre-commit-config.yaml` by hand:**
 
 ```bash
-cat > ~/fedcompliance-app/.pre-commit-config.yaml << 'EOF'
+cat > ~/fedcompliance/.pre-commit-config.yaml << 'EOF'
 # .pre-commit-config.yaml
 # Runs on every git commit in this repo.
 # Managed by the pre-commit framework: https://pre-commit.com
@@ -7701,7 +7745,7 @@ EOF
 **Generate the initial secrets baseline:**
 
 ```bash
-cd ~/fedcompliance-app
+cd ~/fedcompliance
 
 # Scan the entire repo and create the baseline file
 detect-secrets scan \
@@ -7732,28 +7776,28 @@ git push origin main
 ```bash
 # Deliberately introduce a fake secret
 echo 'AWS_SECRET_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"' \
-  > ~/fedcompliance-app/test_secret.py
-cd ~/fedcompliance-app && git add test_secret.py
+  > ~/fedcompliance/test_secret.py
+cd ~/fedcompliance && git add test_secret.py
 
 # This commit should be BLOCKED
 git commit -m "test: this should be blocked"
 # Expected output: [ERROR] Secrets were detected in your commit. Aborting.
 
 # Clean up
-rm ~/fedcompliance-app/test_secret.py
+rm ~/fedcompliance/test_secret.py
 git restore --staged test_secret.py 2>/dev/null || git reset HEAD test_secret.py
 ```
 
 ---
 
-### Step 26.3 - Run the Full End-to-End Validation
+### Step 34.3 - Run the Full End-to-End Validation
 
 **Location:** Bastion VM + Jenkins UI
 
 This step walks through a complete push-to-deploy cycle and verifies every stage.
 
 ```bash
-cd ~/fedcompliance-app
+cd ~/fedcompliance
 ```
 
 Open `app/main.py` and update the health endpoint to return a version field:
@@ -7813,7 +7857,7 @@ oci os object list --bucket-name app_logs --prefix compliance/ --output table
 
 ---
 
-### Step 26.4 - Interview Insight: Preventing Secrets in Commits
+### Step 34.4 - Interview Insight: Preventing Secrets in Commits
 
 > **Interview Insight - "How do you prevent secrets from being committed to source control?"**
 >
@@ -7831,13 +7875,13 @@ oci os object list --bucket-name app_logs --prefix compliance/ --output table
 
 ---
 
-### Step 26.5 - Document the Pipeline Architecture
+### Step 34.5 - Document the Pipeline Architecture
 
-**Location:** Bastion VM - `~/fedcompliance-app/docs/pipeline-architecture.md`
+**Location:** Bastion VM - `~/fedcompliance/docs/pipeline-architecture.md`
 
 ```bash
-mkdir -p ~/fedcompliance-app/docs
-cat > ~/fedcompliance-app/docs/pipeline-architecture.md << 'EOF'
+mkdir -p ~/fedcompliance/docs
+cat > ~/fedcompliance/docs/pipeline-architecture.md << 'EOF'
 # FedCompliance App - Pipeline Architecture
 
 ## Overview
@@ -7897,7 +7941,7 @@ git push origin main
 
 ---
 
-### Step 26.6 - Write the Teardown Script by Hand
+### Step 34.6 - Write the Teardown Script by Hand
 
 **Location:** Bastion VM - `~/teardown.sh`
 
@@ -7982,7 +8026,7 @@ echo "      Jenkins stopped and disabled."
 ```bash
 echo ""
 echo "[6/6] Running Terraform destroy..."
-cd ~/fedcompliance-app/terraform
+cd ~/fedcompliance/terraform
 
 terraform workspace show
 terraform plan -destroy -out=destroy.tfplan
@@ -8021,7 +8065,7 @@ chmod +x ~/teardown.sh
 
 ---
 
-### Step 26.7 - Execute the Teardown
+### Step 34.7 - Execute the Teardown
 
 ```bash
 bash ~/teardown.sh
@@ -8050,7 +8094,7 @@ oci network vcn list \
 
 ---
 
-### Step 26.8 - Phase 26 Troubleshooting
+### Step 34.8 - Phase 34 Troubleshooting
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|
@@ -8065,7 +8109,7 @@ oci network vcn list \
 
 ---
 
-### Step 26.9 - Phase 26 Verification Checklist
+### Step 34.9 - Phase 34 Verification Checklist
 
 ```bash
 # All k3s namespaces gone
@@ -8380,7 +8424,7 @@ helm install fedcompliance ./helm/fedcompliance/
 
 **Image signing with OCI Vault (conceptual):**
 
-Your Phase 3 lab already has OCI Vault configured (Day 1, Step 22.9). Container image signing uses Vault's KMS keys to cryptographically sign images, proving they came from your pipeline and haven't been tampered with. This maps to EO 14028 (Executive Order on Improving the Nation's Cybersecurity) supply chain requirements.
+Your Phase 3 lab already has OCI Vault configured (Day 1, Step 30.9). Container image signing uses Vault's KMS keys to cryptographically sign images, proving they came from your pipeline and haven't been tampered with. This maps to EO 14028 (Executive Order on Improving the Nation's Cybersecurity) supply chain requirements.
 
 ```bash
 # Conceptual flow (requires cosign CLI):

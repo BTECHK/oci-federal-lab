@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # =============================================================
 # THROWAWAY SCRIPT — Delete after instance is created
 # Creates A1.Flex instance with cloud-init bootstrap

@@ -8,6 +8,25 @@
 
 ---
 
+## ⚠️ BEFORE YOU BEGIN — DESTROY PHASE 1 INFRASTRUCTURE
+
+Phase 2 creates new infrastructure that would exceed the Always Free tier if Phase 1 resources still exist. **Tear down Phase 1 before starting.**
+
+```bash
+# From your Phase 1 terraform directory
+cd ~/fedtracker/terraform
+terraform destroy
+# Type 'yes' when prompted — this removes all Phase 1 VMs, VCN, subnets
+```
+
+**Verify cleanup:**
+- OCI Console → Compute → Instances → confirm no running instances
+- OCI Console → Networking → Virtual Cloud Networks → confirm no VCNs
+
+> Your Phase 1 code is safe in git. Only the cloud infrastructure is destroyed. You can rebuild Phase 1 anytime with `terraform apply`.
+
+---
+
 ## WHAT YOU'RE BUILDING
 
 Phase 1 taught you how to build and automate. Phase 2 teaches you how to survive when things break. You start by rebuilding a fresh environment fast (proving your Phase 1 skills are muscle memory), then layer on backup architecture, Kubernetes, and disaster recovery. Day 4 is the climax: you simulate a ransomware attack, detect it with AIDE, and recover everything within a measured RTO.
@@ -321,7 +340,7 @@ cat > ~/oci-federal-lab-phase2/terraform/network.tf << 'EOF'
 
 resource "oci_core_vcn" "fedanalytics_vcn" {
   compartment_id = var.compartment_ocid
-  display_name   = "fedanalytics-vcn"
+  display_name   = "p2-fedanalytics-vcn"
   cidr_blocks    = ["10.0.0.0/16"]
   dns_label      = "fedanalytics"
 
@@ -479,7 +498,7 @@ resource "oci_core_security_list" "private_sl" {
 resource "oci_core_subnet" "public_subnet" {
   compartment_id    = var.compartment_ocid
   vcn_id            = oci_core_vcn.fedanalytics_vcn.id
-  display_name      = "public-subnet"
+  display_name      = "p2-fedanalytics-public-subnet"
   cidr_block        = "10.0.1.0/24"
   route_table_id    = oci_core_route_table.public_rt.id
   security_list_ids = [oci_core_security_list.public_sl.id]
@@ -490,7 +509,7 @@ resource "oci_core_subnet" "public_subnet" {
 resource "oci_core_subnet" "private_subnet" {
   compartment_id             = var.compartment_ocid
   vcn_id                     = oci_core_vcn.fedanalytics_vcn.id
-  display_name               = "private-subnet"
+  display_name               = "p2-fedanalytics-private-subnet"
   cidr_block                 = "10.0.2.0/24"
   route_table_id             = oci_core_route_table.private_rt.id
   security_list_ids          = [oci_core_security_list.private_sl.id]
@@ -513,7 +532,7 @@ cat > ~/oci-federal-lab-phase2/terraform/compute.tf << 'EOF'
 resource "oci_core_instance" "bastion" {
   compartment_id      = var.compartment_ocid
   availability_domain = var.availability_domain
-  display_name        = "bastion"
+  display_name        = "p2-fedanalytics-bastion"
   shape               = "VM.Standard.A1.Flex"
 
   shape_config {
@@ -546,7 +565,7 @@ resource "oci_core_instance" "bastion" {
 resource "oci_core_instance" "app_server" {
   compartment_id      = var.compartment_ocid
   availability_domain = var.availability_domain
-  display_name        = "app-server"
+  display_name        = "p2-fedanalytics-app-server"
   shape               = "VM.Standard.A1.Flex"
 
   shape_config {
@@ -589,7 +608,7 @@ cat > ~/oci-federal-lab-phase2/terraform/database.tf << 'EOF'
 
 resource "oci_database_autonomous_database" "fedanalytics_db" {
   compartment_id           = var.compartment_ocid
-  display_name             = "fedanalytics-db"
+  display_name             = "p2-fedanalytics-adb"
   db_name                  = "fedanalyticsdb"
   db_workload              = "OLTP"
   is_free_tier             = true
@@ -703,27 +722,27 @@ APP_IP=$(terraform output -raw app_server_private_ip)
 
 cat >> ~/.ssh/config << SSHEOF
 
-Host bastion-p2
+Host p2-bastion
     HostName ${BASTION_IP}
     User opc
     IdentityFile ~/.ssh/oci_key
 
-Host app-server-p2
+Host p2-app-server
     HostName ${APP_IP}
     User opc
     IdentityFile ~/.ssh/oci_key
-    ProxyJump bastion-p2
+    ProxyJump p2-bastion
 SSHEOF
 ```
 
-> **Why `-p2` suffix?** If you still have Phase 1 SSH config entries, the `-p2` suffix prevents conflicts. You can use `ssh app-server-p2` to connect to this Phase 2 environment.
+> **Why `-p2` suffix?** If you still have Phase 1 SSH config entries, the `-p2` suffix prevents conflicts. You can use `ssh p2-app-server` to connect to this Phase 2 environment.
 
 ```bash
 # Test SSH connectivity
-ssh bastion-p2 "hostname && echo 'Bastion OK'"
+ssh p2-bastion "hostname && echo 'Bastion OK'"
 # Expected: bastion hostname printed
 
-ssh app-server-p2 "hostname && echo 'App Server OK'"
+ssh p2-app-server "hostname && echo 'App Server OK'"
 # Expected: app-server hostname printed (via bastion ProxyJump)
 ```
 
@@ -802,10 +821,10 @@ cat > ~/oci-federal-lab-phase2/ansible/inventory.ini << 'EOF'
 # Update IPs after terraform apply
 
 [bastion]
-bastion-p2 ansible_host=<BASTION_PUBLIC_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key
+p2-bastion ansible_host=<BASTION_PUBLIC_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key
 
 [app]
-app-server-p2 ansible_host=<APP_SERVER_PRIVATE_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key ansible_ssh_common_args='-o ProxyCommand="ssh -i ~/.ssh/oci_key -W %h:%p opc@<BASTION_PUBLIC_IP>"'
+p2-app-server ansible_host=<APP_SERVER_PRIVATE_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key ansible_ssh_common_args='-o ProxyCommand="ssh -i ~/.ssh/oci_key -W %h:%p opc@<BASTION_PUBLIC_IP>"'
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
@@ -819,7 +838,7 @@ EOF
 ```bash
 cd ~/oci-federal-lab-phase2
 ansible all -i ansible/inventory.ini -m ping
-# Expected: app-server-p2 | SUCCESS
+# Expected: p2-app-server | SUCCESS
 ```
 
 ---
@@ -1818,17 +1837,17 @@ ansible-playbook -i ansible/inventory.ini ansible/playbooks/deploy_app.yml
 
 ```bash
 # Test through SSH tunnel
-ssh app-server-p2 "curl -s http://localhost:8000/health" | python3 -m json.tool
+ssh p2-app-server "curl -s http://localhost:8000/health" | python3 -m json.tool
 # Expected: {"status": "healthy", "service": "fedanalytics", ...}
 
-ssh app-server-p2 "curl -s http://localhost:8000/docs" | head -5
+ssh p2-app-server "curl -s http://localhost:8000/docs" | head -5
 # Expected: HTML content (Swagger UI auto-generated docs)
 ```
 
 **Test the ingest endpoint:**
 
 ```bash
-ssh app-server-p2 'curl -s -X POST http://localhost:8000/ingest \
+ssh p2-app-server 'curl -s -X POST http://localhost:8000/ingest \
   -H "Content-Type: application/json" \
   -d '"'"'{
     "source": "test-client",
@@ -1843,7 +1862,7 @@ ssh app-server-p2 'curl -s -X POST http://localhost:8000/ingest \
 **Test the webhook endpoint:**
 
 ```bash
-ssh app-server-p2 'curl -s -X POST http://localhost:8000/webhook \
+ssh p2-app-server 'curl -s -X POST http://localhost:8000/webhook \
   -H "Content-Type: application/json" \
   -d '"'"'{
     "eventType": "com.oraclecloud.objectstorage.createobject",
@@ -1857,10 +1876,10 @@ ssh app-server-p2 'curl -s -X POST http://localhost:8000/webhook \
 **Test the logs endpoint:**
 
 ```bash
-ssh app-server-p2 "curl -s 'http://localhost:8000/logs?severity=INFO&limit=5'" | python3 -m json.tool
+ssh p2-app-server "curl -s 'http://localhost:8000/logs?severity=INFO&limit=5'" | python3 -m json.tool
 # Expected: Log entries filtered by INFO severity
 
-ssh app-server-p2 "curl -s http://localhost:8000/metrics" | python3 -m json.tool
+ssh p2-app-server "curl -s http://localhost:8000/metrics" | python3 -m json.tool
 # Expected: Metrics with records_ingested > 0, webhooks_received > 0
 ```
 
@@ -2881,7 +2900,7 @@ Open your existing `main.tf` and remove the `oci_core_instance.app_server` block
 resource "oci_core_instance" "k3s_server_node" {
   availability_domain = var.availability_domain
   compartment_id      = var.compartment_ocid
-  display_name        = "k3s-server-node"
+  display_name        = "p2-fedanalytics-k3s-server"
   shape               = "VM.Standard.A1.Flex"
 
   shape_config {
@@ -2917,7 +2936,7 @@ resource "oci_core_instance" "k3s_server_node" {
 resource "oci_core_instance" "k3s_agent_node" {
   availability_domain = var.availability_domain
   compartment_id      = var.compartment_ocid
-  display_name        = "k3s-agent-node"
+  display_name        = "p2-fedanalytics-k3s-agent"
   shape               = "VM.Standard.A1.Flex"
 
   shape_config {
@@ -3029,17 +3048,17 @@ echo "k3s agent:  ${K3S_AGENT_IP}"
 ```bash
 cat >> ~/.ssh/config << SSHEOF
 
-Host k3s-server-node
+Host p2-k3s-server
     HostName ${K3S_SERVER_IP}
     User opc
     IdentityFile ~/.ssh/oci_key
-    ProxyCommand ssh -W %h:%p bastion-p2
+    ProxyCommand ssh -W %h:%p p2-bastion
 
-Host k3s-agent-node
+Host p2-k3s-agent
     HostName ${K3S_AGENT_IP}
     User opc
     IdentityFile ~/.ssh/oci_key
-    ProxyCommand ssh -W %h:%p bastion-p2
+    ProxyCommand ssh -W %h:%p p2-bastion
 SSHEOF
 ```
 
@@ -3048,10 +3067,10 @@ SSHEOF
 Wait 2-3 minutes for cloud-init to finish on both nodes, then verify:
 
 ```bash
-ssh k3s-server-node "hostname && free -h && nproc"
+ssh p2-k3s-server "hostname && free -h && nproc"
 # Expected: k3s-server   12Gi total   2 CPUs
 
-ssh k3s-agent-node "hostname && free -h && nproc"
+ssh p2-k3s-agent "hostname && free -h && nproc"
 # Expected: k3s-agent    12Gi total   2 CPUs
 ```
 
@@ -3059,10 +3078,10 @@ ssh k3s-agent-node "hostname && free -h && nproc"
 
 ### Step 23.2 — Install k3s Server Node
 
-📍 **k3s-server-node (SSH)**
+📍 **p2-k3s-server (SSH)**
 
 ```bash
-ssh k3s-server-node
+ssh p2-k3s-server
 ```
 
 **Install k3s in server mode:**
@@ -3121,7 +3140,7 @@ kubectl get nodes
 
 ### Step 23.3 — Join k3s Agent Node
 
-📍 **k3s-agent-node (SSH)**
+📍 **p2-k3s-agent (SSH)**
 
 Open a new terminal window and SSH to the agent node:
 
@@ -3158,7 +3177,7 @@ sudo systemctl status k3s-agent
 **Switch back to the server node** and confirm both nodes are visible:
 
 ```bash
-# Back on k3s-server-node
+# Back on p2-k3s-server
 kubectl get nodes
 ```
 
@@ -3176,9 +3195,87 @@ Both nodes showing `Ready` means the cluster is healthy and pod scheduling can b
 
 ---
 
+### Step 23.3B — Containerize FedAnalytics and Push to OCIR
+
+📍 **p2-app-server (SSH)** — where the app code lives from Step 21.2
+
+Before deploying to k3s, you need a container image. This is the same pattern from Phase 1 Step 14 — write a Dockerfile, build, tag, push to OCIR.
+
+**Create the Dockerfile:**
+
+```bash
+cat > ~/oci-federal-lab-phase2/app/Dockerfile << 'DOCKEREOF'
+# FedAnalytics container image
+# Same pattern as Phase 1 FedTracker — Oracle Linux 9 slim base, non-root user
+FROM oraclelinux:9-slim
+
+# Install Python and pip
+RUN microdnf install -y python3 python3-pip && \
+    microdnf clean all
+
+# Create non-root user (CIS benchmark)
+RUN useradd -r -m -s /bin/bash appuser
+
+WORKDIR /app
+
+# Install dependencies first (Docker layer caching — unchanged deps = cached layer)
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY main.py .
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+CMD ["python3", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+DOCKEREOF
+```
+
+**Build and push to OCIR:**
+
+```bash
+# Login to OCIR (same as Phase 1 — replace with your values)
+docker login <REGION_CODE>.ocir.io -u '<YOUR_OBJECT_STORAGE_NAMESPACE>/oracleidentitycloudservice/<YOUR_EMAIL>'
+# Password: use your OCI Auth Token (generated in OCI Console → User Settings → Auth Tokens)
+
+# Build the image
+cd ~/oci-federal-lab-phase2/app
+docker build -t <REGION_CODE>.ocir.io/<YOUR_OBJECT_STORAGE_NAMESPACE>/fedanalytics:latest .
+
+# Push to OCIR
+docker push <REGION_CODE>.ocir.io/<YOUR_OBJECT_STORAGE_NAMESPACE>/fedanalytics:latest
+```
+
+> **Remember from Phase 1:** `<REGION_CODE>` is your OCI region key (e.g., `iad` for Ashburn, `phx` for Phoenix). `<YOUR_OBJECT_STORAGE_NAMESPACE>` is your tenancy's Object Storage namespace — find it under OCI Console → Tenancy Details → Object Storage Namespace. It may be a random string like `ax3k7abc1def`, NOT your tenancy name.
+
+**Create OCIR pull secret on k3s** (so the cluster can pull your private image):
+
+📍 **p2-k3s-server (SSH)**
+
+```bash
+sudo k3s kubectl create secret docker-registry ocir-secret \
+  --docker-server=<REGION_CODE>.ocir.io \
+  --docker-username='<YOUR_OBJECT_STORAGE_NAMESPACE>/oracleidentitycloudservice/<YOUR_EMAIL>' \
+  --docker-password='<YOUR_AUTH_TOKEN>' \
+  --docker-email='<YOUR_EMAIL>'
+
+# Verify the secret was created
+sudo k3s kubectl get secret ocir-secret
+# Expected: NAME          TYPE                             DATA   AGE
+#           ocir-secret   kubernetes.io/dockerconfigjson   1      5s
+```
+
+---
+
 ### Step 23.4 — Deploy FedAnalytics to k3s
 
-📍 **k3s-server-node (SSH)**
+📍 **p2-k3s-server (SSH)**
 
 You'll create three Kubernetes manifest files: a ConfigMap for database connection settings, a Deployment that runs 2 FedAnalytics pod replicas, and a Service that exposes the app on NodePort 30080.
 
@@ -3236,11 +3333,15 @@ spec:
         app: fedanalytics
         version: "1.0"
     spec:
+      # IMPORTANT: Build and push your container image to OCIR before applying this manifest.
+      # Follow the pattern from Phase 1 Step 14. Example:
+      #   docker build -t <REGION_CODE>.ocir.io/<NAMESPACE>/fedanalytics:latest .
+      #   docker push <REGION_CODE>.ocir.io/<NAMESPACE>/fedanalytics:latest
+      imagePullSecrets:
+        - name: ocir-secret
       containers:
         - name: fedanalytics-container
-          image: python:3.11-slim
-          workingDir: /app
-          command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+          image: <REGION_CODE>.ocir.io/<YOUR_OBJECT_STORAGE_NAMESPACE>/fedanalytics:latest
           ports:
             - containerPort: 8000
               name: http-api
@@ -3380,7 +3481,7 @@ kubectl rollout status deployment/fedanalytics-deployment
 
 ### Step 23.5 — Test Multi-Node Networking
 
-📍 **bastion-p2 (SSH)** for external tests; 📍 **k3s-server-node** for internal tests
+📍 **p2-bastion (SSH)** for external tests; 📍 **p2-k3s-server** for internal tests
 
 **From the bastion, test both nodes directly on their NodePort:**
 
@@ -3394,10 +3495,10 @@ K3S_SERVER_IP="YOUR_K3S_SERVER_PRIVATE_IP"
 K3S_AGENT_IP="YOUR_K3S_AGENT_PRIVATE_IP"
 
 # Test the /health endpoint through each node's NodePort
-echo "--- Testing k3s-server-node NodePort ---"
+echo "--- Testing p2-k3s-server NodePort ---"
 curl -s "http://${K3S_SERVER_IP}:30080/health" | python3 -m json.tool
 
-echo "--- Testing k3s-agent-node NodePort ---"
+echo "--- Testing p2-k3s-agent NodePort ---"
 curl -s "http://${K3S_AGENT_IP}:30080/health" | python3 -m json.tool
 ```
 
@@ -3582,7 +3683,7 @@ sudo systemctl stop k3s-agent
 exit
 ```
 
-**Observe the symptom (from k3s-server-node):**
+**Observe the symptom (from p2-k3s-server):**
 
 ```bash
 kubectl get nodes --watch
@@ -3595,11 +3696,11 @@ kubectl get pods -o wide
 **Diagnose it:**
 
 ```bash
-# On k3s-server-node: check node conditions
+# On p2-k3s-server: check node conditions
 kubectl describe node k3s-agent
 # Look for: "Ready False" condition and "KubeletStopped" reason in Events
 
-# On k3s-agent-node: check the service status
+# On p2-k3s-agent: check the service status
 ssh k3s-agent-node
 sudo systemctl status k3s-agent
 # Expected: inactive (dead)
@@ -3610,13 +3711,13 @@ sudo journalctl -u k3s-agent -n 30
 **Fix it:**
 
 ```bash
-# On k3s-agent-node
+# On p2-k3s-agent
 sudo systemctl start k3s-agent
 sudo systemctl status k3s-agent
 # Expected: active (running)
 exit
 
-# Back on k3s-server-node — watch node return to Ready
+# Back on p2-k3s-server — watch node return to Ready
 kubectl get nodes --watch
 # Expected: k3s-agent → Ready within ~30 seconds
 
@@ -3686,11 +3787,11 @@ This is not optional in federal environments. NIST 800-53 CM-6 (Configuration Se
 
 ```ini
 [bastion]
-bastion-p2 ansible_host=YOUR_BASTION_PUBLIC_IP ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key
+p2-bastion ansible_host=YOUR_BASTION_PUBLIC_IP ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key
 
 [k3s_cluster]
-k3s-server-node ansible_host=YOUR_K3S_SERVER_PRIVATE_IP ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -i ~/.ssh/oci_key opc@YOUR_BASTION_PUBLIC_IP"'
-k3s-agent-node  ansible_host=YOUR_K3S_AGENT_PRIVATE_IP  ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -i ~/.ssh/oci_key opc@YOUR_BASTION_PUBLIC_IP"'
+p2-k3s-server ansible_host=YOUR_K3S_SERVER_PRIVATE_IP ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -i ~/.ssh/oci_key opc@YOUR_BASTION_PUBLIC_IP"'
+p2-k3s-agent  ansible_host=YOUR_K3S_AGENT_PRIVATE_IP  ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -i ~/.ssh/oci_key opc@YOUR_BASTION_PUBLIC_IP"'
 
 [all_managed_nodes:children]
 k3s_cluster
@@ -3722,11 +3823,11 @@ ansible-playbook harden.yml \
 
 ```
 TASK [Ensure sshd_config PermitRootLogin is no] *****
-ok: [k3s-server-node]    ← "ok" means no change needed — baseline is intact
-ok: [k3s-agent-node]
+ok: [p2-k3s-server]    ← "ok" means no change needed — baseline is intact
+ok: [p2-k3s-agent]
 
 TASK [Ensure firewall is enabled and running] *****
-changed: [k3s-server-node]   ← "changed" means this WOULD change if --check weren't set
+changed: [p2-k3s-server]   ← "changed" means this WOULD change if --check weren't set
 --- before
 +++ after
 @@ -1,3 +1,3 @@
@@ -3741,6 +3842,7 @@ changed: [k3s-server-node]   ← "changed" means this WOULD change if --check we
 ```bash
 cat > ~/oci-federal-lab-phase2/ansible/scripts/detect-drift.sh << 'SCRIPTEOF'
 #!/bin/bash
+set -euo pipefail
 # detect-drift.sh — Run Ansible in check mode and report any configuration drift
 # Usage: ./detect-drift.sh [optional: path-to-playbook]
 
@@ -3799,7 +3901,7 @@ If the cluster was just freshly configured by Ansible, you should see all `ok` t
 
 ### Step 23A.3 — Simulate Drift and Detect It
 
-📍 **k3s-server-node (SSH)** to inject the fault, then 📍 **Local Terminal (WSL2)** to detect it
+📍 **p2-k3s-server (SSH)** to inject the fault, then 📍 **Local Terminal (WSL2)** to detect it
 
 **Simulate drift — manually change a configuration that your hardening playbook manages:**
 
@@ -3836,7 +3938,7 @@ Playbook:  harden.yml
 ========================================
 
 TASK [Ensure sshd_config has correct permissions] *****
-changed: [k3s-server-node]
+changed: [p2-k3s-server]
 --- before: /etc/ssh/sshd_config
 +++ after
 @@ -1 +1 @@
@@ -3844,7 +3946,7 @@ changed: [k3s-server-node]
 +mode: '0600'
 
 TASK [Ensure firewalld is enabled and running] *****
-changed: [k3s-server-node]
+changed: [p2-k3s-server]
 --- before
 +++ after
 @@ -1 +1 @@
@@ -3852,7 +3954,7 @@ changed: [k3s-server-node]
 +state: started
 
 PLAY RECAP *******************************
-k3s-server-node : ok=8  changed=2  unreachable=0  failed=0
+p2-k3s-server : ok=8  changed=2  unreachable=0  failed=0
 
 ========================================
 DRIFT DETECTED: 2 change(s) found
@@ -3887,7 +3989,7 @@ ansible-playbook harden.yml -i inventory.ini -v
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| `ansible-playbook --check` fails with `unreachable` | ProxyCommand wrong in inventory or bastion SSH key not loaded | Test `ssh k3s-server-node` manually. Verify `ansible_ssh_common_args` has correct bastion IP. Run `ssh-add ~/.ssh/oci_key` |
+| `ansible-playbook --check` fails with `unreachable` | ProxyCommand wrong in inventory or bastion SSH key not loaded | Test `ssh p2-k3s-server` manually. Verify `ansible_ssh_common_args` has correct bastion IP. Run `ssh-add ~/.ssh/oci_key` |
 | Drift report shows 0 tasks (empty playbook run) | Inventory hosts not matching playbook `hosts:` directive | Check `harden.yml` top-level `hosts:` value matches group name in `inventory.ini`. Should be `k3s_cluster` or `all_managed_nodes` |
 | `detect-drift.sh` always exits 0 even when drift exists | `grep "changed="` not finding the string in output | Check Ansible output format. Try `--check -v` manually and look for the word "changed" in the PLAY RECAP line. Adjust grep pattern if needed |
 | Drift is detected but remediation playbook also fails | Task requires elevated privilege | Ensure `become: true` is set on tasks that modify system files. Add `--become` flag to playbook run |
@@ -3932,7 +4034,7 @@ ansible-playbook harden.yml -i inventory.ini -v
 | Field | Value | Why |
 |-------|-------|-----|
 | Load Balancer Type | **Load Balancer** (not Network Load Balancer) | Layer 7 — understands HTTP, can check `/health` |
-| Name | `fedanalytics-lb` | Descriptive, matches the app |
+| Name | `p2-fedanalytics-lb` | Descriptive, matches the app |
 | Visibility | **Public** | Needs to be reachable from the internet |
 | Bandwidth | Flexible: **10 Mbps** min / **10 Mbps** max | Always Free tier limit |
 | VCN | Select your Phase 2 VCN | Must be the same VCN as your k3s nodes |
@@ -4003,7 +4105,7 @@ The LB needs two Security List rules:
 
 ```bash
 # Get the LB's public IP from the OCI Console
-# Load Balancers → fedanalytics-lb → IP Addresses section
+# Load Balancers → p2-fedanalytics-lb → IP Addresses section
 LB_IP="<YOUR_LB_PUBLIC_IP>"
 
 # Test through the load balancer
@@ -4039,7 +4141,7 @@ done
 
 ```bash
 # From bastion: stop k3s on node-2 to simulate a failure
-ssh k3s-agent-node 'sudo systemctl stop k3s-agent'
+ssh p2-k3s-agent 'sudo systemctl stop k3s-agent'
 ```
 
 ```bash
@@ -4054,7 +4156,7 @@ done
 
 ```bash
 # Restore node-2
-ssh k3s-agent-node 'sudo systemctl start k3s-agent'
+ssh p2-k3s-agent 'sudo systemctl start k3s-agent'
 # Wait 30 seconds for health check to detect recovery
 # Traffic resumes to both nodes
 ```
@@ -4162,13 +4264,13 @@ AIDE directly satisfies **SI-7 (Software, Firmware, and Information Integrity)**
 
 ```bash
 # From your local machine (WSL2):
-ssh -J fedanalytics-bastion fedanalytics-k3s-server
+ssh -J p2-bastion p2-k3s-server
 ```
 
 | Flag | What It Does |
 |------|-------------|
-| `-J fedanalytics-bastion` | ProxyJump — route through bastion host (defined in your SSH config) |
-| `fedanalytics-k3s-server` | The alias for your k3s-server private IP (also in SSH config) |
+| `-J p2-bastion` | ProxyJump — route through bastion host (defined in your SSH config) |
+| `p2-k3s-server` | The alias for your k3s-server private IP (also in SSH config) |
 
 #### Install AIDE
 
@@ -4714,6 +4816,7 @@ sudo aide --check 2>&1 | grep -E "All files match|differences"
 ```bash
 sudo tee /usr/local/bin/fedanalytics-aide-daily-check.sh << 'EOF'
 #!/bin/bash
+set -euo pipefail
 # fedanalytics-aide-daily-check.sh
 # Daily AIDE integrity check with structured logging.
 # Runs via cron. On violation, writes alert to syslog and saves JSON report.
@@ -5362,7 +5465,7 @@ cat /tmp/pre-attack-baseline.json
 
 ```bash
 # SSH to k3s-server
-ssh -J fedanalytics-bastion fedanalytics-k3s-server
+ssh -J p2-bastion p2-k3s-server
 
 # Run AIDE check — must be clean before attack
 sudo aide --check 2>&1 | tail -5
@@ -5403,7 +5506,7 @@ Save this output — you will verify the same state is restored after recovery.
 #### SSH to k3s-server as your normal user
 
 ```bash
-ssh -J fedanalytics-bastion fedanalytics-k3s-server
+ssh -J p2-bastion p2-k3s-server
 ```
 
 #### Phase 1 of the attack: Destroy the running application
@@ -5482,7 +5585,7 @@ You are now the on-call engineer. Something is wrong — monitoring alerts are f
 
 In OCI Console:
 1. Navigate to **Networking → Load Balancers**
-2. Click `fedanalytics-lb`
+2. Click `p2-fedanalytics-lb`
 3. Click **Backend Sets** → `fedanalytics-backend-set`
 4. Observe: both k3s nodes now show **Critical** health status (app is not running)
 
@@ -6730,7 +6833,7 @@ from datetime import datetime
 LAB_RESOURCES = {
     "compute": [
         {
-            "resource_name": "Bastion VM (fedanalytics-bastion)",
+            "resource_name": "Bastion VM (p2-fedanalytics-bastion)",
             "shape": "VM.Standard.A1.Flex",
             "ocpu_count": 1,
             "memory_gb": 6,
@@ -6742,7 +6845,7 @@ LAB_RESOURCES = {
             "estimated_monthly_hours": 720,
         },
         {
-            "resource_name": "k3s Server Node (fedanalytics-k3s-server)",
+            "resource_name": "k3s Server Node (p2-fedanalytics-k3s-server)",
             "shape": "VM.Standard.A1.Flex",
             "ocpu_count": 2,
             "memory_gb": 12,
@@ -6756,7 +6859,7 @@ LAB_RESOURCES = {
     ],
     "database": [
         {
-            "resource_name": "Oracle Autonomous Database (fedanalytics-adb)",
+            "resource_name": "Oracle Autonomous Database (p2-fedanalytics-adb)",
             "db_type": "Autonomous Transaction Processing",
             "ocpu_count": 1,
             "storage_tb": 0.02,  # 20 GB
@@ -6775,7 +6878,7 @@ LAB_RESOURCES = {
             "paid_monthly_cost_usd": 0.00,
         },
         {
-            "resource_name": "Load Balancer (fedanalytics-lb)",
+            "resource_name": "Load Balancer (p2-fedanalytics-lb)",
             "bandwidth_mbps": 10,
             "always_free": True,
             "always_free_notes": "1 flexible load balancer with 10 Mbps bandwidth always free",

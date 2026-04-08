@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Updates Ansible inventory with current Terraform output IPs
 # Run from repo root after terraform apply:
 #   bash tools/update-inventory.sh

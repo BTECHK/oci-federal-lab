@@ -2,7 +2,7 @@
 # WSL2 Setup Script — installs Terraform and OCI CLI
 # Run from WSL2: bash /mnt/c/Users/<your-windows-username>/OneDrive/Desktop/github/oci-federal-lab/tools/setup-wsl2.sh
 
-set -e
+set -euo pipefail
 
 echo "========================================="
 echo " WSL2 Lab Setup — Terraform + OCI CLI"

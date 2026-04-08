@@ -3645,7 +3645,7 @@ Internet
 2. Make sure `fedtracker-lab` compartment is selected
 3. Click **Create VCN** (NOT the wizard this time)
 4. Fill in:
-   - **Name:** `fedtracker-vcn`
+   - **Name:** `p1-fedtracker-vcn`
    - **Compartment:** `fedtracker-lab`
    - **IPv4 CIDR Blocks:** `10.0.0.0/16`
 5. Click **Create VCN**
@@ -3659,10 +3659,10 @@ Internet
 
 > **🧠 ELI5 — Internet Gateway:** An Internet Gateway is the VCN's front door to the internet. Without it, nothing in the VCN can communicate with the outside world. The public subnet's route table points to the Internet Gateway for outbound traffic, and it also allows inbound traffic to reach public IPs.
 
-1. Inside `fedtracker-vcn`, click the **Gateways** tab → scroll to **Internet Gateways**
+1. Inside `p1-fedtracker-vcn`, click the **Gateways** tab → scroll to **Internet Gateways**
 2. Click **Create Internet Gateway**
 3. Fill in:
-   - **Name:** `fedtracker-igw`
+   - **Name:** `p1-fedtracker-igw`
    - **Compartment:** `fedtracker-lab`
 4. Click **Create Internet Gateway**
 
@@ -3671,10 +3671,10 @@ Internet
 ### Step 8.4 — Create NAT Gateway
 📍 **OCI Console**
 
-1. Inside `fedtracker-vcn`, click the **Gateways** tab → scroll to **NAT Gateways**
+1. Inside `p1-fedtracker-vcn`, click the **Gateways** tab → scroll to **NAT Gateways**
 2. Click **Create NAT Gateway**
 3. Fill in:
-   - **Name:** `fedtracker-natgw`
+   - **Name:** `p1-fedtracker-natgw`
    - **Compartment:** `fedtracker-lab`
 4. Click **Create NAT Gateway**
 
@@ -3687,10 +3687,10 @@ Internet
 
 > **🧠 ELI5 — Service Gateway:** A Service Gateway lets your private subnet talk to Oracle services (like Autonomous AI Database, Object Storage) over Oracle's internal network — not the public internet. The NAT Gateway handles outbound internet traffic, but Oracle services live on the **Oracle Services Network**, a separate backbone. Without a Service Gateway, your app server in the private subnet can't reach the database. Think of it as a private back door directly into Oracle's service buildings, bypassing the public streets entirely.
 
-1. Inside `fedtracker-vcn`, click the **Gateways** tab → scroll to **Service Gateways**
+1. Inside `p1-fedtracker-vcn`, click the **Gateways** tab → scroll to **Service Gateways**
 2. Click **Create Service Gateway**
 3. Fill in:
-   - **Name:** `fedtracker-sgw`
+   - **Name:** `p1-fedtracker-sgw`
    - **Compartment:** `fedtracker-lab`
    - **Services:** Select **All IAD Services In Oracle Services Network** (or your region's equivalent — e.g., `All PHX Services...` for Phoenix)
 4. Click **Create Service Gateway**
@@ -3706,34 +3706,34 @@ Internet
 
 **Public subnet route table:**
 
-1. Inside `fedtracker-vcn`, click the **Routing** tab
+1. Inside `p1-fedtracker-vcn`, click the **Routing** tab
 2. Click **Create Route Table**
 3. Fill in:
-   - **Name:** `public-rt`
+   - **Name:** `p1-fedtracker-public-rt`
    - **Compartment:** `fedtracker-lab`
    - Click **+ Another Route Rule**:
      - **Target Type:** Internet Gateway
      - **Destination CIDR:** `0.0.0.0/0`
-     - **Target:** `fedtracker-igw`
+     - **Target:** `p1-fedtracker-igw`
 4. Click **Create**
 
 **Private subnet route table:**
 
 1. Click **Create Route Table** again
 2. Fill in:
-   - **Name:** `private-rt`
+   - **Name:** `p1-fedtracker-private-rt`
    - **Compartment:** `fedtracker-lab`
    - Click **+ Another Route Rule**:
      - **Target Type:** NAT Gateway
      - **Destination CIDR:** `0.0.0.0/0`
-     - **Target:** `fedtracker-natgw`
+     - **Target:** `p1-fedtracker-natgw`
    - Click **+ Another Route Rule**:
      - **Target Type:** Service Gateway
      - **Destination Service:** `All IAD Services In Oracle Services Network` (or your region equivalent)
-     - **Target:** `fedtracker-sgw`
+     - **Target:** `p1-fedtracker-sgw`
 3. Click **Create**
 
-> **Why two rules on `private-rt`?** The NAT Gateway rule handles general internet traffic (e.g., `dnf install`, pip downloads). The Service Gateway rule handles traffic to Oracle services (Autonomous AI Database, Object Storage). Without the second rule, the app server can't connect to the database — the connection hangs because it tries to reach the DB through the NAT Gateway, which can't access the Oracle Services Network.
+> **Why two rules on `p1-fedtracker-private-rt`?** The NAT Gateway rule handles general internet traffic (e.g., `dnf install`, pip downloads). The Service Gateway rule handles traffic to Oracle services (Autonomous AI Database, Object Storage). Without the second rule, the app server can't connect to the database — the connection hangs because it tries to reach the DB through the NAT Gateway, which can't access the Oracle Services Network.
 
 ---
 
@@ -3744,10 +3744,10 @@ Internet
 
 **Public subnet security list:**
 
-1. Inside `fedtracker-vcn`, click the **Security** tab
+1. Inside `p1-fedtracker-vcn`, click the **Security** tab
 2. Click **Create Security List**
 3. Fill in:
-   - **Name:** `public-sl`
+   - **Name:** `p1-fedtracker-public-sl`
    - **Compartment:** `fedtracker-lab`
 4. Add **Ingress Rules**:
    - Rule 1: SSH from your IP
@@ -3765,7 +3765,7 @@ Internet
 
 1. Click **Create Security List** again
 2. Fill in:
-   - **Name:** `private-sl`
+   - **Name:** `p1-fedtracker-private-sl`
    - **Compartment:** `fedtracker-lab`
 3. Add **Ingress Rules**:
    - Rule 1: SSH from public subnet only
@@ -3791,40 +3791,40 @@ Internet
 
 **Public subnet:**
 
-1. Inside `fedtracker-vcn`, click the **Subnets** tab
+1. Inside `p1-fedtracker-vcn`, click the **Subnets** tab
 2. Click **Create Subnet**
 3. Fill in:
-   - **Name:** `public-subnet`
+   - **Name:** `p1-fedtracker-public-subnet`
    - **Compartment:** `fedtracker-lab`
    - **Subnet Type:** Regional
    - **IPv4 CIDR Block:** `10.0.1.0/24`
-   - **Route Table:** `public-rt`
+   - **Route Table:** `p1-fedtracker-public-rt`
    - **Subnet Access:** **Public Subnet**
-   - **Security List:** `public-sl`
+   - **Security List:** `p1-fedtracker-public-sl`
 4. Click **Create Subnet**
 
 **Private subnet:**
 
 1. Click **Create Subnet** again
 2. Fill in:
-   - **Name:** `private-subnet`
+   - **Name:** `p1-fedtracker-private-subnet`
    - **Compartment:** `fedtracker-lab`
    - **Subnet Type:** Regional
    - **IPv4 CIDR Block:** `10.0.2.0/24`
-   - **Route Table:** `private-rt`
+   - **Route Table:** `p1-fedtracker-private-rt`
    - **Subnet Access:** **Private Subnet**
-   - **Security List:** `private-sl`
+   - **Security List:** `p1-fedtracker-private-sl`
 3. Click **Create Subnet**
 
 **Verify:**
 
-In `fedtracker-vcn`, you should see:
-- 2 subnets: `public-subnet` (10.0.1.0/24) and `private-subnet` (10.0.2.0/24)
-- Internet Gateway: `fedtracker-igw`
-- NAT Gateway: `fedtracker-natgw`
-- Service Gateway: `fedtracker-sgw`
-- 2 Route Tables: `public-rt` (→ IGW) and `private-rt` (→ NAT GW + Service GW)
-- 2 Security Lists: `public-sl` and `private-sl`
+In `p1-fedtracker-vcn`, you should see:
+- 2 subnets: `p1-fedtracker-public-subnet` (10.0.1.0/24) and `p1-fedtracker-private-subnet` (10.0.2.0/24)
+- Internet Gateway: `p1-fedtracker-igw`
+- NAT Gateway: `p1-fedtracker-natgw`
+- Service Gateway: `p1-fedtracker-sgw`
+- 2 Route Tables: `p1-fedtracker-public-rt` (→ IGW) and `p1-fedtracker-private-rt` (→ NAT GW + Service GW)
+- 2 Security Lists: `p1-fedtracker-public-sl` and `p1-fedtracker-private-sl`
 
 ---
 
@@ -3833,12 +3833,12 @@ In `fedtracker-vcn`, you should see:
 
 1. Navigate to **Compute** → **Instances** → **Create Instance**
 2. Fill in:
-   - **Name:** `bastion`
+   - **Name:** `p1-fedtracker-bastion`
    - **Compartment:** `fedtracker-lab`
    - **Image:** Oracle Linux 9
    - **Shape:** VM.Standard.A1.Flex — **1 OCPU / 6 GB RAM** (bastion doesn't need much)
-   - **VCN:** `fedtracker-vcn`
-   - **Subnet:** `public-subnet`
+   - **VCN:** `p1-fedtracker-vcn`
+   - **Subnet:** `p1-fedtracker-public-subnet`
    - **Public IPv4 address:** Assign a public IPv4 address
    - **SSH keys:** Generate a key pair → download both keys
 3. Click **Create**
@@ -3860,12 +3860,12 @@ chmod 600 ~/.ssh/bastion.key
 
 1. Navigate to **Compute** → **Instances** → **Create Instance**
 2. Fill in:
-   - **Name:** `app-server`
+   - **Name:** `p1-fedtracker-app-server`
    - **Compartment:** `fedtracker-lab`
    - **Image:** Oracle Linux 9
    - **Shape:** VM.Standard.A1.Flex — **1 OCPU / 10 GB RAM**
-   - **VCN:** `fedtracker-vcn`
-   - **Subnet:** `private-subnet`
+   - **VCN:** `p1-fedtracker-vcn`
+   - **Subnet:** `p1-fedtracker-private-subnet`
    - **Public IPv4 address:** **Do NOT assign** (this is a private subnet)
    - **SSH keys:** Generate a key pair → download both keys
 3. Click **Create**
@@ -4468,7 +4468,7 @@ sudo ausearch -m avc -ts recent
 | Python `oracledb.connect()` works | Connected message | Check: (1) wallet is in correct directory, (2) wallet password is correct, (3) admin password is correct, (4) DSN matches the wallet's tnsnames.ora entries |
 | `curl /health` shows `"type": "oracle"` | Oracle DB connected | Check `DB_TYPE=oracle` in service file. Check `journalctl -u fedtracker` for connection errors |
 | `curl /personnel` returns records | JSON with 5 records | Schema may not be created. Run the schema script again |
-| Connection hangs / timeout | Should connect in 1-2 seconds | **Most likely:** Service Gateway missing or route rule not added. Check: (1) `fedtracker-sgw` exists in VCN → Gateways tab → Service Gateways, (2) `private-rt` has a route rule with Target Type: Service Gateway and Destination: All IAD Services In Oracle Services Network. The NAT Gateway handles internet traffic but Oracle ADB uses the Oracle Services Network — a Service Gateway is required. |
+| Connection hangs / timeout | Should connect in 1-2 seconds | **Most likely:** Service Gateway missing or route rule not added. Check: (1) `p1-fedtracker-sgw` exists in VCN → Gateways tab → Service Gateways, (2) `p1-fedtracker-private-rt` has a route rule with Target Type: Service Gateway and Destination: All IAD Services In Oracle Services Network. The NAT Gateway handles internet traffic but Oracle ADB uses the Oracle Services Network — a Service Gateway is required. |
 
 ---
 
@@ -5052,14 +5052,14 @@ echo ".terraform/" >> ~/oci-federal-lab/.gitignore
 resource "oci_core_vcn" "main" {
   compartment_id = var.compartment_ocid
   cidr_blocks    = [var.vcn_cidr]
-  display_name   = "${var.project_name}-vcn"
+  display_name   = "p1-${var.project_name}-vcn"
   dns_label      = var.project_name
 
   freeform_tags = var.freeform_tags
 }
 ```
 
-> **What is `"${var.project_name}-vcn"`?** This is Terraform string interpolation — it inserts the variable's value into the string. If `project_name` is "fedtracker", the result is "fedtracker-vcn". This keeps resource names consistent and predictable.
+> **What is `"p1-${var.project_name}-vcn"`?** This is Terraform string interpolation — it inserts the variable's value into the string. If `project_name` is "fedtracker", the result is "p1-fedtracker-vcn". The `p1-` prefix scopes all resources to Phase 1, making multi-phase environments easy to identify. This keeps resource names consistent and predictable.
 
 **Step 2:** Internet Gateway
 
@@ -5068,7 +5068,7 @@ resource "oci_core_vcn" "main" {
 resource "oci_core_internet_gateway" "main" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main.id
-  display_name   = "${var.project_name}-igw"
+  display_name   = "p1-${var.project_name}-igw"
   enabled        = true
 
   freeform_tags = var.freeform_tags
@@ -5084,7 +5084,7 @@ resource "oci_core_internet_gateway" "main" {
 resource "oci_core_nat_gateway" "main" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main.id
-  display_name   = "${var.project_name}-natgw"
+  display_name   = "p1-${var.project_name}-natgw"
 
   freeform_tags = var.freeform_tags
 }
@@ -5097,7 +5097,7 @@ resource "oci_core_nat_gateway" "main" {
 resource "oci_core_route_table" "public" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main.id
-  display_name   = "public-rt"
+  display_name   = "p1-fedtracker-public-rt"
 
   route_rules {
     destination       = "0.0.0.0/0"
@@ -5111,7 +5111,7 @@ resource "oci_core_route_table" "public" {
 resource "oci_core_route_table" "private" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main.id
-  display_name   = "private-rt"
+  display_name   = "p1-fedtracker-private-rt"
 
   route_rules {
     destination       = "0.0.0.0/0"
@@ -5129,7 +5129,7 @@ resource "oci_core_route_table" "private" {
 resource "oci_core_security_list" "public" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main.id
-  display_name   = "public-sl"
+  display_name   = "p1-fedtracker-public-sl"
 
   # Allow SSH from anywhere (in production, restrict to your IP)
   ingress_security_rules {
@@ -5154,7 +5154,7 @@ resource "oci_core_security_list" "public" {
 resource "oci_core_security_list" "private" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main.id
-  display_name   = "private-sl"
+  display_name   = "p1-fedtracker-private-sl"
 
   # SSH from public subnet only
   ingress_security_rules {
@@ -5194,7 +5194,7 @@ resource "oci_core_subnet" "public" {
   compartment_id    = var.compartment_ocid
   vcn_id            = oci_core_vcn.main.id
   cidr_block        = var.public_subnet_cidr
-  display_name      = "public-subnet"
+  display_name      = "p1-fedtracker-public-subnet"
   dns_label         = "public"
   route_table_id    = oci_core_route_table.public.id
   security_list_ids = [oci_core_security_list.public.id]
@@ -5207,7 +5207,7 @@ resource "oci_core_subnet" "private" {
   compartment_id             = var.compartment_ocid
   vcn_id                     = oci_core_vcn.main.id
   cidr_block                 = var.private_subnet_cidr
-  display_name               = "private-subnet"
+  display_name               = "p1-fedtracker-private-subnet"
   dns_label                  = "private"
   route_table_id             = oci_core_route_table.private.id
   security_list_ids          = [oci_core_security_list.private.id]
@@ -5250,7 +5250,7 @@ data "oci_identity_availability_domains" "ads" {
 resource "oci_core_instance" "bastion" {
   compartment_id      = var.compartment_ocid
   availability_domain = data.oci_identity_availability_domains.ads.availability_domains[0].name
-  display_name        = "bastion"
+  display_name        = "p1-fedtracker-bastion"
   shape               = var.instance_shape
 
   shape_config {
@@ -5266,7 +5266,7 @@ resource "oci_core_instance" "bastion" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.public.id
     assign_public_ip = true
-    display_name     = "bastion-vnic"
+    display_name     = "p1-fedtracker-bastion-vnic"
   }
 
   metadata = {
@@ -5286,7 +5286,7 @@ resource "oci_core_instance" "bastion" {
 resource "oci_core_instance" "app_server" {
   compartment_id      = var.compartment_ocid
   availability_domain = data.oci_identity_availability_domains.ads.availability_domains[0].name
-  display_name        = "app-server"
+  display_name        = "p1-fedtracker-app-server"
   shape               = var.instance_shape
 
   shape_config {
@@ -5302,7 +5302,7 @@ resource "oci_core_instance" "app_server" {
   create_vnic_details {
     subnet_id        = oci_core_subnet.private.id
     assign_public_ip = false
-    display_name     = "app-server-vnic"
+    display_name     = "p1-fedtracker-app-server-vnic"
   }
 
   metadata = {
@@ -7473,8 +7473,8 @@ sudo iptables -D OUTPUT -p tcp --dport 80 -j DROP
 3. Click **Create Application**
 4. Fill in:
    - **Name:** `fedtracker-functions`
-   - **VCN:** `fedtracker-vcn`
-   - **Subnet:** `public-subnet` (functions need internet access for external dependencies)
+   - **VCN:** `p1-fedtracker-vcn`
+   - **Subnet:** `p1-fedtracker-public-subnet` (functions need internet access for external dependencies)
 5. Click **Create**
 
 ---

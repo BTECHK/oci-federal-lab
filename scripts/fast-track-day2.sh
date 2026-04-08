@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # =============================================================
 # fast-track-day2.sh — Rebuild Day 1 app + apply Day 2 Oracle DB patch
 #

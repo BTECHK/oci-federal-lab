@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Destroy & Rebuild with Timing — captures real metrics for interview prep
 # Run from repo root:
 #   cd /mnt/c/Users/<your-windows-username>/OneDrive/Desktop/github/oci-federal-lab

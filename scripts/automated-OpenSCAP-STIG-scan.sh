@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # =============================================================================
 # DISA STIG Scanner — runs OpenSCAP and summarizes results
 # Usage: sudo ./stig_scan.sh
