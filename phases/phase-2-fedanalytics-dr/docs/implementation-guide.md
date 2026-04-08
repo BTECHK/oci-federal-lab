@@ -805,7 +805,7 @@ cat > ~/oci-federal-lab-phase2/ansible/inventory.ini << 'EOF'
 bastion-p2 ansible_host=<BASTION_PUBLIC_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key
 
 [app]
-app-server-p2 ansible_host=<APP_SERVER_PRIVATE_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key ansible_ssh_common_args='-o ProxyJump=opc@<BASTION_PUBLIC_IP>'
+app-server-p2 ansible_host=<APP_SERVER_PRIVATE_IP> ansible_user=opc ansible_ssh_private_key_file=~/.ssh/oci_key ansible_ssh_common_args='-o ProxyCommand="ssh -i ~/.ssh/oci_key -W %h:%p opc@<BASTION_PUBLIC_IP>"'
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
@@ -1637,7 +1637,7 @@ cat > ~/oci-federal-lab-phase2/ansible/playbooks/deploy_app.yml << 'EOF'
     - name: Install Python dependencies
       pip:
         requirements: "{{ app_dir }}/requirements.txt"
-        executable: /usr/bin/python3 -m pip
+        executable: pip3
         state: present
 
     - name: Verify Python dependencies are importable
@@ -1919,7 +1919,6 @@ git push
 - Ansible deployment playbook: FedAnalytics FastAPI app with systemd service management
 - FedAnalytics API: 6 endpoints (ingest, webhook, logs, metrics, health, ingest/status)
 - Webhook endpoint with HMAC-SHA256 signature validation (Phase 2 API Pillar)
-- OCI Generative AI integration for compliance report generation
 
 **What's running:**
 - Bastion host (SSH gateway)
@@ -2066,7 +2065,7 @@ curl -s "${GATEWAY_URL}/health" | python3 -m json.tool
 # Test data ingestion through gateway
 curl -s -X POST "${GATEWAY_URL}/ingest" \
   -H "Content-Type: application/json" \
-  -d '{"source": "api-gateway-test", "data_type": "test", "payload": {"message": "routed through gateway"}}' | python3 -m json.tool
+  -d '{"source": "api-gateway-test", "data_type": "test", "records": [{"timestamp": "2026-04-08T00:00:00Z", "source": "api-gateway-test", "category": "metric", "message": "routed through gateway"}]}' | python3 -m json.tool
 
 # Test webhook through gateway
 curl -s -X POST "${GATEWAY_URL}/webhook" \
@@ -2117,10 +2116,10 @@ Create `api_gateway.tf`:
 # Provides managed rate limiting, routing, and a public HTTPS endpoint
 
 resource "oci_apigateway_gateway" "fedanalytics" {
-  compartment_id = var.compartment_id
+  compartment_id = var.compartment_ocid
   display_name   = "fedanalytics-gateway"
   endpoint_type  = "PUBLIC"
-  subnet_id      = oci_core_subnet.public.id
+  subnet_id      = oci_core_subnet.public_subnet.id
 
   freeform_tags = {
     "project"   = "oci-federal-lab"
@@ -2130,7 +2129,7 @@ resource "oci_apigateway_gateway" "fedanalytics" {
 }
 
 resource "oci_apigateway_deployment" "fedanalytics_v1" {
-  compartment_id = var.compartment_id
+  compartment_id = var.compartment_ocid
   gateway_id     = oci_apigateway_gateway.fedanalytics.id
   display_name   = "fedanalytics-api-v1"
   path_prefix    = "/v1"
@@ -3417,7 +3416,7 @@ Both should return:
 ```bash
 curl -s -X POST "http://${K3S_SERVER_IP}:30080/ingest" \
   -H "Content-Type: application/json" \
-  -d '{"source": "k3s-test", "payload": {"metric": "cluster_health", "value": 1}}' \
+  -d '{"source": "k3s-test", "data_type": "test", "records": [{"timestamp": "2026-04-08T00:00:00Z", "source": "k3s-test", "category": "metric", "message": "test record"}]}' \
   | python3 -m json.tool
 ```
 
@@ -3683,7 +3682,7 @@ This is not optional in federal environments. NIST 800-53 CM-6 (Configuration Se
 
 📍 **Local Terminal (WSL2)**
 
-**Update your Ansible inventory** to include the k3s nodes. Open `~/oci-federal-lab-phase2/ansible/inventory/hosts.ini` and replace the `app_server` entry:
+**Update your Ansible inventory** to include the k3s nodes. Open `~/oci-federal-lab-phase2/ansible/inventory.ini` and replace the `app_server` entry:
 
 ```ini
 [bastion]
@@ -3702,8 +3701,8 @@ k3s_cluster
 ```bash
 cd ~/oci-federal-lab-phase2/ansible
 
-ansible-playbook hardening.yml \
-  -i inventory/hosts.ini \
+ansible-playbook harden.yml \
+  -i inventory.ini \
   --check \
   --diff \
   -v
@@ -3745,8 +3744,8 @@ cat > ~/oci-federal-lab-phase2/ansible/scripts/detect-drift.sh << 'SCRIPTEOF'
 # detect-drift.sh — Run Ansible in check mode and report any configuration drift
 # Usage: ./detect-drift.sh [optional: path-to-playbook]
 
-PLAYBOOK_PATH="${1:-hardening.yml}"
-INVENTORY_PATH="inventory/hosts.ini"
+PLAYBOOK_PATH="${1:-harden.yml}"
+INVENTORY_PATH="inventory.ini"
 REPORT_DIR="drift-reports"
 TIMESTAMP=$(date +"%Y-%m-%dT%H-%M-%S")
 REPORT_FILE="${REPORT_DIR}/drift-report-${TIMESTAMP}.txt"
@@ -3833,7 +3832,7 @@ cd ~/oci-federal-lab-phase2/ansible
 ========================================
 DRIFT DETECTION REPORT
 Timestamp: 2026-04-08T14-45-00
-Playbook:  hardening.yml
+Playbook:  harden.yml
 ========================================
 
 TASK [Ensure sshd_config has correct permissions] *****
@@ -3866,7 +3865,7 @@ The script exits with code 1 (non-zero), which means Jenkins will mark the pipel
 **Remediate the drift** by running the playbook for real (without `--check`):
 
 ```bash
-ansible-playbook hardening.yml -i inventory/hosts.ini -v
+ansible-playbook harden.yml -i inventory.ini -v
 # This actually applies the changes — restores permissions and restarts firewalld
 ```
 
@@ -3889,7 +3888,7 @@ ansible-playbook hardening.yml -i inventory/hosts.ini -v
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
 | `ansible-playbook --check` fails with `unreachable` | ProxyCommand wrong in inventory or bastion SSH key not loaded | Test `ssh k3s-server-node` manually. Verify `ansible_ssh_common_args` has correct bastion IP. Run `ssh-add ~/.ssh/oci_key` |
-| Drift report shows 0 tasks (empty playbook run) | Inventory hosts not matching playbook `hosts:` directive | Check `hardening.yml` top-level `hosts:` value matches group name in `hosts.ini`. Should be `k3s_cluster` or `all_managed_nodes` |
+| Drift report shows 0 tasks (empty playbook run) | Inventory hosts not matching playbook `hosts:` directive | Check `harden.yml` top-level `hosts:` value matches group name in `inventory.ini`. Should be `k3s_cluster` or `all_managed_nodes` |
 | `detect-drift.sh` always exits 0 even when drift exists | `grep "changed="` not finding the string in output | Check Ansible output format. Try `--check -v` manually and look for the word "changed" in the PLAY RECAP line. Adjust grep pattern if needed |
 | Drift is detected but remediation playbook also fails | Task requires elevated privilege | Ensure `become: true` is set on tasks that modify system files. Add `--become` flag to playbook run |
 | Simulated drift doesn't show up in check mode | Ansible task checks idempotency differently | Some tasks use `stat` + `when` conditionals — run with `-vvv` to see task logic. The `file` module uses mode comparison; confirm the exact octal mode in the playbook matches the fault you injected |
@@ -4014,7 +4013,7 @@ curl -s "http://${LB_IP}/health" | python3 -m json.tool
 # Test data ingestion through LB
 curl -s -X POST "http://${LB_IP}/ingest" \
   -H "Content-Type: application/json" \
-  -d '{"source": "lb-test", "data_type": "test", "payload": {"message": "through load balancer"}}' | python3 -m json.tool
+  -d '{"source": "lb-test", "data_type": "test", "records": [{"timestamp": "2026-04-08T00:00:00Z", "source": "lb-test", "category": "metric", "message": "through load balancer"}]}' | python3 -m json.tool
 
 # Test metrics through LB
 curl -s "http://${LB_IP}/metrics" | python3 -m json.tool
@@ -4040,7 +4039,7 @@ done
 
 ```bash
 # From bastion: stop k3s on node-2 to simulate a failure
-ssh node-2 'sudo systemctl stop k3s-agent'
+ssh k3s-agent-node 'sudo systemctl stop k3s-agent'
 ```
 
 ```bash
@@ -4055,7 +4054,7 @@ done
 
 ```bash
 # Restore node-2
-ssh node-2 'sudo systemctl start k3s-agent'
+ssh k3s-agent-node 'sudo systemctl start k3s-agent'
 # Wait 30 seconds for health check to detect recovery
 # Traffic resumes to both nodes
 ```
@@ -5411,7 +5410,7 @@ ssh -J fedanalytics-bastion fedanalytics-k3s-server
 
 ```bash
 # Delete the FedAnalytics Kubernetes deployment
-sudo k3s kubectl delete deployment fedanalytics -n default
+sudo k3s kubectl delete deployment fedanalytics-deployment -n default
 
 # Delete the Kubernetes service (LB stops routing to app)
 sudo k3s kubectl delete service fedanalytics-service -n default
@@ -5641,7 +5640,7 @@ The Ansible hardening playbook is your authoritative source of truth for system 
 cd ~/oci-federal-lab-phase2/ansible
 
 ansible-playbook \
-    -i inventory/inventory.ini \
+    -i inventory.ini \
     playbooks/site.yml \
     --limit k3s_server \
     --tags hardening \

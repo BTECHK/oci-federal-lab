@@ -1393,7 +1393,7 @@ ansible_python_interpreter=/usr/bin/python3
     - name: Install OCI CLI (needed for Vault access)
       pip:
         name: oci-cli
-        executable: /usr/bin/python3 -m pip
+        executable: pip3
 
     - name: Verify OCI CLI importable
       command: python3 -c "import oci; print('oci OK')"
@@ -1665,7 +1665,7 @@ This playbook retrieves secrets from OCI Vault at runtime and uses them to confi
     - name: Install Python dependencies
       pip:
         requirements: "{{ app_dir }}/app/requirements.txt"
-        executable: /usr/bin/python3 -m pip
+        executable: pip3
 
     - name: Verify Python dependencies are importable
       command: python3 -c "import fastapi; import uvicorn; print('deps OK')"
@@ -5049,9 +5049,9 @@ which helm
 ```bash
 # Alternative: direct binary download
 HELM_VERSION="v3.14.4"
-curl -LO "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
-tar -zxvf "helm-${HELM_VERSION}-linux-amd64.tar.gz"
-sudo mv linux-amd64/helm /usr/local/bin/helm
+curl -LO "https://get.helm.sh/helm-${HELM_VERSION}-linux-arm64.tar.gz"
+tar -zxvf "helm-${HELM_VERSION}-linux-arm64.tar.gz"
+sudo mv linux-arm64/helm /usr/local/bin/helm
 helm version
 ```
 
@@ -5752,7 +5752,7 @@ ARGOCD_VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/
 echo "Installing ArgoCD CLI ${ARGOCD_VERSION}"
 
 curl -sSL -o /usr/local/bin/argocd \
-  "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64"
+  "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-arm64"
 chmod +x /usr/local/bin/argocd
 
 argocd version --client
@@ -7475,7 +7475,7 @@ git push
 
 ```bash
 # Deploy a bad config change via Helm
-helm -n fedcompliance upgrade fedcompliance-app ./helm/fedcompliance \
+helm -n fedcompliance upgrade fedcompliance ./helm/fedcompliance \
   --set replicas=2 \
   --set image.tag=nonexistent-tag-12345
 # This sets a tag that doesn't exist in OCIR — pods will fail with ImagePullBackOff
@@ -7489,7 +7489,7 @@ kubectl -n fedcompliance get pods
 # Expected: New pods stuck in ImagePullBackOff, old pods terminating
 
 # Check Helm release history
-helm -n fedcompliance history fedcompliance-app
+helm -n fedcompliance history fedcompliance
 # Shows: current release = FAILED, previous = DEPLOYED
 ```
 
@@ -7505,7 +7505,7 @@ kubectl -n fedcompliance describe pod -l app=fedcompliance | grep -A5 "Events"
 
 ```bash
 # Roll back to the last working release
-helm -n fedcompliance rollback fedcompliance-app
+helm -n fedcompliance rollback fedcompliance
 # Helm restores the previous revision's configuration
 
 # Verify
@@ -7514,7 +7514,7 @@ kubectl -n fedcompliance get pods
 curl -s http://localhost:30080/health | python3 -m json.tool
 
 # Check history — rollback creates a new revision pointing to the old config
-helm -n fedcompliance history fedcompliance-app
+helm -n fedcompliance history fedcompliance
 ```
 
 <sub><em>
@@ -7548,7 +7548,7 @@ kubectl -n fedcompliance scale deployment/fedcompliance --replicas=5
 
 ```bash
 # Check ArgoCD status
-argocd app get fedcompliance-app
+argocd app get fedcompliance
 # Expected: Status = OutOfSync, Health = Healthy
 # The app still works (5 replicas), but ArgoCD knows it doesn't match git
 
@@ -7559,7 +7559,7 @@ argocd app get fedcompliance-app
 
 ```bash
 # Option A: Let ArgoCD fix it (restore git state)
-argocd app sync fedcompliance-app
+argocd app sync fedcompliance
 # ArgoCD re-applies the git config — replicas go back to 2
 
 # Option B: If the change was intentional, update git
@@ -7618,7 +7618,7 @@ k3s cluster (bastion VM, port 30080)
   |
   v
 ArgoCD (k3s, NodePort)
-  |-- Application: fedcompliance-app
+  |-- Application: fedcompliance
         |-- Watching git repo -> auto-sync on push
   |
   v
@@ -7803,7 +7803,7 @@ curl http://localhost:30080/health
 # Expected: {"status":"ok","version":"1.3.0","phase":"Phase-3-complete",...}
 
 # Confirm ArgoCD sees the app as healthy
-kubectl get application fedcompliance-app -n argocd \
+kubectl get application fedcompliance -n argocd \
   -o jsonpath='{.status.sync.status}'
 # Expected: Synced
 
@@ -7881,7 +7881,7 @@ reconciliation via ArgoCD.
 
 ## Infrastructure
 
-- Bastion VM: Oracle Linux 9, 1 OCPU, 6 GB RAM (VM.Standard.E4.Flex)
+- Bastion VM: Oracle Linux 9, 1 OCPU, 6 GB RAM (VM.Standard.A1.Flex)
 - k3s cluster: single-node, running on bastion VM
 - OCIR: OCI Container Registry (private repository)
 - Object Storage: app_logs bucket, Standard tier
@@ -7928,7 +7928,7 @@ fi
 ```bash
 echo ""
 echo "[1/6] Removing ArgoCD Application..."
-kubectl delete application fedcompliance-app -n argocd --ignore-not-found=true
+kubectl delete application fedcompliance -n argocd --ignore-not-found=true
 echo "      ArgoCD application deleted."
 ```
 
@@ -8102,7 +8102,7 @@ echo "Teardown completed: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 **DAY 1 - Phase 22: Environment & Secure Foundations**
 
 - OCI tenancy configured: compartment, VCN, public subnet, private subnet, internet gateway, NAT gateway, route tables, security lists - all written as Terraform HCL by hand
-- Bastion VM: Oracle Linux 9, VM.Standard.E4.Flex, provisioned via Terraform, SSH key pair created locally
+- Bastion VM: Oracle Linux 9, VM.Standard.A1.Flex, provisioned via Terraform, SSH key pair created locally
 - `cloud-init` bootstrap script: installs Docker, k3s, fn CLI, OCI CLI, Jenkins, Python 3, pip packages
 - OCI CLI configured with API key authentication; Terraform OCI provider configured
 - k3s single-node cluster running on bastion VM; `kubectl` functional
@@ -8339,7 +8339,7 @@ kubectl get nodes
 kubectl get namespaces
 
 # Deploy your existing Helm chart — it works unchanged
-helm install fedtracker ./helm/fedtracker/
+helm install fedcompliance ./helm/fedcompliance/
 
 # ⚠️ TEARDOWN when done to save credits
 # OCI Console → OKE → your cluster → Delete
@@ -8357,7 +8357,7 @@ helm install fedtracker ./helm/fedtracker/
 
 📍 **OCI Console** → **Developer Services** → **Container Registry**
 
-1. Find your existing OCIR repository (e.g., `fedtracker`)
+1. Find your existing OCIR repository (e.g., `fedcompliance`)
 2. Click the repository name → **Settings**
 3. Under **Scanning**, toggle **Enable image scanning**
 4. **Scan on push:** Enable — every new image push triggers a scan automatically
@@ -8488,7 +8488,7 @@ Jenkins (your lab):                    OCI DevOps:
 # 3-tier architecture: LB (public) → k3s nodes (private) → ADB (managed)
 
 resource "oci_load_balancer_load_balancer" "k3s_lb" {
-  compartment_id = var.compartment_id
+  compartment_id = var.compartment_ocid
   display_name   = "fedcompliance-lb"
   shape          = "flexible"
 
@@ -8527,7 +8527,7 @@ resource "oci_load_balancer_backend_set" "k3s_backends" {
 resource "oci_load_balancer_backend" "node_1" {
   load_balancer_id = oci_load_balancer_load_balancer.k3s_lb.id
   backendset_name  = oci_load_balancer_backend_set.k3s_backends.name
-  ip_address       = module.compute.node_1_private_ip
+  ip_address       = module.compute.k3s_node1_private_ip
   port             = 30080
 }
 
@@ -8535,7 +8535,7 @@ resource "oci_load_balancer_backend" "node_1" {
 resource "oci_load_balancer_backend" "node_2" {
   load_balancer_id = oci_load_balancer_load_balancer.k3s_lb.id
   backendset_name  = oci_load_balancer_backend_set.k3s_backends.name
-  ip_address       = module.compute.node_2_private_ip
+  ip_address       = module.compute.k3s_node2_private_ip
   port             = 30080
 }
 
