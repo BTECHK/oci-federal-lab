@@ -1591,7 +1591,7 @@ sudo uptrack-upgrade -y
 
 📍 **OCI Console**
 
-1. Navigate to **Compute** → **Instances** → select your bastion or app-server
+1. Navigate to **Compute** → **Instances** → select your bastion or p1-app-server
 2. Click the **Oracle Cloud Agent** tab
 3. Find **OS Management Hub** plugin → toggle it to **Enabled**
 4. Wait 2-3 minutes for the agent to register

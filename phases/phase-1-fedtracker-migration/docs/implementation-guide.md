@@ -6479,10 +6479,10 @@ sudo oscap xccdf eval \
 > The scan takes 2-5 minutes. The `--fetch-remote-resources` flag downloads Oracle's ELSA vulnerability definitions for a complete scan. It checks hundreds of STIG controls and reports pass/fail for each.
 
 ```bash
-# Check the summary
-grep -c "pass" /tmp/stig-results.xml
-grep -c "fail" /tmp/stig-results.xml
-# Expected: Many passes and some failures — failures are expected before hardening
+# Check the summary — extract result tags and count each type
+grep -oP '<result[^>]*>\K[^<]+' /tmp/stig-results.xml | sort | uniq -c | sort -rn
+# Expected output shows counts for: pass, fail, notchecked, notapplicable, etc.
+# Many passes and some failures are expected before hardening
 ```
 
 ```bash
@@ -6535,9 +6535,9 @@ oscap xccdf eval \
   "${CONTENT}" 2>/dev/null
 
 # Parse results
-PASS=$(grep -c 'result="pass"' "${RESULTS}" 2>/dev/null || echo 0)
-FAIL=$(grep -c 'result="fail"' "${RESULTS}" 2>/dev/null || echo 0)
-NOTAPPLICABLE=$(grep -c 'result="notapplicable"' "${RESULTS}" 2>/dev/null || echo 0)
+PASS=$(grep -oP '<result[^>]*>\K[^<]+' "${RESULTS}" 2>/dev/null | grep -c '^pass$' || echo 0)
+FAIL=$(grep -oP '<result[^>]*>\K[^<]+' "${RESULTS}" 2>/dev/null | grep -c '^fail$' || echo 0)
+NOTAPPLICABLE=$(grep -oP '<result[^>]*>\K[^<]+' "${RESULTS}" 2>/dev/null | grep -c '^notapplicable$' || echo 0)
 TOTAL=$((PASS + FAIL))
 
 echo "=== Results ==="
@@ -6591,24 +6591,85 @@ Completed: 2026-03-23 10:03:00 UTC
 
 Review the HTML report and manually fix the top 5 failures. Common STIG failures and fixes:
 
+**Fix 1: File permissions on /etc/passwd**
+
 ```bash
 # STIG: Ensure permissions on /etc/passwd are 644
 sudo chmod 644 /etc/passwd
+```
 
+<sub><em>
+
+| Command | Flag(s) | What It Does |
+|---------|---------|-------------|
+| `chmod` | `644` | Sets permissions: owner read/write (6), group read (4), others read (4). `/etc/passwd` stores usernames and UIDs — everyone needs to read it, but only root should write it |
+
+</em></sub>
+
+**Fix 2: File permissions on /etc/shadow**
+
+```bash
 # STIG: Ensure permissions on /etc/shadow are 000
 sudo chmod 000 /etc/shadow
+```
 
+<sub><em>
+
+| Command | Flag(s) | What It Does |
+|---------|---------|-------------|
+| `chmod` | `000` | Removes all permissions — no read, write, or execute for anyone. `/etc/shadow` stores password hashes. Only root (which bypasses permission checks) should access it. This prevents even group members from reading hashes |
+
+</em></sub>
+
+**Fix 3: Restrict core dumps**
+
+```bash
 # STIG: Ensure core dumps are restricted
 echo "* hard core 0" | sudo tee -a /etc/security/limits.conf
+```
 
+<sub><em>
+
+| Command | Part | What It Does |
+|---------|------|-------------|
+| `echo "* hard core 0"` | `*` = all users, `hard` = cannot be overridden, `core` = core dump size, `0` = disabled | Core dumps write process memory to disk when a program crashes — including any secrets in memory (passwords, keys, tokens). Disabling them prevents sensitive data from leaking to disk |
+| `tee -a` | `-a` = append | Appends to `limits.conf` without overwriting existing entries. `sudo tee` is needed because `>>`redirect runs as your user, not root |
+
+</em></sub>
+
+**Fix 4: Enable ASLR (Address Space Layout Randomization)**
+
+```bash
 # STIG: Ensure address space layout randomization (ASLR) is enabled
 echo "kernel.randomize_va_space = 2" | sudo tee -a /etc/sysctl.d/99-cis.conf
 sudo sysctl -p /etc/sysctl.d/99-cis.conf
+```
 
+<sub><em>
+
+| Command | Flag(s) | What It Does |
+|---------|---------|-------------|
+| `echo "kernel.randomize_va_space = 2"` | `2` = full randomization | ASLR randomizes where programs are loaded in memory. Without it, an attacker who finds a buffer overflow knows exactly where to jump. Value `2` randomizes the stack, heap, and shared libraries |
+| `sysctl -p` | `-p <file>` = load settings from file | Applies the kernel parameter immediately without rebooting. Without this, the setting only takes effect on next boot |
+
+</em></sub>
+
+**Fix 5: Password complexity requirements**
+
+```bash
 # STIG: Ensure password creation requirements are configured
 sudo dnf install -y libpwquality
 sudo sed -i 's/# minlen = .*/minlen = 14/' /etc/security/pwquality.conf
 ```
+
+<sub><em>
+
+| Command | Flag(s) | What It Does |
+|---------|---------|-------------|
+| `dnf install libpwquality` | `-y` = auto-confirm | Installs the password quality checking library. PAM (Pluggable Authentication Module) uses it to enforce rules when users set passwords |
+| `sed -i` | `-i` = edit in place, `s/old/new/` = substitute | Uncomments and changes the minimum password length from the default (typically 8) to 14 characters. DISA STIG requires 15+ for privileged accounts, 14 for standard accounts |
+
+</em></sub>
 
 ```bash
 # Re-run the scan to see improvement
