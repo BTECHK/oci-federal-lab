@@ -26,7 +26,7 @@ Day 1 builds the "before" state — a manually-configured legacy server with no 
 | Backup | None | Block volume + Object Storage + DR runbook |
 | Cost Control | None | Tags + budget alerts + cost scripts |
 | Monitoring | None | Bash + Python health/cost scripts |
-| Compliance | None | OpenSCAP CIS + FedRAMP readiness agent (Ollama AI) |
+| Compliance | None | OpenSCAP DISA STIG + FedRAMP readiness agent (Ollama AI) |
 | Serverless | None | OCI Functions (audit processor + health check) |
 
 ---
@@ -90,7 +90,7 @@ Internet
 │  │  Podman/Docker + FedTracker │                      │
 │  │  Ansible-managed            │                      │
 │  │  Hardened (auditd, firewall)│                      │
-│  │  OpenSCAP CIS validated     │                      │
+│  │  OpenSCAP STIG validated     │                      │
 │  └──────────────┬──────────────┘                      │
 │                 │                                      │
 │  ┌──────────────▼──────────────┐                      │
@@ -117,13 +117,12 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 | Tag | Where | What It Looks Like |
 |-----|-------|-------------------|
 | 📍 **OCI Console** | Oracle Cloud web UI | cloud.oracle.com — clicking buttons, navigating menus |
-| 📍 **Local Terminal** | Your machine's terminal | PowerShell / Git Bash on your laptop (Terraform, git, SSH, curl) |
-| 📍 **WSL2 Terminal** | Windows Subsystem for Linux | Ubuntu shell on your laptop — **required for Ansible commands** (Ansible doesn't run on Windows) |
+| 📍 **Local Terminal** | Your machine's terminal | WSL2 on your laptop (Terraform, git, SSH, curl, Ansible — everything runs here) |
 | 📍 **VM Terminal** | SSH into Oracle Linux VM | `ssh opc@<public_ip>` — commands run on the cloud server |
 | 📍 **Editor** | Your text editor | VS Code, nano, vim — editing files |
 | 📍 **Browser** | Web browser | Testing endpoints, viewing Swagger docs, Jenkins UI |
 
-> **Windows users:** Most local commands work in PowerShell or Git Bash. Ansible is the exception — it requires a Linux environment. Install WSL2 (`wsl --install` in PowerShell as admin) and run all `ansible-playbook` and `ansible` commands from WSL2. VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code. Your Windows filesystem is accessible from WSL2 at `/mnt/c/Users/...`.
+> **Windows users:** Use WSL2 as your primary terminal for all local commands — SSH, Terraform, git, Ansible, and curl all work natively in WSL2. Install it with `wsl --install` in PowerShell as admin (one-time setup). VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code. Your Windows filesystem is accessible from WSL2 at `/mnt/c/Users/...`. PowerShell is only needed for Windows-specific commands like `wsl --shutdown`.
 
 ---
 
@@ -539,7 +538,7 @@ On the instance details page, confirm:
 > **🧠 ELI5 — SSH (Secure Shell):** SSH is how you remotely control a Linux server. It creates an encrypted tunnel between your laptop and the cloud VM, so you can type commands as if you were sitting at the server's keyboard. The private key file is your proof of identity — like a digital badge that the server checks before letting you in.
 
 > **🖥️ Windows Users:** The commands below use Unix-style syntax. On Windows:
-> - Use **Git Bash** (recommended) or **PowerShell** for SSH commands
+> - Use **WSL2** (recommended) for SSH commands
 > - Replace `chmod 600` with this PowerShell command (run as Admin): `icacls "C:\Users\<USERNAME>\.ssh\<keyfile>" /inheritance:r /grant:r "<USERNAME>:R"`
 > - When creating `~/.ssh/config`, make sure it's saved as `config` (no `.txt` extension) — Notepad adds `.txt` by default
 > - **VS Code Remote SSH** is a great alternative: install the "Remote - SSH" extension, then F1 → "Remote-SSH: Connect to Host"
@@ -2698,7 +2697,7 @@ python3 -m pip install oci --user
 > **Important — keep this key on your local machine too.** You'll need `~/.oci/oci_api_key.pem` locally for Terraform (Day 2 Step 11). Copy the downloaded key to your local OCI config directory now:
 >
 > ```bash
-> # Local Terminal (Git Bash on Windows)
+> # Local Terminal (WSL2)
 > mkdir -p ~/.oci
 > cp ~/Downloads/oci_api_key.pem ~/.oci/oci_api_key.pem
 > chmod 600 ~/.oci/oci_api_key.pem
@@ -2728,15 +2727,15 @@ OCIEOF
 
 Now transfer the private key you downloaded to the VM:
 
-📍 **Local Terminal** (Git Bash on Windows, or Terminal on Mac/Linux)
+📍 **Local Terminal** (WSL2)
 
 ```bash
 # Transfer the API key from your local machine to the VM
-# On Windows (Git Bash), ~ = C:\Users\<username>, so ~/Downloads works
-scp -i ~/.ssh/legacy-server.key ~/Downloads/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/
+# In WSL2, Windows paths are at /mnt/c/Users/<username>/
+scp -i ~/.ssh/legacy-server.key /mnt/c/Users/k_a_s/Downloads/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/
 ```
 
-> **Windows note:** If you saved the key somewhere other than Downloads, adjust the path. In Git Bash, use forward slashes: `scp -i ~/.ssh/legacy-server.key /c/Users/YourName/path/to/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/`
+> **Windows note:** If you saved the key somewhere other than Downloads, adjust the path. In WSL2, Windows paths are at `/mnt/c/Users/<username>/`: `scp -i ~/.ssh/legacy-server.key /mnt/c/Users/k_a_s/path/to/oci_api_key.pem opc@<PUBLIC_IP>:/home/opc/`
 
 📍 **VM Terminal**
 
@@ -3055,12 +3054,12 @@ Now save the Day 1 code to your GitHub repo so it survives when you tear down th
 mkdir -p ~/Desktop/github/oci-federal-lab/app
 
 # Copy the three app files from the VM to your local repo
-scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/main.py ~/Desktop/github/oci-federal-lab/app/
-scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/health_check.sh ~/Desktop/github/oci-federal-lab/app/
-scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/oci_reporter.py ~/Desktop/github/oci-federal-lab/phases/phase-1-fedtracker-migration/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/main.py /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/health_check.sh /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab/app/
+scp -i ~/.ssh/legacy-server.key opc@<PUBLIC_IP>:/opt/fedtracker/oci_reporter.py /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab/phases/phase-1-fedtracker-migration/app/
 
 # Commit and push
-cd ~/Desktop/github/oci-federal-lab
+cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
 git add phases/phase-1-fedtracker-migration/app/
 git commit -m "Day 1: FedTracker app code (main.py, health_check.sh, oci_reporter.py)"
 git push
@@ -3076,7 +3075,7 @@ git push
 
 > You have a running "legacy" app on the VM and a copy of the code on your local machine. Now containerize it — this is the first step of any legacy-to-cloud migration. You'll build a Docker image on your Windows workstation, test it locally, and verify the same app runs identically in a container. Day 4 completes the migration by pushing this image to OCI Container Registry and deploying it with Podman on the cloud.
 >
-> 📍 **Where work happens:** Local Terminal (Git Bash or PowerShell on Windows).
+> 📍 **Where work happens:** Local Terminal (WSL2).
 >
 > 🛠️ **Build approach:** Dockerfile and requirements.txt built by hand.
 >
@@ -3102,10 +3101,10 @@ docker --version
 ---
 
 ### Step 6A.2 — Create Dockerfile and requirements.txt
-📍 **Local Terminal** (Git Bash on Windows)
+📍 **Local Terminal** (WSL2)
 
 ```bash
-cd ~/Desktop/github/oci-federal-lab
+cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
 
 # Create requirements.txt — lists the Python packages the app needs
 cat > phases/phase-1-fedtracker-migration/docker/requirements.txt << 'EOF'
@@ -3165,10 +3164,10 @@ DOCKEOF
 ---
 
 ### Step 6A.3 — Build and Run with Docker Desktop
-📍 **Local Terminal** (Git Bash on Windows)
+📍 **Local Terminal** (WSL2)
 
 ```bash
-cd ~/Desktop/github/oci-federal-lab
+cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
 
 # Build the container image
 # The build context is the docker/ directory, but main.py is in app/
@@ -3193,7 +3192,7 @@ docker ps
 ---
 
 ### Step 6A.4 — Test All Endpoints Locally
-📍 **Local Terminal** (Git Bash on Windows)
+📍 **Local Terminal** (WSL2)
 
 ```bash
 # Health check
@@ -3241,7 +3240,7 @@ docker images | grep fedtracker
 **Add the Docker files to your git commit:**
 
 ```bash
-cd ~/Desktop/github/oci-federal-lab
+cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
 git add phases/phase-1-fedtracker-migration/docker/
 git commit -m "Day 1: Add Dockerfile and requirements.txt for FedTracker container
 
@@ -4755,7 +4754,7 @@ sudo dnf install -y dnf-plugins-core
 sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
 sudo dnf install -y terraform
 
-# Windows (Git Bash)
+# WSL2
 # Download from https://developer.hashicorp.com/terraform/downloads
 # Unzip and add to PATH
 
@@ -5555,7 +5554,7 @@ ansible --version
 # Expected: ansible [core 2.x.x]
 ```
 
-> **Your WSL2 workflow:** Edit files in VS Code (Windows) — run Terraform and git from PowerShell or Git Bash (Windows) — run Ansible from WSL2 (Linux). Your Windows files are accessible from WSL2 at `/mnt/c/Users/<YOUR_USERNAME>/`. VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code (Terminal → New Terminal → select "Ubuntu (WSL)").
+> **Your WSL2 workflow:** Edit files in VS Code (Windows) — run Terraform, git, SSH, and Ansible all from WSL2. Your Windows files are accessible from WSL2 at `/mnt/c/Users/<YOUR_USERNAME>/`. VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code (Terminal → New Terminal → select "Ubuntu (WSL)").
 
 ---
 
@@ -5608,7 +5607,7 @@ ansible all -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.i
 
 ```yaml
 ---
-# Hardening Playbook — applies CIS-aligned security settings
+# Hardening Playbook — applies STIG-aligned security settings
 # Targets: app server (and optionally bastion)
 # Run: ansible-playbook -i phases/phase-1-fedtracker-migration/ansible/inventory/inventory.ini phases/phase-1-fedtracker-migration/ansible/playbooks/harden.yml
 
@@ -6210,7 +6209,7 @@ git push
 
 **Skills practiced:** Terraform (deep), Ansible (deep), IaC patterns, configuration management, destroy/rebuild, idempotency
 
-**Next:** Day 4 — "Migrate & Secure" — you'll rebuild the Day 1 container for ARM, push to OCIR, deploy with Podman on OCI, run CIS compliance scans with OpenSCAP, and build a FedRAMP readiness agent with Ollama.
+**Next:** Day 4 — "Migrate & Secure" — you'll rebuild the Day 1 container for ARM, push to OCIR, deploy with Podman on OCI, run DISA STIG compliance scans with OpenSCAP, and build a FedRAMP readiness agent with Ollama.
 
 ---
 
@@ -6245,12 +6244,12 @@ git push
 ---
 
 ### Step 14.2 — Rebuild for ARM and Push to OCIR
-📍 **Local Terminal** (Git Bash on Windows)
+📍 **Local Terminal** (WSL2)
 
 > **⚠️ Why rebuild?** On Day 1, you built with `docker build` (x86, for your local machine). The OCI VM is ARM (Ampere A1 Flex). If you push the x86 image and try to `podman run` it on ARM, you'll get `exec format error`. You must rebuild for the target architecture.
 
 ```bash
-cd ~/Desktop/github/oci-federal-lab
+cd /mnt/c/Users/k_a_s/OneDrive/Desktop/github/oci-federal-lab
 
 # Rebuild for ARM (matches your OCI VM architecture)
 docker buildx build --platform linux/arm64 -t fedtracker:1.0-arm64 phases/phase-1-fedtracker-migration/docker/
@@ -6282,17 +6281,19 @@ docker buildx build --platform linux/arm64 -t fedtracker:1.0-arm64 phases/phase-
 # In OCI Cloud Shell or local terminal with OCI CLI configured
 oci os ns get
 # Expected: {"data": "your-namespace-here"}
-# Example: "mytenancy"
+# Example: "ax3k7abc1def"
 ```
 
-**Step 3:** Log in to OCIR from your Windows machine
+> **Namespace is NOT your tenancy name.** Your Object Storage Namespace (e.g., `ax3k7abc1def`) is often different from your tenancy name (e.g., `afungtu`). Older OCI tenancies used the same value for both, but newer tenancies get a random string. The OCIR error message says "tenant name" but it actually requires the **Object Storage Namespace**. Find it at: OCI Console → Profile → Tenancy → Object Storage Namespace.
+
+**Step 3:** Log in to OCIR from WSL2
 
 ```bash
-# In Git Bash on Windows
+# In WSL2
 # Format: docker login <region>.ocir.io
 # Username: <namespace>/<username> (or <namespace>/oracleidentitycloudservice/<username> for IDCS)
 docker login iad.ocir.io
-# Username: <YOUR_NAMESPACE>/<YOUR_USERNAME>
+# Username: <OBJECT_STORAGE_NAMESPACE>/<YOUR_EMAIL>  (NOT your tenancy name — see namespace note above)
 # Password: <paste the Auth Token from Step 1>
 # Expected: Login Succeeded
 ```
@@ -6304,10 +6305,10 @@ docker login iad.ocir.io
 ```bash
 # Tag the image for OCIR
 # Format: <region>.ocir.io/<namespace>/<repo-name>:<tag>
-docker tag fedtracker:1.0 iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
+docker tag fedtracker:1.0-arm64 iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
 
 # Push to OCIR
-docker push iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
+docker push iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
 # Expected: Layers push successfully, image manifest written
 ```
 
@@ -6317,7 +6318,7 @@ docker push iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
 
 1. Navigate to **Developer Services** → **Container Registry**
 2. Compartment: `fedtracker-lab`
-3. You should see `fedtracker-lab/fedtracker` with tag `1.0`
+3. You should see `fedtracker-lab/fedtracker` with tag `1.0-arm64`
 
 ---
 
@@ -6328,7 +6329,7 @@ docker push iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
 
 ```bash
 # SSH into your app server (via bastion — see ~/.ssh/config)
-ssh app-server
+ssh p1-app-server
 
 # Podman is pre-installed on Oracle Linux 9
 podman --version
@@ -6336,18 +6337,19 @@ podman --version
 
 # Log in to OCIR from the VM
 podman login iad.ocir.io
-# Username: <YOUR_NAMESPACE>/<YOUR_USERNAME>
-# Password: <Auth Token>
+# Username: <OBJECT_STORAGE_NAMESPACE>/<YOUR_EMAIL>  (NOT your tenancy name — see Step 14.3 Step 2)
+# Password: <Auth Token from Step 14.3 Step 1>
 
-# Pull the image you pushed from your Windows machine
-podman pull iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
+# Pull the image you pushed from WSL2
+podman pull iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
 
 # Run the container
 podman run -d --name fedtracker-app \
   -p 8000:8000 \
   -e DB_TYPE=sqlite \
+  -e SQLITE_PATH=/app/fedtracker.db \
   --restart=always \
-  iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0
+  iad.ocir.io/<YOUR_NAMESPACE>/fedtracker-lab/fedtracker:1.0-arm64
 
 # Verify it's running
 podman ps
@@ -6360,32 +6362,18 @@ curl http://localhost:8000/health
 
 > **Why `--restart=always`?** This tells Podman to restart the container if it crashes or if the VM reboots. Without this, you'd have to manually start it every time. In production, you'd use a systemd unit for containers or Kubernetes.
 
-**Open the port for external access:**
+**Verify from your local machine (WSL2):**
 
 ```bash
-# Open port 8000 in the OS firewall
-sudo firewall-cmd --add-port=8000/tcp --permanent
-sudo firewall-cmd --reload
-```
+# In a separate WSL2 terminal — port forward through bastion
+ssh -L 8000:localhost:8000 p1-app-server
 
-Then open port 8000 in the **OCI Security List**:
-
-1. OCI Console → **Networking** → **Virtual Cloud Networks** → `legacy-vcn`
-2. Click on your **Public Subnet** → **Security Lists** → **Default Security List**
-3. **Add Ingress Rule:**
-   - Source CIDR: `<YOUR_IP>/32` (use https://whatismyip.com — restrict to YOUR IP only, not 0.0.0.0/0)
-   - Destination Port: `8000`
-   - Description: `FedTracker app access`
-
-> **⚠️ Security:** Never open port 8000 to `0.0.0.0/0` (the entire internet). Always restrict to your IP address. In production, you'd use a load balancer or API Gateway in front of the app.
-
-**Verify from your Windows machine:**
-
-```bash
-# From Git Bash on Windows
-curl http://<VM_PUBLIC_IP>:8000/health
+# In your original WSL2 terminal
+curl http://localhost:8000/health
 # Expected: {"status": "healthy", ...}
 ```
+
+> **Why port forwarding?** The app server is on a private subnet with no public IP. SSH port forwarding tunnels traffic through the bastion to reach it. This is the same pattern used in production — applications on private subnets are never directly exposed to the internet.
 
 > **🎉 Migration Complete!** You just completed a real container migration: built on your local workstation → pushed to a private cloud registry → deployed on OCI compute with Podman. This is the exact pattern used in federal legacy-to-cloud migrations.
 
@@ -6452,9 +6440,9 @@ ss -tlnp | grep 8000
 
 ---
 
-## PHASE 15: OPENSCAP CIS COMPLIANCE (1.5 hrs)
+## PHASE 15: OPENSCAP DISA STIG COMPLIANCE (1.5 hrs)
 
-> Federal systems must comply with security baselines — CIS Benchmarks define the minimum security configuration for operating systems. OpenSCAP is an open-source tool that scans your server against these benchmarks and generates compliance reports. This is not optional in federal environments — it's how you prove to auditors that your systems are configured correctly.
+> Federal systems must comply with security baselines — DISA STIGs define the minimum security configuration for operating systems in DoD/federal environments. OpenSCAP is an open-source tool that scans your server against these standards and generates compliance reports. This is not optional in federal environments — it's how you prove to auditors that your systems are configured correctly.
 >
 > 📍 **Where work happens:** VM Terminal (app-server).
 >
@@ -6465,33 +6453,35 @@ ss -tlnp | grep 8000
 ### Step 15.1 — Install and Run OpenSCAP
 📍 **VM Terminal** (app-server)
 
-> **🧠 ELI5 — CIS Benchmarks & OpenSCAP:** CIS (Center for Internet Security) Benchmarks are security configuration guides — they list hundreds of settings like "SSH root login should be disabled" and "password minimum length should be 14 characters." OpenSCAP is a tool that automatically checks your server against these benchmarks and tells you which ones pass and which fail. Think of it as a security audit checklist that checks itself.
+> **🧠 ELI5 — DISA STIG & OpenSCAP:** DISA STIGs (Security Technical Implementation Guides) are the DoD's security configuration standards — they list hundreds of settings like "SSH root login should be disabled" and "password minimum length should be 14 characters." OpenSCAP is a tool that automatically checks your server against these standards and tells you which ones pass and which fail. Think of it as a security audit checklist that checks itself.
 
 ```bash
-# Install OpenSCAP tools and the CIS content
+# Install OpenSCAP tools and SCAP content
 sudo dnf install -y openscap-scanner scap-security-guide
 
 # List available profiles
-oscap info /usr/share/xml/scap/ssg/content/ssg-ol8-ds.xml | grep -A2 "Profile"
-# Expected: Several profiles including CIS benchmarks
-# Look for: xccdf_org.ssgproject.content_profile_cis
+oscap info /usr/share/xml/scap/ssg/content/ssg-ol9-ds.xml | grep -A2 "Profile"
+# Look for: xccdf_org.ssgproject.content_profile_stig
 ```
 
 ```bash
-# Run the CIS Level 1 scan and generate an HTML report
+# Run the DISA STIG scan and generate an HTML report
 sudo oscap xccdf eval \
-  --profile xccdf_org.ssgproject.content_profile_cis \
-  --results /tmp/cis-results.xml \
-  --report /tmp/cis-report.html \
-  /usr/share/xml/scap/ssg/content/ssg-ol8-ds.xml
+  --fetch-remote-resources \
+  --profile xccdf_org.ssgproject.content_profile_stig \
+  --results /tmp/stig-results.xml \
+  --report /tmp/stig-report.html \
+  /usr/share/xml/scap/ssg/content/ssg-ol9-ds.xml
 ```
 
-> The scan takes 2-5 minutes. It checks hundreds of CIS controls and reports pass/fail for each.
+> **Why STIG instead of CIS?** Oracle Linux 9's SCAP Security Guide doesn't ship a CIS benchmark profile. DISA STIG (Security Technical Implementation Guide) is the DoD's hardening standard and is the most relevant compliance profile for federal environments. It covers similar controls to CIS but is the actual standard used in FedRAMP and DoD ATO processes.
+
+> The scan takes 2-5 minutes. The `--fetch-remote-resources` flag downloads Oracle's ELSA vulnerability definitions for a complete scan. It checks hundreds of STIG controls and reports pass/fail for each.
 
 ```bash
 # Check the summary
-grep -c "pass" /tmp/cis-results.xml
-grep -c "fail" /tmp/cis-results.xml
+grep -c "pass" /tmp/stig-results.xml
+grep -c "fail" /tmp/stig-results.xml
 # Expected: Many passes and some failures — failures are expected before hardening
 ```
 
@@ -6503,11 +6493,11 @@ grep -c "fail" /tmp/cis-results.xml
 📍 **Local Terminal**
 
 ```bash
-scp -J bastion opc@<APP_SERVER_PRIVATE_IP>:/tmp/cis-report.html ~/Desktop/
-# Open ~/Desktop/cis-report.html in your browser
+scp -J bastion opc@<APP_SERVER_PRIVATE_IP>:/tmp/stig-report.html ~/Desktop/
+# Open ~/Desktop/stig-report.html in your browser
 ```
 
-> The HTML report shows every CIS control, whether it passed or failed, and what the expected value is. Your Day 2 hardening (SSH, auditd) should already cover several controls.
+> The HTML report shows every STIG control, whether it passed or failed, and what the expected value is. Your Day 2 hardening (SSH, auditd) should already cover several controls.
 
 ---
 
@@ -6517,27 +6507,28 @@ scp -J bastion opc@<APP_SERVER_PRIVATE_IP>:/tmp/cis-report.html ~/Desktop/
 ```bash
 sudo su - clouduser
 
-cat > /opt/fedtracker/cis_scan.sh << 'SCANEOF'
+cat > /opt/fedtracker/stig_scan.sh << 'SCANEOF'
 #!/bin/bash
 # =============================================================================
-# CIS Benchmark Scanner — runs OpenSCAP and summarizes results
-# Usage: sudo ./cis_scan.sh
+# DISA STIG Scanner — runs OpenSCAP and summarizes results
+# Usage: sudo ./stig_scan.sh
 # Output: HTML report + console summary
 # =============================================================================
 
 TIMESTAMP=$(date -u '+%Y%m%d_%H%M%S')
-RESULTS="/tmp/cis-results-${TIMESTAMP}.xml"
-REPORT="/tmp/cis-report-${TIMESTAMP}.html"
-PROFILE="xccdf_org.ssgproject.content_profile_cis"
-CONTENT="/usr/share/xml/scap/ssg/content/ssg-ol8-ds.xml"
+RESULTS="/tmp/stig-results-${TIMESTAMP}.xml"
+REPORT="/tmp/stig-report-${TIMESTAMP}.html"
+PROFILE="xccdf_org.ssgproject.content_profile_stig"
+CONTENT="/usr/share/xml/scap/ssg/content/ssg-ol9-ds.xml"
 
-echo "=== CIS Benchmark Scan ==="
-echo "Profile: CIS Level 1 for Oracle Linux 9"
+echo "=== DISA STIG Scan ==="
+echo "Profile: DISA STIG for Oracle Linux 9"
 echo "Started: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 echo ""
 
 # Run the scan
 oscap xccdf eval \
+  --fetch-remote-resources \
   --profile "${PROFILE}" \
   --results "${RESULTS}" \
   --report "${REPORT}" \
@@ -6565,19 +6556,19 @@ echo ""
 echo "Completed: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 SCANEOF
 
-chmod +x /opt/fedtracker/cis_scan.sh
+chmod +x /opt/fedtracker/stig_scan.sh
 ```
 
 ```bash
 # Run the scan (requires root for full access)
-sudo /opt/fedtracker/cis_scan.sh
+sudo /opt/fedtracker/stig_scan.sh
 ```
 
 **Expected output:**
 
 ```
-=== CIS Benchmark Scan ===
-Profile: CIS Level 1 for Oracle Linux 9
+=== DISA STIG Scan ===
+Profile: DISA STIG for Oracle Linux 9
 Started: 2026-03-23 10:00:00 UTC
 
 === Results ===
@@ -6587,8 +6578,8 @@ Started: 2026-03-23 10:00:00 UTC
   Total Checked:  180
   Score:          78%
 
-  HTML Report:    /tmp/cis-report-20260323_100000.html
-  XML Results:    /tmp/cis-results-20260323_100000.xml
+  HTML Report:    /tmp/stig-report-20260323_100000.html
+  XML Results:    /tmp/stig-results-20260323_100000.xml
 
 Completed: 2026-03-23 10:03:00 UTC
 ```
@@ -6598,34 +6589,34 @@ Completed: 2026-03-23 10:03:00 UTC
 ### Step 15.3 — Remediate Top Failures
 📍 **VM Terminal** (app-server)
 
-Review the HTML report and manually fix the top 5 failures. Common CIS failures and fixes:
+Review the HTML report and manually fix the top 5 failures. Common STIG failures and fixes:
 
 ```bash
-# CIS: Ensure permissions on /etc/passwd are 644
+# STIG: Ensure permissions on /etc/passwd are 644
 sudo chmod 644 /etc/passwd
 
-# CIS: Ensure permissions on /etc/shadow are 000
+# STIG: Ensure permissions on /etc/shadow are 000
 sudo chmod 000 /etc/shadow
 
-# CIS: Ensure core dumps are restricted
+# STIG: Ensure core dumps are restricted
 echo "* hard core 0" | sudo tee -a /etc/security/limits.conf
 
-# CIS: Ensure address space layout randomization (ASLR) is enabled
+# STIG: Ensure address space layout randomization (ASLR) is enabled
 echo "kernel.randomize_va_space = 2" | sudo tee -a /etc/sysctl.d/99-cis.conf
 sudo sysctl -p /etc/sysctl.d/99-cis.conf
 
-# CIS: Ensure password creation requirements are configured
+# STIG: Ensure password creation requirements are configured
 sudo dnf install -y libpwquality
 sudo sed -i 's/# minlen = .*/minlen = 14/' /etc/security/pwquality.conf
 ```
 
 ```bash
 # Re-run the scan to see improvement
-sudo /opt/fedtracker/cis_scan.sh
+sudo /opt/fedtracker/stig_scan.sh
 # Expected: Higher score than before
 ```
 
-> **🧠 Interview framing:** "I ran CIS Level 1 benchmarks against Oracle Linux 9 using OpenSCAP. The initial scan showed a 78% compliance score. I remediated the top failures — file permissions, core dump restrictions, ASLR, password complexity — and improved the score to 85%. In production, I'd automate these remediations in the Ansible hardening playbook."
+> **🧠 Interview framing:** "I ran DISA STIG benchmarks against Oracle Linux 9 using OpenSCAP. The initial scan showed a 78% compliance score. I remediated the top failures — file permissions, core dump restrictions, ASLR, password complexity — and improved the score to 85%. In production, I'd automate these remediations in the Ansible hardening playbook."
 
 ---
 
@@ -6882,7 +6873,7 @@ cat > /opt/fedtracker/compliance/checklist.json << 'JSONEOF'
 JSONEOF
 ```
 
-> **Why only 18 checks?** FedRAMP Moderate has ~325 controls. We curated 18 that are (1) automatable with a single shell command, (2) cover 6 of the most critical NIST 800-53 families, and (3) don't overlap with the OpenSCAP CIS checks you already ran. This is a learning tool — demonstrating the pattern matters more than exhaustive coverage.
+> **Why only 18 checks?** FedRAMP Moderate has ~325 controls. We curated 18 that are (1) automatable with a single shell command, (2) cover 6 of the most critical NIST 800-53 families, and (3) don't overlap with the OpenSCAP STIG checks you already ran. This is a learning tool — demonstrating the pattern matters more than exhaustive coverage.
 
 ---
 
@@ -7261,8 +7252,8 @@ sudo iptables -D OUTPUT -p tcp --dport 80 -j DROP
 - Dockerfile for FedTracker (non-root user, health check, Oracle Linux base)
 - Built and ran containers with both Podman and Docker
 - docker-compose.yml with persistent volumes
-- OpenSCAP CIS benchmark scan script with automated scoring
-- Remediated top CIS failures to improve compliance score
+- OpenSCAP DISA STIG scan script with automated scoring
+- Remediated top STIG failures to improve compliance score
 - FedRAMP readiness agent (~270 lines) with Ollama AI narrative generation
 - Proved air-gap capability with network-blocked Ollama inference
 
@@ -7277,10 +7268,10 @@ sudo iptables -D OUTPUT -p tcp --dport 80 -j DROP
 - "I containerized a legacy application locally, pushed to OCI Container Registry, and deployed on OCI compute with Podman — a real container migration workflow"
 - "I run containers as non-root users with HEALTHCHECK directives for orchestrator integration"
 - "I used Docker Compose for multi-container management with persistent volumes to survive container restarts"
-- "I ran CIS Level 1 benchmarks with OpenSCAP, achieved X% compliance, and remediated the top failures"
+- "I ran DISA STIG benchmarks with OpenSCAP, achieved X% compliance, and remediated the top failures"
 - "I built a FedRAMP readiness agent that checks 18 NIST 800-53 controls with a weighted scoring model and uses Ollama for air-gapped narrative generation"
 
-**Skills practiced:** Podman (new), Docker, Docker Compose, OpenSCAP CIS compliance, FedRAMP/NIST 800-53 (new), Ollama/AI, Python, security compliance
+**Skills practiced:** Podman (new), Docker, Docker Compose, OpenSCAP DISA STIG compliance, FedRAMP/NIST 800-53 (new), Ollama/AI, Python, security compliance
 
 **Next:** Day 5 — "Pipeline & Operations" — you'll build OCI Functions (serverless), a Jenkins pipeline, run DR drills, and tear everything down cleanly.
 
@@ -8281,7 +8272,7 @@ Take one screenshot now and save it to `docs/screenshots/` in your repo:
 | Day 1 | Manual VM setup, Linux admin, FastAPI REST API (built from scratch), systemd, Docker containerization, Bash/Python scripts | Oracle Linux, OCI basics, FastAPI, REST APIs, Docker, Bash, Python, systemd |
 | Day 2 | Proper architecture: VCN, subnets, bastion, Oracle DB, security hardening, IAM, cost tagging | OCI networking, Oracle DB, security, cost management, IAM |
 | Day 3 | Terraform + Ansible automation, destroy/rebuild proof | Terraform, Ansible, IaC, configuration management |
-| Day 4 | ARM rebuild, OCIR push, Podman deploy, OpenSCAP CIS, FedRAMP readiness agent (Ollama) | Container registry migration, compliance scanning, FedRAMP/AI integration |
+| Day 4 | ARM rebuild, OCIR push, Podman deploy, OpenSCAP DISA STIG, FedRAMP readiness agent (Ollama) | Container registry migration, compliance scanning, FedRAMP/AI integration |
 | Day 5 | OCI Functions, Jenkins pipeline, DR drill, cost reporting, teardown | Serverless, CI/CD, disaster recovery, FinOps |
 
 ### What You Can Now Talk About in Interviews
@@ -8290,7 +8281,7 @@ Take one screenshot now and save it to `docs/screenshots/` in your repo:
 - "I designed a secure OCI environment with public/private subnets, bastion access, and Oracle Autonomous DB"
 - "I automated infrastructure provisioning with Terraform and server hardening with Ansible"
 - "I containerized the application with Podman (Oracle Linux native) and Docker, using non-root containers with health checks"
-- "I ran CIS Level 1 benchmarks with OpenSCAP, remediated failures, and tracked compliance score improvement"
+- "I ran DISA STIG benchmarks with OpenSCAP, remediated failures, and tracked compliance score improvement"
 - "I built a FedRAMP readiness agent that checks 18 NIST 800-53 controls with a weighted scoring model and uses Ollama for air-gapped narrative generation"
 - "I implemented serverless event processing with OCI Functions for audit file validation and health check automation"
 - "I built a Jenkins CI/CD pipeline that validates Terraform, lints Ansible, builds containers, deploys to the app server, and runs smoke tests"

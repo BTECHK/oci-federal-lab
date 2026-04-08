@@ -14,7 +14,7 @@ Last updated: 2026-03-31
 |  Windows Desktop                                                 |
 |                                                                  |
 |  +---------------+  +---------------+  +----------------------+  |
-|  | VS Code       |  | Terraform     |  | Git Bash             |  |
+|  | VS Code       |  | Terraform     |  | WSL2                 |  |
 |  | (write code)  |  | (builds       |  | (SSH, SCP, git push) |  |
 |  |               |  |  infra)       |  |                      |  |
 |  +-------+-------+  +-------+-------+  +-----------+----------+  |

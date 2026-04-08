@@ -118,7 +118,7 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 | Tag | Where | What It Looks Like |
 |-----|-------|-------------------|
 | 📍 **OCI Console** | Oracle Cloud web UI | cloud.oracle.com — clicking buttons, navigating menus |
-| 📍 **Local Terminal** | Your machine's terminal | bash / PowerShell / Git Bash on your laptop |
+| 📍 **Local Terminal** | Your machine's terminal | WSL2 on your laptop |
 | 📍 **VM Terminal** | SSH into Oracle Linux VM | `ssh opc@<public_ip>` — commands run on the cloud server |
 | 📍 **Editor** | Your text editor | VS Code, nano, vim — editing files |
 | 📍 **Browser** | Web browser | Testing endpoints, viewing Swagger docs |
@@ -789,7 +789,7 @@ ansible --version
 # Expected: ansible [core 2.x.x]
 ```
 
-> **Windows users:** Ansible does **not** run natively on Windows. Install WSL2 first (`wsl --install` in PowerShell as admin), then install Ansible inside WSL2 with `pip install ansible`. Run all `ansible-playbook` commands from WSL2, not PowerShell or Git Bash. VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code.
+> **Windows users:** Ansible does **not** run natively on Windows. Install WSL2 first (`wsl --install` in PowerShell as admin), then install Ansible inside WSL2 with `pip install ansible`. Run all commands from WSL2 — Ansible does not work in PowerShell or Git Bash. VS Code's WSL extension lets you open a WSL2 terminal directly inside VS Code.
 
 ---
 

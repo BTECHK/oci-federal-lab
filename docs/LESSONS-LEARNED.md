@@ -93,10 +93,10 @@ Last updated: 2026-03-30
 - **Why:** Oracle Linux 9 puts `opc` sudo access in `/etc/sudoers.d/90-cloud-init-users` instead of the `wheel` group (OL8). Same user, same cloud, different sudo mechanism.
 - **Check:** Include `cat /etc/os-release` output in prerequisites. Note version-specific behavior in callout boxes.
 
-**Rule:** Always provide the Windows equivalent for Unix commands that don't work in Git Bash.
+**Rule:** Use WSL2 as the primary terminal on Windows — it handles Unix commands natively, avoiding Git Bash limitations.
 
-- **Why:** `chmod 600 key.pem` does nothing in Git Bash on Windows. SSH fails silently with wrong permissions. Must use PowerShell `icacls` instead. Notepad saves files as `.txt` by default — SSH config must have no extension.
-- **Check:** For every `chmod`, provide the `icacls` equivalent. For every file creation, warn about extensions.
+- **Why:** `chmod 600 key.pem` does nothing in Git Bash on Windows, but works correctly in WSL2. SSH, Ansible, Terraform, and git all run natively in WSL2. Keep PowerShell `icacls` as a fallback reference. Notepad saves files as `.txt` by default — SSH config must have no extension.
+- **Check:** Ensure all commands target WSL2. For PowerShell-only tasks (`wsl --install`, `icacls`), note them explicitly.
 
 ---
 

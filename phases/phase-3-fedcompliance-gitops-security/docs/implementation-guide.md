@@ -182,7 +182,7 @@ Watch for these location tags throughout the guide. They tell you exactly where 
 | Tag | Where | What It Looks Like |
 |-----|-------|-------------------|
 | 📍 **OCI Console** | Oracle Cloud web UI | cloud.oracle.com — clicking buttons, navigating menus |
-| 📍 **Local Terminal** | Your machine's terminal | bash / PowerShell / Git Bash on your laptop |
+| 📍 **Local Terminal** | Your machine's terminal | WSL2 on your laptop |
 | 📍 **Bastion Terminal** | SSH into bastion/Jenkins VM | `ssh opc@<bastion_ip>` — public subnet jump box |
 | 📍 **App Node Terminal** | SSH into k3s node via bastion | `ssh -J opc@<bastion_ip> opc@<private_ip>` — private subnet |
 | 📍 **Editor** | Your text editor | VS Code, nano, vim — editing files |
@@ -1541,7 +1541,7 @@ oci secrets secret-bundle get \
 
 📍 **Local Terminal**
 
-> **Prerequisite:** Ansible must be installed on your local machine. If you installed it in Phase 1 or 2, skip the install. **Windows users:** Run all Ansible commands from WSL2 (not PowerShell or Git Bash) — Ansible does not run natively on Windows. See Phase 1 Step 12.1 for WSL2 setup instructions.
+> **Prerequisite:** Ansible must be installed on your local machine. If you installed it in Phase 1 or 2, skip the install. **Windows users:** Run all commands from WSL2 — Ansible does not run in PowerShell or Git Bash. See Phase 1 Step 12.1 for WSL2 setup instructions.
 
 ```bash
 # Install Ansible if not already installed:

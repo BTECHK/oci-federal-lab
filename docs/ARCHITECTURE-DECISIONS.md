@@ -146,7 +146,7 @@ Managed CI/CD (GitHub Actions, Terraform Cloud, OCI Resource Manager) eliminates
 - **Step 7.2 `chmod 000` doesn't break the service** — Python bytecode cache (`__pycache__/`) lets uvicorn start even when `main.py` has no permissions. Must also `rm -rf __pycache__/` for the exercise to work. (2026-03-31)
 - **`alternatives --set python3` to 3.11 breaks `firewall-cmd`** — system tools depend on Python 3.9's `gi` module. Fix: revert to 3.9 with `alternatives --set python3 /usr/bin/python3.9` (must `--install` first if not registered). Guide already warns about this but Step 7.1 doesn't mention the workaround. (2026-03-31)
 - **`su - clouduser` vs `sudo su - clouduser`** — 12 occurrences in the guide had the wrong command. Cloud-init users on OL9 have no password set, so `su -` fails. Caught during live walkthrough. (2026-03-25)
-- **Windows SSH gotchas** — `chmod 600` doesn't work in Git Bash, need `icacls` in PowerShell. Notepad saves `.txt` extensions by default. SSH config must have no extension. None of this is in standard OCI docs. (2026-03-25)
+- **Windows SSH gotchas** — `chmod 600` doesn't work in Git Bash, need `icacls` in PowerShell. WSL2 resolves this by handling `chmod` natively. Notepad saves `.txt` extensions by default. SSH config must have no extension. None of this is in standard OCI docs. (2026-03-25)
 - **Copy-paste into Cloud Shell** — `\` line continuations break when pasted. All CLI commands must be single lines. (2026-03-25)
 - **OCI quota policy names** don't match documentation (`blockstorage` vs `block-storage`). Comments (`#`) cause parser errors in quota policies. (2026-03-23)
 

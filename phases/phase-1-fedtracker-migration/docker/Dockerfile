@@ -18,7 +18,7 @@ RUN python3 -m pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 
 #Create non root user
-RUN useradd -r -s /bin/false appuser && chown -R appuser:appuser /app
+RUN useradd -r -s /bin/false appuser && touch /app/fedtracker.db && chown -R appuser:appuser /app
 USER appuser 
 
 #Expose the application port

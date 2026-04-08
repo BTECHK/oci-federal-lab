@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     """Initialize the database when the application starts."""
     print(f"[FedTracker] Starting with DB_TYPE={os.environ.get('DB_TYPE', 'sqlite')}")
     if os.environ.get("DB_TYPE", "sqlite") == "sqlite":
-        print(f"[FedTracker] SQLite database: {os.environ.get('SQLITE_PATH', '/opt/fedtracker/fedtracker.db')}")
+        print(f"[FedTracker] SQLite database: {os.environ.get('SQLITE_PATH', '/app/fedtracker.db')}")
         init_db()
         print("[FedTracker] Database initialized with seed data")
     yield
@@ -50,7 +50,7 @@ app = FastAPI(
 # Day 1: "sqlite" (default) — file-based, everything on one box
 # Day 2+: "oracle" — Oracle Autonomous DB (set via environment variable)
 DB_TYPE = os.environ.get("DB_TYPE", "sqlite")
-SQLITE_PATH = os.environ.get("SQLITE_PATH", "/opt/fedtracker/fedtracker.db")
+SQLITE_PATH = os.environ.get("SQLITE_PATH", "/app/fedtracker.db")
 
 
 # --- Pydantic Models ---

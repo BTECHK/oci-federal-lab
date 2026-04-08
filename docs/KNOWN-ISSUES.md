@@ -37,11 +37,11 @@ Last updated: 2026-03-30
 
 ## Windows / SSH Gotchas
 
-- `chmod 600` does NOT work in Git Bash on Windows — use `icacls` in PowerShell instead
+- WSL2 handles `chmod 600` natively — no workaround needed. If using PowerShell as a fallback, use `icacls` instead
 - Notepad saves files as `.txt` by default — SSH config must be named `config` not `config.txt`
 - SSH config location: `C:\Users\<username>\.ssh\config` (no extension)
-- Git Bash is the best terminal for SSH on Windows (has ssh, supports Unix-style paths)
-- PowerShell has ssh built-in but no chmod equivalent
+- WSL2 is the recommended terminal for all local commands on Windows (SSH, Ansible, Terraform, git)
+- PowerShell has ssh built-in but no chmod equivalent — use only for Windows-specific tasks (`wsl --install`, `icacls`)
 
 ## OCI Free Tier Limitations
 
