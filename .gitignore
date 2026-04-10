@@ -84,3 +84,9 @@ logs-and-errors/
 
 # Continue-here planning file
 .continue-here.md
+
+# Phases not yet in progress — hidden from public view until work begins.
+# Files remain on disk locally; they're just untracked. When a phase starts,
+# remove its entry here to bring it back into the tracked tree.
+phases/phase-2-fedanalytics-dr/
+phases/phase-3-fedcompliance-gitops-security/
