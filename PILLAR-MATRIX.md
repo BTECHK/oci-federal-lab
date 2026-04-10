@@ -6,6 +6,8 @@ Machine-readable tracker: what was promised in the original design vs what is de
 Original design: `docs/plans/2026-03-18-interview-lab-project-design.md`
 Last verified: 2026-04-08
 
+> **Note — Potential Future Work:** Phase 2 (FedAnalytics DR) and Phase 3 (FedCompliance GitOps Security) are planned but **not yet started**. All rows in those sections describe intended scope, not delivered work. Their "DONE" status reflects guide authoring, not live lab execution.
+
 ---
 
 ## Phase 1 — FedTracker Migration
@@ -25,7 +27,7 @@ Last verified: 2026-04-08
 
 ---
 
-## Phase 2 — FedAnalytics DR
+## Phase 2 — FedAnalytics DR  *(Potential Future Work — not yet started)*
 
 | Pillar | Promised Deliverable | Status | Guide Section | Verified |
 |--------|---------------------|--------|---------------|----------|
@@ -47,7 +49,7 @@ Last verified: 2026-04-08
 
 ---
 
-## Phase 3 — FedCompliance GitOps Security
+## Phase 3 — FedCompliance GitOps Security  *(Potential Future Work — not yet started)*
 
 | Pillar | Promised Deliverable | Status | Guide Section | Verified |
 |--------|---------------------|--------|---------------|----------|
@@ -70,6 +72,8 @@ Last verified: 2026-04-08
 
 ## Pillar Progression Summary
 
+> **Note:** Phase 2 and Phase 3 columns below describe planned progression — those phases are **potential future work**, not yet started.
+
 | Pillar | Phase 1 | Phase 2 | Phase 3 |
 |--------|---------|---------|---------|
 | **API** | REST fundamentals | Webhooks + API Gateway | API key auth + mTLS concepts |
@@ -82,7 +86,7 @@ Last verified: 2026-04-08
 | **CI/CD** | N/A | Jenkins + CloudBees | 9-stage pipeline |
 | **DR** | N/A | Ransomware sim + recovery drill | N/A |
 
-All pillars delivered as of 2026-04-08.
+All Phase 1 pillars delivered as of 2026-04-08. Phase 2 and Phase 3 remain potential future work.
 
 ---
 

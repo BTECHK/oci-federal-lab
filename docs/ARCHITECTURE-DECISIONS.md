@@ -4,6 +4,8 @@ Ongoing record of key decisions, trade-offs, pivots, and lessons learned while b
 
 **Format:** Each entry captures what was decided, what alternatives were considered, why this path was chosen, and what we learned. Entries are reverse-chronological (newest first).
 
+> **Note — Potential Future Work:** Several ADRs below (notably ADR-001, ADR-003, ADR-007, ADR-008) reference Phase 2 (FedAnalytics DR) and Phase 3 (FedCompliance GitOps Security). Those phases are **planned but not yet started** — treat any mention of them as forward-looking scope, not delivered work.
+
 ---
 
 ## ADR-008: Phase-First Repository Structure with Enterprise Naming
