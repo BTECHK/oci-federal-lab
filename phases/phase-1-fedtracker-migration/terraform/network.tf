@@ -92,13 +92,16 @@ resource "oci_core_security_list" "private" {
     }
   }
 
-  # App traffic from public subnet
+  # App traffic from public subnet (also used by OCI Functions health-checker → /health/deep)
   ingress_security_rules {
-    protocol = "6" # TCP
-    source   = var.public_subnet_cidr
+    protocol    = "6" # TCP
+    source      = var.public_subnet_cidr
+    description = "Allow OCI Functions (health-checker) to call FedTracker /health/deep"
     tcp_options {
-      min = 8000
-      max = 8000
+      destination_port_range {
+        min = 8000
+        max = 8000
+      }
     }
   }
 

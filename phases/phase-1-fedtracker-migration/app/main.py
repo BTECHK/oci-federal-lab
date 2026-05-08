@@ -17,7 +17,7 @@ from typing import Optional, List
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 
@@ -203,6 +203,66 @@ def health_check():
     }
 
 
+@app.get("/health/deep")
+def health_deep():
+    """
+    Deep health probe — exercises every external dependency.
+    Returns 200 only if ALL components are healthy.
+    Used by the OCI Function health-checker as the canonical liveness signal.
+    """
+    import shutil
+    import oci
+    from fastapi.responses import JSONResponse
+
+    components: dict = {}
+
+    # Database
+    try:
+        get_db().execute("SELECT 1")
+        components["database"] = {"ok": True}
+    except Exception as e:
+        components["database"] = {"ok": False, "error": str(e)}
+
+    # Object Storage (HEAD the audit-evidence bucket)
+    try:
+        signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+        c = oci.object_storage.ObjectStorageClient(config={}, signer=signer)
+        ns = c.get_namespace().data
+        c.head_bucket(
+            namespace_name=ns,
+            bucket_name=os.environ.get("AUDIT_EVIDENCE_BUCKET", "audit-evidence"),
+        )
+        components["object_storage"] = {"ok": True, "namespace": ns}
+    except Exception as e:
+        components["object_storage"] = {"ok": False, "error": str(e)}
+
+    # Ollama
+    try:
+        import requests as _requests
+        r = _requests.get("http://localhost:11434/api/tags", timeout=3)
+        models = [m["name"] for m in r.json().get("models", [])]
+        components["ollama"] = {"ok": r.ok, "models": models}
+    except Exception as e:
+        components["ollama"] = {"ok": False, "error": str(e)}
+
+    # Disk
+    du = shutil.disk_usage("/")
+    components["disk"] = {
+        "ok": du.free > 1_000_000_000,
+        "free_gb": round(du.free / 1e9, 1),
+    }
+
+    all_ok = all(c.get("ok") for c in components.values())
+    body = {
+        "status": "healthy" if all_ok else "degraded",
+        "components": components,
+    }
+    return JSONResponse(
+        status_code=200 if all_ok else 503,
+        content=body,
+    )
+
+
 @app.get("/personnel")
 def list_personnel(
     skip: int = Query(default=0, ge=0, description="Number of records to skip"),
@@ -304,31 +364,59 @@ def get_audit_log(
 @app.post("/audit/export")
 def export_audit_csv():
     """
-    Export the audit log as a CSV file.
-    Returns a downloadable CSV with all audit entries.
-    Used for compliance reporting and evidence collection.
+    Export the audit log as CSV to Object Storage.
+    Triggers downstream OCI Function via Events for narrative synthesis.
+    Returns JSON pointer to the uploaded object.
     """
+    import csv, io
+    from datetime import datetime, timezone
+    import oci
+
     conn = get_db()
-    rows = conn.execute("SELECT * FROM audit_log ORDER BY timestamp DESC").fetchall()
+    rows = conn.execute(
+        "SELECT * FROM audit_log ORDER BY timestamp DESC"
+    ).fetchall()
     conn.close()
 
-    # Build CSV in memory
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["id", "timestamp", "action", "resource_type", "resource_id", "details", "source_ip"])
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["id", "timestamp", "action", "resource_type",
+                     "resource_id", "details", "source_ip"])
     for row in rows:
-        writer.writerow([row["id"], row["timestamp"], row["action"],
-                        row["resource_type"], row["resource_id"],
-                        row["details"], row["source_ip"]])
+        writer.writerow([
+            row["id"], row["timestamp"], row["action"],
+            row["resource_type"], row["resource_id"],
+            row["details"], row["source_ip"],
+        ])
+    csv_bytes = buf.getvalue().encode("utf-8")
 
-    output.seek(0)
-    log_audit("EXPORT", "audit_log", details=f"Exported {len(rows)} audit entries as CSV")
-
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=audit_log.csv"}
+    signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+    client = oci.object_storage.ObjectStorageClient(config={}, signer=signer)
+    namespace = client.get_namespace().data
+    bucket = os.environ.get("AUDIT_EVIDENCE_BUCKET", "audit-evidence")
+    object_name = (
+        f"audit-export-"
+        f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.csv"
     )
+
+    client.put_object(
+        namespace_name=namespace,
+        bucket_name=bucket,
+        object_name=object_name,
+        put_object_body=csv_bytes,
+        content_type="text/csv",
+    )
+
+    log_audit("EXPORT", "audit_log",
+              details=f"Exported {len(rows)} rows → {bucket}/{object_name}")
+
+    return {
+        "bucket":     bucket,
+        "object":     object_name,
+        "namespace":  namespace,
+        "rows":       len(rows),
+        "size_bytes": len(csv_bytes),
+    }
 
 
 # --- Main Entry Point ---

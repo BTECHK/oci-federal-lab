@@ -109,6 +109,12 @@ variable "oracle_linux_image_id" {
   type        = string
 }
 
+variable "audit_processor_function_id" {
+  description = "OCID of the audit-processor OCI Function (created via OCI Console in Step 17.2, then referenced here)"
+  type        = string
+  default     = ""
+}
+
 # --- Tags ---
 variable "freeform_tags" {
   description = "Freeform tags to apply to all resources"
