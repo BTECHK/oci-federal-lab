@@ -39,7 +39,7 @@ Last verified: 2026-05-07 (Phase 2 / Phase 3 rows updated for cost-conscious res
 | API | OCI API Gateway + rate limiting | DONE | Phase 21B (Steps 21B.1-21B.6) | 2026-04-08 |
 | AI | OCI Generative AI Agents (managed RAG) — incident triage over runbook corpus | RESCOPED | Phase 26 (Steps 26.1-26.5) — needs rewrite per ADR-009/restructure | 2026-05-07 |
 | Security | AIDE file integrity monitoring | DONE | Phase 24 (Steps 24.1-24.5) | 2026-04-08 |
-| Security | OCI Bastion service (replaces self-managed bastion VM) | NEW | Phase 20 (new module — see ADR-009 cost framework) | 2026-05-07 |
+| Security | OCI Bastion service (managed jump host, replaces a self-managed bastion VM at Phase 2 cluster spin-up) | NEW | Phase 20 (new module introduced fresh in Phase 2 — Phase 1's existing bastion VM stays as-is per the user-approved scope freeze 2026-05-08) | 2026-05-08 |
 | Container | k3s 2-node cluster (hard-ish way) — bare-bones K8s learning step (control plane install, agent join token, kubelet, Flannel, NodePort) | DONE | Phase 23 (Steps 23.1-23.6) — restored as Phase 2 spine per ADR-011 | 2026-05-07 |
 | Load Balancing | OCI Load Balancer — 3-tier architecture | DONE | Phase 23B (Steps 23B.1-23B.4) | 2026-04-08 |
 | IaC/Terraform | Multi-node infra + DB (Days 1-2) | DONE | Phase 20 | 2026-04-08 |
@@ -65,7 +65,7 @@ Last verified: 2026-05-07 (Phase 2 / Phase 3 rows updated for cost-conscious res
 | AI | scikit-learn IsolationForest anomaly detection | DONE | Phase 33 (Step 33.5) | 2026-04-08 |
 | Security | Trivy + SBOM supply chain security | DONE | Phase 31 (Steps 31.2-31.5) | 2026-04-08 |
 | Security | Cosign image signing + verification stage in Jenkins pipeline | NEW | Phase 31 (new step — pairs with OPA admission) | 2026-05-07 |
-| Security | OCI Bastion service (carries forward from Phase 1 retrofit + Phase 2; reused module) | CARRY-FORWARD | Phase 30 (terraform — reuse bastion-service module) | 2026-05-07 |
+| Security | OCI Bastion service (introduced in Phase 2; reused in Phase 3 unchanged) | CARRY-FORWARD | Phase 30 (terraform — reuse bastion-service module from Phase 2) | 2026-05-07 |
 | Container | OKE Basic migration: k3s → managed K8s with Always Free A1.Flex worker pool (the "you built it from scratch in P2 — here's the managed equivalent" lesson per ADR-011) | NEW | Phase 30 (new step early in P3) — terminates Phase 2 k3s + provisions OKE Basic + redeploys FedCompliance | 2026-05-07 |
 | Container | One-time paid `VM.Standard.E5.Flex` worker for ~6 hr load-test demo (~$5, tagged `lifetime=ephemeral`) | NEW | Phase 30 appendix | 2026-05-07 |
 | Container | Helm + ArgoCD GitOps targeting OKE Basic (re-targeted from k3s per ADR-011) | RESCOPED | Phase 32 (full day) — re-target from k3s to OKE | 2026-05-07 |
