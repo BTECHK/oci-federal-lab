@@ -8,6 +8,19 @@ Estimates total project cost across all 3 phases assuming:
   - NO $300 trial credits
   - All resources billed at Oracle list rates (2025-2026)
 
+STALE NOTICE — 2026-05-07
+-------------------------
+The Phase 2 model below still itemizes a 2-node k3s cluster ("k3s-node-1",
+"k3s-node-2") and Phase 3 reuses the same shape. Per ADR-009, Phase 2's
+Kubernetes spine has been rewritten to OKE Basic with a 3-node A1.Flex Always
+Free worker pool (free control plane, $0 baseline workers); k3s is preserved
+only as a 1-page appendix. The PAYG numbers this script produces for Phase 2
+and Phase 3 are therefore upper bounds, not the actual restructured plan.
+
+This script will be rewritten as part of the Phase 2 implementation-guide
+work. Until then, treat the printed Phase 2/3 totals as worst-case PAYG, not
+the $150-cap target. See ADR-009 cost framework for the authoritative numbers.
+
 Usage:
     python cost_estimator.py
     python cost_estimator.py --months-per-phase 2

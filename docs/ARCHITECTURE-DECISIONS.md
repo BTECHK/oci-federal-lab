@@ -8,6 +8,49 @@ Ongoing record of key decisions, trade-offs, pivots, and lessons learned while b
 
 ---
 
+## ADR-010: Skip CloudBees Free Trial — Replicate Distinctive Features with Free OSS Jenkins
+**Date:** 2026-05-07
+**Status:** Accepted
+**Context:** Earlier Phase 2 design referenced a "Jenkins + CloudBees CI migration" arc, on the theory that a CloudBees free trial would demonstrate enterprise-grade pipeline governance (folder-level RBAC, audit logging, pipeline templating, Operations Center). With the 30-day trial-credit window for OCI now lapsed and a hard $150 budget cap on the project, every paid or trial-locked dependency adds risk: forgetting to cancel a trial, hitting a feature gate mid-demo, or losing access to the rendered artifact when the trial ends. The question became: which CloudBees features actually matter for a solo portfolio lab, and can they be reproduced with free OSS Jenkins?
+**Decision:** Skip the CloudBees free trial entirely. Replicate the three distinctive features that matter for a solo lab using free OSS Jenkins plugins and built-in capabilities:
+- **Folder-level RBAC** via the Role Strategy plugin (matrix-based role assignments per folder)
+- **Audit logging** via the Audit Trail plugin (records pipeline edits, run triggers, RBAC changes)
+- **Pipeline templating** via shared library structure (`vars/`, `src/`, `resources/` — built into OSS Jenkins)
+
+Explicitly out of scope (overkill for a solo lab, not worth replicating): Operations Center / multi-controller architecture, Beekeeper update center, cross-team governance dashboards, CloudBees Pipeline Explorer.
+**Rationale:** The interview talking point becomes stronger with the swap, not weaker: "I evaluated CloudBees against OSS Jenkins for the features that matter at solo-lab scale, decided the free plugins covered the actual learning objective (RBAC + audit + templating), and avoided a paid dependency on the critical path." This frames the decision as deliberate engineering, not budget-driven compromise. Skipping the trial also eliminates the risk of trial expiry breaking the demo right before an interview.
+**Trade-offs:**
+- Loses hands-on exposure to the CloudBees UI specifically (acceptable — the underlying plugin patterns transfer to any Jenkins-derived product)
+- Loses the "I migrated to CloudBees CI" narrative (replaced with the stronger "I evaluated and chose OSS" narrative)
+**Alternatives considered:**
+- Run the CloudBees trial alongside OSS Jenkins (rejected — doubles up CI/CD learning, violates the "no per-phase tool doubling" rule)
+- Use Jenkins X (rejected — adds K8s-native complexity not on the learning anchor list)
+- Use OCI DevOps as primary CI/CD (rejected — Jenkins is already the spine across all three phases; switching mid-project would fragment the CI/CD narrative)
+**See also:** Phase 3 implementation guide CloudBees-replication subsection (Role Strategy + Audit Trail + shared library walkthrough).
+
+---
+
+## ADR-009: Phase 2 Kubernetes — OKE Basic with Always Free Workers Replaces k3s as Spine
+**Date:** 2026-05-07
+**Status:** Accepted
+**Context:** Original Phase 2 design used a self-managed 2-node k3s cluster on Always Free A1.Flex compute, framed under ADR-007 ("build it yourself first, then use the managed equivalent"). Two pressures forced a re-evaluation:
+1. **Cost ceiling.** With trial credits gone and a $150 hard cap, the 2-node k3s footprint consumes the entire 4 OCPU Always Free quota — leaving no headroom for any other compute in the same tenancy. OKE Basic's control plane is free, and worker nodes can run on the same Always Free A1.Flex shape, so the dollar-cost is identical at $0 baseline.
+2. **Employer signal.** Job postings for federal Cloud Engineer / SRE roles ask for managed Kubernetes (EKS / AKS / GKE / OKE) almost universally; self-managed k3s is a niche skill that signals homelab depth, not production readiness. Using OKE as the spine lets the resume cite the managed Oracle service explicitly.
+**Decision:** Phase 2 spine is OKE Basic with a 3-node A1.Flex Always Free worker pool. k3s is preserved as a single 1-page appendix demonstrating the DIY equivalent (kept for the "I understand the primitives" interview talking point), but no longer a daily part of the Phase 2 build.
+**One-time paid demo:** Within a $5 sub-budget, briefly attach a paid `VM.Standard.E5.Flex` worker (~1 OCPU, ~6 hours wall-clock) to the OKE node pool, run a short load test, then tear down the same session. Tagged `lifetime=ephemeral`. This proves the paid path without committing to it.
+**Rationale:** This change directly contradicts the "DIY first, managed second" framing of ADR-007 *for the Kubernetes pillar specifically*. The contradiction is intentional: ADR-007 was written when free credits were available and time was abundant. With both gone, the cost-vs-employer-signal trade-off flips. ADR-007 still holds for the Terraform pillar (local `terraform apply` is free, and Resource Manager is now an appendix per Phase 1 retrofits) and the CI/CD pillar (Jenkins remains spine; OCI DevOps is not added in parallel — see ADR-010).
+**Trade-offs:**
+- Loses the k3s "build a cluster from scratch" learning depth — partially recovered via the appendix
+- OKE Basic node pools can't be torn down and re-created as cheaply as k3s on a single VM (slightly more friction in the spin-up/tear-down habit)
+- Adds OKE-specific concepts (cluster auth, Kubeconfig issuance, node pool lifecycle) that have no k3s equivalent
+**Alternatives considered:**
+- Keep k3s as primary, OKE as appendix (rejected — inverts the employer-signal weighting that drove this ADR)
+- Skip Kubernetes in Phase 2 entirely, push it to Phase 3 (rejected — Phase 3 already adds Helm/ArgoCD on top of an existing cluster; without P2's K8s spine, P3 has nowhere to land)
+- Use OKE Enhanced (rejected — paid control plane, ~$50+/month, would consume most of the $70 discretionary budget on its own)
+**See also:** ADR-007 (the "DIY first" framing this ADR partially overrides); ADR-001 (the original three-phase pillar design); the cost framework in `C:\Users\k_a_s\.claude\plans\i-think-for-phase-abundant-pixel.md`.
+
+---
+
 ## ADR-008: Phase-First Repository Structure with Enterprise Naming
 **Date:** 2026-04-02
 **Status:** Accepted

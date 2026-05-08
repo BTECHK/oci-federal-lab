@@ -5,7 +5,7 @@
 **Author:** [Your Name]
 **Cloud:** Oracle Cloud Infrastructure (OCI)
 **Linux:** Oracle Linux 9
-**Budget:** $0–$100 (OCI $300 trial credits)
+**Budget:** $150 hard cap (~$70 discretionary for paid services, ~$30 reserve; trial credits no longer in play). See ADR-009 for the cost framework that drives Phase 2/3 tooling choices.
 
 ---
 
@@ -106,8 +106,8 @@ A sanitized, standard-operating-procedure version of each phase will be publishe
 
 The lab is structured to eventually cover two additional federal-infrastructure themes once Phase 1 is complete:
 
-- **Disaster Recovery & Backup Architecture** — DR drill design, cross-region replication, backup verification, file integrity monitoring, measured RTO/RPO, and an open-source → enterprise CI migration story.
-- **CI/CD Modernization & AI-Augmented Operations** — Multi-stage pipelines with supply-chain security scanning, GitOps delivery, API authentication, and anomaly detection.
+- **Disaster Recovery & Backup Architecture** — DR drill design, cross-region replication, backup verification, file integrity monitoring, measured RTO/RPO. Built on OKE Basic (managed Kubernetes) with OCI Generative AI Agents for incident triage.
+- **CI/CD Modernization & AI-Augmented Operations** — Multi-stage Jenkins pipelines with supply-chain security scanning (Trivy + SBOM + Cosign image signing), GitOps delivery (Helm + ArgoCD), API authentication, and anomaly detection. CloudBees-parity governance (Role Strategy RBAC, audit trail, shared library templating) replicated on free OSS Jenkins — see ADR-010.
 
 Details, scope, and documentation for these phases will be published here as each phase is started and completed.
 
@@ -115,9 +115,10 @@ Details, scope, and documentation for these phases will be published here as eac
 
 ## Design Decisions
 
-See the [design documents](docs/plans/) and [ADR log](docs/ARCHITECTURE-DECISIONS.md) for the rationale behind Phase 1 technology choices, including:
+See the [design documents](docs/plans/) and [ADR log](docs/ARCHITECTURE-DECISIONS.md) for the rationale behind technology choices, including:
 - Why Podman on Oracle Linux (RHEL-native, rootless, FIPS-compliant)
-- Why Jenkins for CI/CD (JD requirement: CloudBees Jenkins)
+- Why Jenkins for CI/CD, with CloudBees-parity features replicated on free OSS plugins (see ADR-010)
+- Why OKE Basic with Always Free workers replaced k3s as the Phase 2 Kubernetes spine (see ADR-009)
 - Why on-prem Ollama for the FedRAMP readiness agent (air-gap capability demonstration)
 
 ---

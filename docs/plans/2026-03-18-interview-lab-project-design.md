@@ -9,6 +9,10 @@
 
 ---
 
+> **2026-05-07 RESTRUCTURE BANNER (read first):** This document is the **original** master design from March 2026. Several decisions below have been superseded by the cost-conscious restructure dated 2026-05-07 — specifically the Phase 2 Kubernetes spine (k3s → OKE Basic with Always Free workers, see **ADR-009**), the CloudBees CI migration arc (dropped; replicated via OSS Jenkins plugins, see **ADR-010**), and the budget framing ($150 hard cap; trial credits no longer in play). When the original text below conflicts with ADR-009, ADR-010, or `C:\Users\k_a_s\.claude\plans\i-think-for-phase-abundant-pixel.md`, the restructure plan and ADRs win. The original design is preserved here for historical context and traceability.
+
+---
+
 ## DESIGN PRINCIPLES
 
 1. **Three completely independent projects** — each starts from a fresh OCI environment and tears down at the end

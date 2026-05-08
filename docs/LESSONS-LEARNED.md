@@ -67,7 +67,7 @@ Last updated: 2026-03-30
 
 **Rule:** If phases are "independent", prove it — don't just claim it.
 
-- **Why:** Phases claimed independence but shared knowledge prerequisites. Phase 2 assumes you understand Terraform (taught in Phase 1). Phase 3 assumes k3s knowledge (taught in Phase 2). This is fine, but must be documented as "knowledge prerequisite, not infrastructure prerequisite."
+- **Why:** Phases claimed independence but shared knowledge prerequisites. Phase 2 assumes you understand Terraform (taught in Phase 1). Phase 3 assumes Kubernetes knowledge (taught in Phase 2 via OKE Basic — see ADR-009). This is fine, but must be documented as "knowledge prerequisite, not infrastructure prerequisite."
 - **Check:** Can someone with the right knowledge start Phase N without having done Phase N-1? If yes, document what knowledge they need. If no, it's not independent.
 
 ---
