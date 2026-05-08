@@ -8,6 +8,36 @@ Ongoing record of key decisions, trade-offs, pivots, and lessons learned while b
 
 ---
 
+## ADR-011: Kubernetes Pillar Progression — k3s in Phase 2, OKE Basic Introduced in Phase 3
+**Date:** 2026-05-07 (same day as ADR-009, supersedes it before any implementation work landed)
+**Status:** Accepted
+**Context:** ADR-009 pivoted Phase 2's Kubernetes spine from self-managed k3s to managed OKE Basic, citing cost ceiling and employer signal. The reasoning was internally sound but it broke a deliberate pedagogical decision: k3s was placed in Phase 2 specifically so the lab could teach the bare-bones primitives of Kubernetes — control plane install, agent join token, kubelet, kube-proxy, Flannel CNI, NodePort routing — *before* introducing a managed control plane in a later phase. Replacing k3s with OKE in Phase 2 would have collapsed two lessons (primitives and managed) into one, with the primitives demoted to a 1-page appendix. The user caught this within the same session, before any Phase 2 implementation-guide rewrites had been applied.
+
+The corrected design honors ADR-007's original "build it yourself first, then use the managed equivalent" framing — which ADR-009 had partially overridden — by keeping k3s as the Phase 2 spine and instead introducing OKE Basic in Phase 3 as the explicit managed-K8s migration step.
+
+**Decision:** Lock the following Kubernetes progression across the three phases:
+
+- **Phase 1 — FedTracker Migration:** No Kubernetes. Containerization with Podman + Docker only. Establishes the OCI / Linux / Terraform / Ansible / Jenkins baseline without K8s overhead.
+- **Phase 2 — FedAnalytics DR:** **k3s 2-node DIY cluster** on Always Free A1.Flex. Manual install via `curl get.k3s.io | sh`, manual agent join with `K3S_URL` + `K3S_TOKEN`, manual kubeconfig retrieval, manual NodePort networking, manual multi-node troubleshooting. Phase 23 of the implementation guide stays substantially as-written — this ADR explicitly forbids any rewrite that swaps k3s out of Phase 2.
+- **Phase 3 — FedCompliance GitOps Security:** **OKE Basic introduced as the managed-K8s migration step.** New early-Phase-3 step: terminate the Phase 2 k3s cluster, provision OKE Basic with an Always Free A1.Flex worker pool, redeploy FedCompliance to the new managed cluster. Helm + ArgoCD GitOps then target OKE (not k3s as in the original P3 plan). One-time paid `VM.Standard.E5.Flex` worker demo (~$5, tagged `lifetime=ephemeral`) demonstrates the paid scale-out path.
+
+**Rationale:** The strongest interview narrative the project produces comes from being able to say, in order: "I built a multi-node Kubernetes cluster from scratch in Phase 2, including the agent-join handshake and the CNI overlay; in Phase 3 I migrated to OKE Basic and added Helm and ArgoCD GitOps on top." That sentence requires both halves. ADR-009 would have eliminated the first half by demoting k3s to an appendix. ADR-011 preserves both, and aligns the project with ADR-007's original pedagogical commitment.
+
+**Trade-offs:**
+- Phase 3 grows: it now absorbs the OKE migration step (~600 lines of new content), the kubectl-from-OKE pattern, the OKE node-pool lifecycle, and the paid-worker demo.
+- Phase 3's discretionary budget absorbs the ~$5 paid worker demo and ~$10 of Flexible Load Balancer demo windows that ADR-009 had budgeted to Phase 2 — net cap unchanged at ~$70.
+- The "no per-phase tool doubling" rule from ADR-010 still holds: Phase 3 uses OKE only (k3s is gone after the migration); Phase 2 uses k3s only.
+
+**Alternatives considered (and rejected):**
+- Keep ADR-009 as-is and demote k3s to a Phase 2 appendix (rejected — destroys the bare-bones learning step that the project's pedagogy depends on).
+- Run k3s and OKE side-by-side in Phase 3 to "show the migration delta" (rejected — violates the no-doubling rule and adds compute cost without proportional learning value).
+- Push OKE further out, into a hypothetical Phase 4 (rejected — no Phase 4 exists in the project, and OKE-with-Helm-and-ArgoCD is the natural Phase 3 deliverable).
+- Keep both ADR-009 and ADR-011 as "Accepted" with conflicting decisions and let the implementation guides arbitrate (rejected — ADRs are the authoritative source; conflicts here become drift everywhere downstream).
+
+**See also:** ADR-007 (DIY-first, managed-second framing — restored to full effect by this ADR); ADR-009 (the pivot that this ADR supersedes — body preserved in the log for traceability); ADR-001 (the original three-phase pillar design); the cost framework in `C:\Users\k_a_s\.claude\plans\i-think-for-phase-abundant-pixel.md`; the verification gate "K8s pedagogy gate" added to that plan.
+
+---
+
 ## ADR-010: Skip CloudBees Free Trial — Replicate Distinctive Features with Free OSS Jenkins
 **Date:** 2026-05-07
 **Status:** Accepted
@@ -32,7 +62,7 @@ Explicitly out of scope (overkill for a solo lab, not worth replicating): Operat
 
 ## ADR-009: Phase 2 Kubernetes — OKE Basic with Always Free Workers Replaces k3s as Spine
 **Date:** 2026-05-07
-**Status:** Accepted
+**Status:** **Superseded by ADR-011** (same day, before any implementation-guide rewrites landed). The cost-and-employer-signal reasoning below is sound, but it was applied to the wrong phase — pivoting Phase 2 away from k3s destroyed the deliberate "bare-bones first, managed second" learning progression that motivated putting k3s in Phase 2 in the first place. ADR-011 preserves the k3s/OKE progression by introducing OKE Basic in Phase 3 (as a managed-K8s migration step) instead of replacing k3s in Phase 2. Body retained below for traceability — the walking-back is itself worth preserving.
 **Context:** Original Phase 2 design used a self-managed 2-node k3s cluster on Always Free A1.Flex compute, framed under ADR-007 ("build it yourself first, then use the managed equivalent"). Two pressures forced a re-evaluation:
 1. **Cost ceiling.** With trial credits gone and a $150 hard cap, the 2-node k3s footprint consumes the entire 4 OCPU Always Free quota — leaving no headroom for any other compute in the same tenancy. OKE Basic's control plane is free, and worker nodes can run on the same Always Free A1.Flex shape, so the dollar-cost is identical at $0 baseline.
 2. **Employer signal.** Job postings for federal Cloud Engineer / SRE roles ask for managed Kubernetes (EKS / AKS / GKE / OKE) almost universally; self-managed k3s is a niche skill that signals homelab depth, not production readiness. Using OKE as the spine lets the resume cite the managed Oracle service explicitly.

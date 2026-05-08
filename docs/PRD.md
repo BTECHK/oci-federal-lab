@@ -6,7 +6,7 @@
 **Status:** Active
 **Project Type:** Portfolio / Interview Preparation Lab
 
-> **2026-05-07 restructure note:** The 30-day OCI trial-credit window has lapsed. Budget framing, US-006 (CI/CD), and US-008 (Kubernetes) have been rewritten to reflect ADR-009 (OKE Basic replaces k3s as Phase 2 spine) and ADR-010 (CloudBees free trial dropped; OSS feature replication via Role Strategy + Audit Trail + shared libraries). See `docs/ARCHITECTURE-DECISIONS.md` and `C:\Users\k_a_s\.claude\plans\i-think-for-phase-abundant-pixel.md`.
+> **2026-05-07 restructure note:** The 30-day OCI trial-credit window has lapsed. Budget framing, US-006 (CI/CD), and US-008 (Kubernetes) have been rewritten to reflect ADR-010 (CloudBees free trial dropped; OSS feature replication via Role Strategy + Audit Trail + shared libraries) and **ADR-011 (k3s in Phase 2 / OKE Basic migration in Phase 3 — supersedes ADR-009 within the same day, before any implementation rewrites landed)**. See `docs/ARCHITECTURE-DECISIONS.md` and `C:\Users\k_a_s\.claude\plans\i-think-for-phase-abundant-pixel.md`.
 
 ---
 
@@ -102,16 +102,23 @@ This is a learning lab, not a production application. The "product" is the infra
 - [ ] Podman rootless execution demonstrated
 - [ ] Comparison documented (max 2 hours)
 
-### US-008: Kubernetes Orchestration (OKE Basic, with k3s preserved as appendix)
-**Description:** As a cloud engineer, I want to deploy to a managed OKE Basic cluster so that I can demonstrate the production-shaped Kubernetes pattern federal employers actually run, while preserving a single k3s appendix for the "I understand the primitives" interview talking point. See ADR-009.
+### US-008: Kubernetes Orchestration (k3s in P2, OKE Basic migration in P3)
+**Description:** As a cloud engineer, I want a Kubernetes progression that teaches the bare-bones primitives first and the managed equivalent second, so that I can speak credibly about both DIY clusters and managed services in interviews. Phase 2 builds a k3s 2-node cluster from scratch (manual install, agent join token, kubelet, Flannel CNI, NodePort). Phase 3 migrates that workload to OKE Basic with an Always Free A1.Flex worker pool, then layers Helm charts and ArgoCD GitOps on top. See ADR-011 (which supersedes ADR-009) and ADR-007 (the original DIY-first / managed-second framing).
 
 **Acceptance Criteria:**
-- [ ] OKE Basic cluster (free control plane) with 3-node A1.Flex worker pool on Always Free tier (P2)
-- [ ] Application deployed via kubectl with raw manifests (P2)
-- [ ] Helm charts and ArgoCD GitOps on the same OKE cluster (P3 — no rebuild)
-- [ ] Cross-node networking verified
-- [ ] One-time paid `VM.Standard.E5.Flex` worker (~6 hr, ~$5, tagged `lifetime=ephemeral`) for a load-test demo, then torn down (P2)
-- [ ] k3s appendix (~1 page) demonstrates the DIY equivalent for narrative completeness
+- [ ] **Phase 2 — k3s primitives:**
+  - [ ] 2-node k3s cluster on OCI A1.Flex Always Free tier (server + agent on separate instances)
+  - [ ] Manual `curl get.k3s.io | sh` install on the server node; manual agent join with `K3S_URL` + `K3S_TOKEN`
+  - [ ] Kubeconfig retrieved manually from `/etc/rancher/k3s/k3s.yaml`
+  - [ ] FedAnalytics deployed via raw `kubectl apply` manifests (ConfigMap + Deployment + NodePort Service)
+  - [ ] Cross-node networking verified (NodePort 30080 routes to pods on either node via Flannel VXLAN)
+  - [ ] Hands-on break-fix exercises for CrashLoopBackOff, Service-selector mismatch, Node NotReady
+- [ ] **Phase 3 — OKE Basic migration (NEW):**
+  - [ ] OKE Basic cluster (free control plane) with Always Free A1.Flex worker pool provisioned via Terraform
+  - [ ] FedCompliance redeployed from k3s to OKE; Phase 2 k3s cluster terminated as part of migration
+  - [ ] Helm charts and ArgoCD GitOps target the OKE cluster (re-targeted from the original k3s plan)
+  - [ ] One-time paid `VM.Standard.E5.Flex` worker (~6 hr, ~$5, tagged `lifetime=ephemeral`) for a load-test demo, then torn down
+  - [ ] kubectl-from-OKE pattern documented (`oci ce cluster create-kubeconfig …`)
 
 ### US-009: Security Compliance Scanning
 **Description:** As a cloud engineer, I want to run compliance scans so that I can discuss security posture in interviews.
@@ -162,7 +169,8 @@ This is a learning lab, not a production application. The "product" is the infra
 
 - **Budget constraint:** $150 hard cap (~$50 already spent, ~$70 discretionary, ~$30 reserve). Trial credits no longer in play. ARM A1.Flex instances on Always Free tier are the default; paid shapes only for tightly-scoped, time-boxed demos.
 - **Oracle Linux 9:** Ships Podman by default, Docker not in repos. SELinux enforcing by default.
-- **OKE Basic on ARM:** Free control plane, A1.Flex worker pool on Always Free tier (3 nodes within the 4 OCPU quota). Replaces the original k3s plan as Phase 2 spine — see ADR-009.
+- **k3s on ARM (Phase 2):** Lightweight Kubernetes (~70MB binary), fully conformant API, runs on free-tier A1.Flex instances. Used as the Phase 2 spine to teach the bare-bones primitives — manual server install, agent join token, kubelet, Flannel VXLAN, NodePort.
+- **OKE Basic on ARM (Phase 3 migration target):** Free control plane, A1.Flex worker pool on Always Free tier. Phase 3's managed-K8s migration step lands here — workloads move from the Phase 2 k3s cluster to OKE Basic, then Helm + ArgoCD GitOps are layered on top. See ADR-011 (supersedes ADR-009).
 - **Autonomous Database:** OCI's managed Oracle DB — Always Free tier includes 2 instances.
 - **Phase independence:** Phases share knowledge prerequisites but no live infrastructure prerequisites. Phase 3 reuses the Phase 2 OKE cluster only when both phases run in the same tenancy at the same time; otherwise Phase 3 stands up its own OKE Basic cluster from the same Terraform module.
 
@@ -187,7 +195,7 @@ This is a learning lab, not a production application. The "product" is the infra
 
 | Question | Status |
 |----------|--------|
-| Should Phase 2 use OKE Basic or k3s as the K8s spine? | **Resolved 2026-05-07 — OKE Basic with Always Free A1.Flex workers.** k3s preserved as 1-page appendix. See ADR-009. |
+| Should Phase 2 use OKE Basic or k3s as the K8s spine? | **Resolved 2026-05-07 — k3s.** Bare-bones K8s primitives are the deliberate Phase 2 learning step. OKE Basic enters in Phase 3 as the managed-migration step. See ADR-011 (supersedes ADR-009 same-day). |
 | Should CloudBees free trial be used for the enterprise governance demo? | **Resolved 2026-05-07 — No.** Replicate Role Strategy + Audit Trail + shared-library templating on free OSS Jenkins. See ADR-010. |
-| Should Phase 3 spin up its own OKE cluster or reuse Phase 2's? | Reuse Phase 2's when both phases run in the same tenancy session; otherwise stand up via the same Phase 2 Terraform module. |
+| When Phase 3's OKE migration step runs, what happens to the Phase 2 k3s cluster? | Terminated as part of the migration — Phase 3 rebuilds the workload on OKE. Documented in the new Phase 30 OKE migration step. |
 | How much time on Podman vs Docker comparison? | Max 2 hours on Day 3 |

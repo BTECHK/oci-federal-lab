@@ -106,8 +106,8 @@ A sanitized, standard-operating-procedure version of each phase will be publishe
 
 The lab is structured to eventually cover two additional federal-infrastructure themes once Phase 1 is complete:
 
-- **Disaster Recovery & Backup Architecture** — DR drill design, cross-region replication, backup verification, file integrity monitoring, measured RTO/RPO. Built on OKE Basic (managed Kubernetes) with OCI Generative AI Agents for incident triage.
-- **CI/CD Modernization & AI-Augmented Operations** — Multi-stage Jenkins pipelines with supply-chain security scanning (Trivy + SBOM + Cosign image signing), GitOps delivery (Helm + ArgoCD), API authentication, and anomaly detection. CloudBees-parity governance (Role Strategy RBAC, audit trail, shared library templating) replicated on free OSS Jenkins — see ADR-010.
+- **Disaster Recovery & Backup Architecture** — DR drill design, cross-region replication, backup verification, file integrity monitoring, measured RTO/RPO. Built on a self-managed 2-node k3s cluster (the bare-bones-Kubernetes learning step per ADR-011) with OCI Generative AI Agents for incident triage.
+- **CI/CD Modernization & AI-Augmented Operations** — Migrate workloads from k3s to OKE Basic (the managed-Kubernetes step per ADR-011), then layer Helm + ArgoCD GitOps delivery on top. Multi-stage Jenkins pipelines with supply-chain security scanning (Trivy + SBOM + Cosign image signing), API authentication, and anomaly detection. CloudBees-parity governance (Role Strategy RBAC, audit trail, shared library templating) replicated on free OSS Jenkins — see ADR-010.
 
 Details, scope, and documentation for these phases will be published here as each phase is started and completed.
 
@@ -118,7 +118,7 @@ Details, scope, and documentation for these phases will be published here as eac
 See the [design documents](docs/plans/) and [ADR log](docs/ARCHITECTURE-DECISIONS.md) for the rationale behind technology choices, including:
 - Why Podman on Oracle Linux (RHEL-native, rootless, FIPS-compliant)
 - Why Jenkins for CI/CD, with CloudBees-parity features replicated on free OSS plugins (see ADR-010)
-- Why OKE Basic with Always Free workers replaced k3s as the Phase 2 Kubernetes spine (see ADR-009)
+- Why k3s in Phase 2 then OKE Basic in Phase 3 — primitives first, managed second (see ADR-011, which supersedes ADR-009)
 - Why on-prem Ollama for the FedRAMP readiness agent (air-gap capability demonstration)
 
 ---
