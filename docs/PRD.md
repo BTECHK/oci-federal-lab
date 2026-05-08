@@ -170,9 +170,17 @@ This is a learning lab, not a production application. The "product" is the infra
 - **Budget constraint:** $150 hard cap (~$50 already spent, ~$70 discretionary, ~$30 reserve). Trial credits no longer in play. ARM A1.Flex instances on Always Free tier are the default; paid shapes only for tightly-scoped, time-boxed demos.
 - **Oracle Linux 9:** Ships Podman by default, Docker not in repos. SELinux enforcing by default.
 - **k3s on ARM (Phase 2):** Lightweight Kubernetes (~70MB binary), fully conformant API, runs on free-tier A1.Flex instances. Used as the Phase 2 spine to teach the bare-bones primitives — manual server install, agent join token, kubelet, Flannel VXLAN, NodePort.
-- **OKE Basic on ARM (Phase 3 migration target):** Free control plane, A1.Flex worker pool on Always Free tier. Phase 3's managed-K8s migration step lands here — workloads move from the Phase 2 k3s cluster to OKE Basic, then Helm + ArgoCD GitOps are layered on top. See ADR-011 (supersedes ADR-009).
+- **OKE Basic on ARM (Phase 3 K8s spine):** Free control plane, A1.Flex worker pool on Always Free tier. Phase 3 stands up its own OKE Basic cluster, ADB, Object Storage buckets, and compartment from scratch by default. Helm + ArgoCD GitOps layer on top. See ADR-011 (supersedes ADR-009).
 - **Autonomous Database:** OCI's managed Oracle DB — Always Free tier includes 2 instances.
-- **Phase independence:** Phases share knowledge prerequisites but no live infrastructure prerequisites. Phase 3 reuses the Phase 2 OKE cluster only when both phases run in the same tenancy at the same time; otherwise Phase 3 stands up its own OKE Basic cluster from the same Terraform module.
+- **Phase independence (no infrastructure prerequisites):** Each phase stands up its own compartment, ADB, Object Storage buckets, and compute. A reader who downloads only Phase N from GitHub can complete it from a fresh tenancy without ever having run Phase 1 or Phase 2. The only cross-phase dependencies are *knowledge* prerequisites (see the dependency matrix below). An optional sub-section in Phase 3 covers migrating a workload from a Phase 2 k3s cluster *if* both phases happen to be running in the same tenancy at the same time during a live demo — but it's not on the standalone path.
+
+### Cross-phase dependency matrix
+
+| Phase | Knowledge prerequisites (skills the reader brings) | Infrastructure prerequisites (live OCI resources required from prior phases) |
+|---|---|---|
+| **Phase 1 — FedTracker Migration** | None — Phase 1 is the entry point | None — Phase 1 starts from a fresh tenancy |
+| **Phase 2 — FedAnalytics DR** | Terraform basics (providers, variables, HCL); Ansible basics (inventory, playbooks); FastAPI + Python; Docker fundamentals. Acquired in Phase 1 *or* equivalent prior experience. | None — Phase 2 starts from a fresh tenancy. Phase 1 teardown is recommended only to free Always Free quota. |
+| **Phase 3 — FedCompliance GitOps Security** | Kubernetes basics (Pods / Deployments / Services / kubectl); Helm + ArgoCD concepts; Jenkins pipeline-as-code; OCI Vault. Acquired in Phase 2 *or* equivalent prior experience. | None — Phase 3 stands up its own compartment, ADB, Object Storage buckets, and OKE cluster. Phase 2 teardown is recommended only to free Always Free quota. |
 
 ---
 
@@ -197,5 +205,5 @@ This is a learning lab, not a production application. The "product" is the infra
 |----------|--------|
 | Should Phase 2 use OKE Basic or k3s as the K8s spine? | **Resolved 2026-05-07 — k3s.** Bare-bones K8s primitives are the deliberate Phase 2 learning step. OKE Basic enters in Phase 3 as the managed-migration step. See ADR-011 (supersedes ADR-009 same-day). |
 | Should CloudBees free trial be used for the enterprise governance demo? | **Resolved 2026-05-07 — No.** Replicate Role Strategy + Audit Trail + shared-library templating on free OSS Jenkins. See ADR-010. |
-| When Phase 3's OKE migration step runs, what happens to the Phase 2 k3s cluster? | Terminated as part of the migration — Phase 3 rebuilds the workload on OKE. Documented in the new Phase 30 OKE migration step. |
+| When Phase 3's OKE migration step runs, what happens to the Phase 2 k3s cluster? | **Resolved 2026-05-08.** Phase 3 stands up its own OKE cluster, ADB, and Object Storage buckets standalone — no Phase 2 infrastructure required. The Phase 2 k3s teardown lives in an *optional* sub-section in Step 30.0 for the live-demo case where both phases are running in the same tenancy at once; it is not on the standalone Phase 3 path. |
 | How much time on Podman vs Docker comparison? | Max 2 hours on Day 3 |
