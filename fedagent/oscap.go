@@ -32,3 +32,11 @@ type OscapResult struct {
 func RunOscap(host string) (*OscapResult, error) {
 	return nil, nil // remove stub when implementing
 }
+
+// ── Section 4 (P2): Multi-host goroutine pool ────────────────────────
+// WHAT: Spawn one goroutine per host in a hosts slice, run RunOscap concurrently,
+//       use sync.WaitGroup to coordinate, return map[host]*OscapResult.
+// LEARNING: goroutine + sync.WaitGroup pattern, channel for results, bounded concurrency
+// LOOK UP: sync.WaitGroup.Add/Done/Wait, buffered channels for result collection
+//
+// Write your implementation below. Check answers/ only after attempting.
