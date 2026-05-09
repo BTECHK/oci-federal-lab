@@ -1,0 +1,10 @@
+schema_version: 20180708
+name: supply-chain-validator
+version: 0.0.1
+runtime: go
+entrypoint: ./supply-chain-validator
+memory: 256
+timeout: 120
+config:
+  RESULTS_BUCKET: supply-chain-results
+  COSIGN_PUBKEY_PATH: /function/cosign.pub

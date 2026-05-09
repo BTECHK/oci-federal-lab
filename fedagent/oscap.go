@@ -40,3 +40,11 @@ func RunOscap(host string) (*OscapResult, error) {
 // LOOK UP: sync.WaitGroup.Add/Done/Wait, buffered channels for result collection
 //
 // Write your implementation below. Check answers/ only after attempting.
+
+// ── Section 5 (P3): Subprocess pattern reuse ─────────────────────────
+// WHAT: Trivy and Cosign both use os/exec subprocess invocations like RunOscap.
+//       Factor out a runCommand(name, args...) helper to avoid duplication.
+// LEARNING: helper function refactor, generic subprocess error handling
+// LOOK UP: os/exec.CommandContext, error wrapping with %w
+//
+// Write your implementation below. Check answers/ only after attempting.
