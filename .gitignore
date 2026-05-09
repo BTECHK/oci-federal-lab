@@ -94,3 +94,8 @@ CHANGES-STAGING.md
 # remove its entry here to bring it back into the tracked tree.
 phases/phase-2-fedanalytics-dr/
 phases/phase-3-fedcompliance-gitops-security/
+
+# 4-quadrant scaffold/answers pattern (gitignore answers, breaks, solutions everywhere)
+**/answers/
+**/breaks/
+**/solutions/
