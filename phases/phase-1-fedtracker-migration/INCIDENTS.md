@@ -37,6 +37,11 @@ The break script modified a file in `/opt/fedtracker/` — either replacing the 
 
 After diagnosing: restore the original file, re-initialize AIDE baseline if necessary (`aide --update`), and document the root cause in your postmortem.
 
+### Prevention
+
+`scripts/INC-001-aide-preflight.sh` — runs as first gate in Jenkins deploy pipeline.
+Blocks deployment if AIDE detects any file integrity violations.
+
 ### Postmortem
 
 Write your postmortem in `postmortems/INC-001-aide-detection-postmortem.md`. Cover:

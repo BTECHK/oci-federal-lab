@@ -573,6 +573,52 @@ Run this check after retrofits: `grep -n "phases/phase-1-fedtracker-migration/ap
 
 ---
 
+### 12. Create Prevention Scripts in `scripts/`
+
+Prevention scripts are **tracked** portfolio artifacts (not gitignored). They close the SRE lifecycle loop: incident → postmortem → **automation**. Named `INC-00N-*.sh/.py` so the link to each incident is immediate. Use Bash for OS/system tool calls; Python when cloud API calls are needed.
+
+**Phase 1 — Create Now:**
+
+`scripts/INC-001-aide-preflight.sh` (Bash):
+- Verifies AIDE db was updated within last 24 hours (stale baseline guard)
+- Runs `aide --check`, captures exit code
+- On violation: prints changed file list, exits 1 → blocks Jenkins deploy stage
+- On clean: prints `AIDE: integrity verified — safe to deploy`, exits 0
+
+Header (include verbatim in the script):
+```bash
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────────────────
+# INC-001 Prevention: AIDE Integrity Pre-flight Check
+# Incident: phases/phase-1-fedtracker-migration/INCIDENTS.md → INC-001
+# Postmortem: phases/phase-1-fedtracker-migration/postmortems/INC-001-*.md
+#
+# Purpose: Verify AIDE file integrity before deployment. Blocks deploy if
+#          changes detected. Created after INC-001: unauthorized binary
+#          detected post-deploy.
+#
+# Usage: ./scripts/INC-001-aide-preflight.sh [--strict]
+#   --strict: also fail if aide.db is older than 1 hour
+# ─────────────────────────────────────────────────────────────────────────
+```
+
+Also add a "Prevention" subsection to `phases/phase-1-fedtracker-migration/INCIDENTS.md` under INC-001:
+```markdown
+### Prevention
+`scripts/INC-001-aide-preflight.sh` — runs as first gate in Jenkins deploy pipeline.
+Blocks deployment if AIDE detects any file integrity violations.
+```
+
+**Phase 2 — Add When P2 Builds (document only now):**
+- `scripts/INC-002-oscap-regression.sh` (Bash) — runs oscap, compares score against baseline stored in `/opt/fedtracker/oscap-baseline.txt`, fails if regression > 5 points
+- `scripts/INC-003-k3s-dr-readiness.sh` (Bash) — checks `kubectl get nodes` for all k3s nodes ready, verifies ADB backup timestamp via `oci db autonomous-database get`, outputs go/no-go for DR drill
+
+**Phase 3 — Add When P3 Builds (document only now):**
+- `scripts/INC-004-cert-expiry-check.sh` (Bash) — runs `openssl s_client` against all endpoints, extracts expiry, warns and exits 1 if any cert expires within 30 days
+- `scripts/INC-005-slo-budget-check.py` (Python) — queries Prometheus API for error rate metrics, calculates remaining error budget vs SLO target, exits 1 if < 20% budget remaining
+
+---
+
 ## Verification Gates (All Must Pass Before Done)
 
 1. `fedtracker-app/main.py` contains `# ── Section` comment blocks — NOT a full implementation
@@ -584,8 +630,9 @@ Run this check after retrofits: `grep -n "phases/phase-1-fedtracker-migration/ap
 7. `functions/go/health-checker-go/main.go` compiles: `cd functions/go/health-checker-go && go build ./...` exits 0
 8. `git status` confirms no `answers/`, `breaks/`, `solutions/` directories are tracked
 9. `git grep -n "phases/phase-1-fedtracker-migration/app/main.py" phases/phase-1-fedtracker-migration/docs/implementation-guide.md` returns zero hits
-10. `phases/phase-1-fedtracker-migration/INCIDENTS.md` exists with INC-001 scenario
+10. `phases/phase-1-fedtracker-migration/INCIDENTS.md` exists with INC-001 scenario and "Prevention" subsection
 11. `adrs/ADR-012-pull-vs-push-metrics.md` and `adrs/ADR-013-cli-instance-principal-auth.md` exist with quiz questions
+12. `scripts/INC-001-aide-preflight.sh` exists, is executable (`chmod +x`), and exits 0 on a clean system
 
 ---
 
@@ -596,12 +643,14 @@ Run this check after retrofits: `grep -n "phases/phase-1-fedtracker-migration/ap
 **P2 Python function:** log-summarizer (scheduled, Ollama-powered compliance narrative)
 **P2 Go function:** dr-health-probe (concurrent k3s node polling with sync.WaitGroup)
 **P2 CLI additions:** dr-status, failover-check commands
+**P2 prevention scripts:** INC-002-oscap-regression.sh (Bash), INC-003-k3s-dr-readiness.sh (Bash)
 
 **P3 adds to fedtracker-app:** GET /compliance/controls/{framework}, POST /compliance/scan, POST /evidence/generate
 **P3 adds to fedagent:** Trivy image scan findings, Cosign signature validity, Jenkins pipeline status
 **P3 Python function:** evidence-collector (event-chained from FedAgent scan output)
 **P3 Go function:** supply-chain-validator (OCI Container Registry push → Trivy + Cosign)
 **P3 CLI additions:** scan-trigger, policy-report, pipeline-status commands
+**P3 prevention scripts:** INC-004-cert-expiry-check.sh (Bash), INC-005-slo-budget-check.py (Python)
 
 ---
 
