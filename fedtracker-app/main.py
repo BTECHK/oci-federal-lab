@@ -49,6 +49,16 @@ app = FastAPI(title="FedTracker", version="1.0.0", lifespan=lifespan)
 # Write your implementation below. Check answers/ only after attempting.
 
 
+# ── Section 3c (P3): Register compliance + evidence routers ──────────
+# WHAT: Wire up P3 routes — GET /compliance/controls/{framework},
+#       POST /compliance/scan, GET /compliance/report,
+#       POST /evidence/generate
+# LEARNING: P3 turns FedTracker from a tracker into a compliance-evidence service
+# LOOK UP: routes/compliance.py and routes/evidence.py
+#
+# Write your implementation below. Check answers/ only after attempting.
+
+
 # ── Section 4: Development entry point ──────────────────────────────
 # WHAT: Allow running with `python main.py` during development
 # LEARNING: uvicorn.run vs gunicorn, __name__ == "__main__" guard

@@ -49,3 +49,21 @@ func (c *OscapCollector) Collect(ch chan<- prometheus.Metric) {
 // LOOK UP: prometheus.MustNewConstMetric, GaugeValue
 //
 // Write your implementation below. Check answers/ only after attempting.
+
+// ── Section 6 (P3): Supply chain metric descriptors ──────────────────
+// WHAT: Add Desc fields for fedplatform_trivy_findings_total{image, severity},
+//       fedplatform_cosign_signature_valid{image}, and
+//       fedplatform_pipeline_last_build_status{job}; register them in Describe.
+// LEARNING: collectors with multiple data sources, label cardinality choices
+// LOOK UP: prometheus.NewDesc with multiple labels
+//
+// Write your implementation below. Check answers/ only after attempting.
+
+// ── Section 7 (P3): Emit Trivy + Cosign + Jenkins metrics ────────────
+// WHAT: In Collect, call ScanTrivy(), VerifyCosign(), QueryJenkins() and
+//       emit metrics. Cosign returns 0 or 1; Jenkins returns 0 or 1; Trivy
+//       emits a counter per image × severity.
+// LEARNING: emitting many label combinations in a single Collect call
+// LOOK UP: prometheus.CounterValue vs GaugeValue choice per metric
+//
+// Write your implementation below. Check answers/ only after attempting.

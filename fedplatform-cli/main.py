@@ -28,6 +28,14 @@ import click
 #
 # Write your implementation below. Check answers/ only after attempting.
 
+
+# ── Section 4 (P3): Register scan-trigger, policy-report, pipeline-status ─
+# WHAT: Wire P3 supply-chain operator commands (compliance.py + pipeline.py)
+# LEARNING: keep section comments grouped by phase so the CLI evolution is grep-able
+# LOOK UP: cli.add_command, importing the new commands from commands/
+#
+# Write your implementation below. Check answers/ only after attempting.
+
 @click.group()
 def cli():
     """FedPlatform operator CLI."""
