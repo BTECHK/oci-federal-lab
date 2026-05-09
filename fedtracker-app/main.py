@@ -40,6 +40,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="FedTracker", version="1.0.0", lifespan=lifespan)
 
 
+# ── Section 3b (P2): Register ingest + logs routers ─────────────────
+# WHAT: Wire up P2 routes — POST /ingest/batch, POST /ingest/webhook,
+#       GET /ingest/pipeline/status, GET /logs
+# LEARNING: routers compose by domain, each owns its prefix and tags
+# LOOK UP: routes/ingest.py and routes/logs.py for the router objects
+#
+# Write your implementation below. Check answers/ only after attempting.
+
+
 # ── Section 4: Development entry point ──────────────────────────────
 # WHAT: Allow running with `python main.py` during development
 # LEARNING: uvicorn.run vs gunicorn, __name__ == "__main__" guard

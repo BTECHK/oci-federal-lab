@@ -33,3 +33,19 @@ func (c *OscapCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *OscapCollector) Collect(ch chan<- prometheus.Metric) {
 }
+
+// ── Section 4 (P2): Additional metric descriptors ────────────────────
+// WHAT: Add Desc fields for fedplatform_k3s_node_ready{node} and
+//       fedplatform_backup_age_seconds{target}; register them via Describe.
+// LEARNING: One collector can emit multiple metric families
+// LOOK UP: prometheus.NewDesc with variable labels, gauge semantics
+//
+// Write your implementation below. Check answers/ only after attempting.
+
+// ── Section 5 (P2): Emit k3s + backup metrics in Collect ─────────────
+// WHAT: After emitting oscap metrics, call PollK3sNodes() + GetBackupAge()
+//       and emit one metric per node and one per backup target.
+// LEARNING: A single Collect() call should be cheap and concurrency-safe
+// LOOK UP: prometheus.MustNewConstMetric, GaugeValue
+//
+// Write your implementation below. Check answers/ only after attempting.

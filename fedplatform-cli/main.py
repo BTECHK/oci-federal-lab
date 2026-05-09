@@ -20,6 +20,14 @@ import click
 #
 # Write your implementation below. Check answers/ only after attempting.
 
+
+# ── Section 3 (P2): Register dr-status and failover-check ───────────
+# WHAT: Wire commands/dr.py and commands/failover.py into the cli group
+# LEARNING: P2 adds DR-aware operator commands without rewriting P1 setup
+# LOOK UP: import paths inside commands/ module
+#
+# Write your implementation below. Check answers/ only after attempting.
+
 @click.group()
 def cli():
     """FedPlatform operator CLI."""

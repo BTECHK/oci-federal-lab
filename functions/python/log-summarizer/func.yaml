@@ -1,0 +1,12 @@
+schema_version: 20180708
+name: log-summarizer
+version: 0.0.1
+runtime: python3.11
+entrypoint: /python/bin/fdk /function/func.py handler
+memory: 256
+timeout: 120
+config:
+  ADB_DSN: fedtrackerdb_low
+  OLLAMA_URL: http://10.0.2.201:11434
+  OLLAMA_MODEL: llama3
+  OUTPUT_BUCKET: compliance-artifacts

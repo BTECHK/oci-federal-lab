@@ -1,0 +1,10 @@
+schema_version: 20180708
+name: dr-health-probe
+version: 0.0.1
+runtime: go
+entrypoint: ./dr-health-probe
+memory: 128
+timeout: 60
+config:
+  K3S_NODES: "10.0.2.201,10.0.2.202,10.0.2.203"
+  ALERT_BUCKET: dr-alerts
