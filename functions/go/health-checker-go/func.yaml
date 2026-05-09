@@ -1,0 +1,9 @@
+schema_version: 20180708
+name: health-checker-go
+version: 0.0.1
+runtime: go
+entrypoint: ./health-checker-go
+memory: 128
+timeout: 30
+config:
+  APP_HEALTH_URL: http://10.0.2.201:8000/health/deep

@@ -53,14 +53,22 @@
         mode: '0755'
 
     # --- Application Code ---
-    - name: Copy application code
-      copy:
-        src: ../../app/main.py    # Relative to ansible/playbooks/ → up to phase-1 root → app/
-        dest: "{{ app_dir }}/main.py"
+    # Deploy the full multi-file app from fedtracker-app/answers/ at the repo root.
+    # answers/ is gitignored by design (scaffold/answers pedagogy) — it exists locally.
+    # Relative path: playbooks/ → ansible/ → phase-1/ → phases/ → repo-root → fedtracker-app/answers/
+    - name: Deploy FedTracker app (multi-file from fedtracker-app/answers/)
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../../../../fedtracker-app/answers/"
+        dest: "{{ app_dir }}/"
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         mode: '0644'
       notify: restart fedtracker
+
+    - name: Install FedTracker Python dependencies from requirements.txt
+      pip:
+        requirements: "{{ playbook_dir }}/../../../../fedtracker-app/requirements.txt"
+        executable: pip3
 
     # --- systemd Service ---
     - name: Create systemd service file
