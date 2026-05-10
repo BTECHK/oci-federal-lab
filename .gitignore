@@ -97,3 +97,9 @@ CHANGES-STAGING.md
 **/answers/
 **/breaks/
 **/solutions/
+
+# Generated gRPC stubs — produced by fedagent/proto/generate.sh
+fedagent/pb/
+fedtracker-app/proto/*_pb2.py
+fedtracker-app/proto/*_pb2_grpc.py
+fedtracker-app/proto/*_pb2.pyi

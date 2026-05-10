@@ -619,6 +619,71 @@ Blocks deployment if AIDE detects any file integrity violations.
 
 ---
 
+### 13. Add gRPC Interface to `fedagent` (Foundation)
+
+**On theme:** Federal compliance requires type-safe internal contracts. Proto files become auditable artifacts of how data flows between intake (Python FastAPI) and compliance scanning (Go fedagent). REST stays for external traffic; gRPC is internal-only.
+
+**Create `fedagent/proto/compliance.proto`:**
+```proto
+syntax = "proto3";
+package fedplatform.compliance.v1;
+option go_package = "fedplatform/fedagent/pb";
+
+service ComplianceService {
+  // P1 method
+  rpc GetOscapScore(GetOscapScoreRequest) returns (GetOscapScoreResponse);
+}
+
+message GetOscapScoreRequest {
+  string host = 1;
+  string framework = 2;   // "fedramp" | "nist" | "cmmc"
+}
+
+message GetOscapScoreResponse {
+  int32 score = 1;
+  int32 findings_high = 2;
+  int32 findings_medium = 3;
+  int32 findings_low = 4;
+  string scanned_at = 5;  // ISO 8601 UTC
+}
+```
+
+**Update `fedagent/go.mod`:** add `google.golang.org/grpc v1.62.0` and `google.golang.org/protobuf v1.32.0`.
+
+**Generate Go stubs:** `protoc --go_out=. --go-grpc_out=. proto/compliance.proto` (document in fedagent/README.md).
+
+**New scaffold `fedagent/grpc_server.go` (sections):**
+- Section 1: Imports (grpc, generated pb, fedagent collector)
+- Section 2: ComplianceServer struct embedding pb.UnimplementedComplianceServiceServer
+- Section 3: GetOscapScore handler — reuses oscap.go scan logic, builds proto response
+- Section 4: Server registration helper (returns *grpc.Server)
+
+`fedagent/answers/grpc_server.go` — complete implementation.
+
+**Update `fedagent/main.go` scaffold + answers:** dual listeners — HTTP on `:9100` (Prometheus), gRPC on `:9101` (new). Goroutines + signal handling for graceful shutdown of both.
+
+**New scaffold `fedtracker-app/grpc_client.py` (sections):**
+- Section 1: Imports (grpc, generated pb stubs)
+- Section 2: ComplianceClient class managing channel to `fedagent:9101` with reconnect
+- Section 3: `get_oscap_score(host, framework)` async wrapper returning Pydantic model
+- Section 4: Module singleton initialized in fedtracker-app lifespan
+
+`fedtracker-app/answers/grpc_client.py` — complete implementation.
+
+**Update `fedtracker-app/requirements.txt`:** add `grpcio==1.62.0`, `grpcio-tools==1.62.0`, `protobuf==4.25.0`.
+
+**Update `fedtracker-app/answers/routes/personnel.py`:** GET /personnel/{id} response now includes `compliance_status` field, populated via gRPC call to fedagent.
+
+**ADR:** `adrs/ADR-014-grpc-internal-rest-external.md` — why REST for external API, gRPC for internal compliance calls. Federal angle: type-safe contracts, schema evolution, lower overhead. End with 5 quiz questions.
+
+**Inline verification:**
+- `fedagent/proto/compliance.proto` exists with ComplianceService
+- `cd fedagent && go build ./...` compiles HTTP + gRPC servers
+- Python gRPC client imports without error
+- adrs/ADR-014 exists with quiz questions
+
+---
+
 ## Verification Gates (All Must Pass Before Done)
 
 1. `fedtracker-app/main.py` contains `# ── Section` comment blocks — NOT a full implementation

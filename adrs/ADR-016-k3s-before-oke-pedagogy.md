@@ -1,4 +1,4 @@
-# ADR-014: k3s in P2 Before OKE in P3
+# ADR-016: k3s in P2 Before OKE in P3
 
 **Status:** Accepted
 **Date:** 2026-05-09

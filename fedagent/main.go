@@ -35,6 +35,16 @@ import (
 //
 // Write your implementation below. Check answers/ only after attempting.
 
+// ── Section 5: gRPC server startup (P1 addition) ─────────────────────
+// WHAT: Run a second listener on :9101 for the internal ComplianceService.
+//       Use a goroutine and net.Listen("tcp", ":9101"); call NewGrpcServer
+//       (defined in grpc_server.go) and srv.Serve(lis).
+// LEARNING: Two listeners share one process — graceful shutdown must drain
+//           BOTH before the program exits.
+// LOOK UP: net.Listen, grpc.Server.GracefulStop, errgroup or sync.WaitGroup
+//
+// Write your implementation below. Check answers/ only after attempting.
+
 func main() {
 	_ = flag.String("host", "localhost", "Target hostname for OpenSCAP scan")
 	_ = http.NewServeMux() // satisfy import; remove when implementing

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package fedplatform.compliance.v1;
+
+option go_package = "fedplatform/fedagent/pb";
+
+// ComplianceService is the internal gRPC contract between fedtracker-app
+// (intake / Python FastAPI) and fedagent (Go compliance scanner).
+//
+// External traffic enters via REST on the FedTracker API. Internal
+// compliance lookups go over gRPC for type safety, schema evolution, and
+// lower per-call overhead. See adrs/ADR-014-grpc-internal-rest-external.md.
+service ComplianceService {
+  // P1 method — returns the latest OpenSCAP score for a host.
+  rpc GetOscapScore(GetOscapScoreRequest) returns (GetOscapScoreResponse);
+}
+
+message GetOscapScoreRequest {
+  string host = 1;
+  string framework = 2;   // "fedramp" | "nist" | "cmmc"
+}
+
+message GetOscapScoreResponse {
+  int32 score = 1;
+  int32 findings_high = 2;
+  int32 findings_medium = 3;
+  int32 findings_low = 4;
+  string scanned_at = 5;  // ISO 8601 UTC
+}

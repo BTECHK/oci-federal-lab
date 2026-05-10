@@ -225,7 +225,7 @@ Create gitignored:
 
 ### 9. Add ADR-014
 
-`adrs/ADR-014-k3s-before-oke-pedagogy.md` — why k3s DIY cluster in P2 before managed OKE in P3. Key: feel the primitives (control plane, kubelet, Flannel CNI, kubeconfig) before the managed abstraction. Include 5 quiz questions.
+`adrs/ADR-016-k3s-before-oke-pedagogy.md` — why k3s DIY cluster in P2 before managed OKE in P3. Key: feel the primitives (control plane, kubelet, Flannel CNI, kubeconfig) before the managed abstraction. Include 5 quiz questions. (Renumbered from ADR-014 to free that slot for the gRPC ADR.)
 
 ---
 
@@ -243,6 +243,50 @@ Add sections after existing k3s cluster setup content:
 
 ---
 
+### 11. Extend gRPC Interface — DR Methods
+
+**Update `fedagent/proto/compliance.proto`** to add P2 methods to existing ComplianceService:
+
+```proto
+import "google/protobuf/empty.proto";
+
+service ComplianceService {
+  rpc GetOscapScore(GetOscapScoreRequest) returns (GetOscapScoreResponse);
+  // P2 methods
+  rpc GetK3sNodeHealth(google.protobuf.Empty) returns (K3sNodeHealthResponse);
+  rpc GetADBBackupStatus(google.protobuf.Empty) returns (ADBBackupStatusResponse);
+}
+
+message K3sNodeHealthResponse {
+  message NodeStatus {
+    string node = 1;
+    bool ready = 2;
+    string last_heartbeat = 3;
+  }
+  repeated NodeStatus nodes = 1;
+}
+
+message ADBBackupStatusResponse {
+  string last_backup_at = 1;
+  int64 backup_age_seconds = 2;
+  bool within_rpo = 3;     // age < 4 hours
+}
+```
+
+Regenerate Go stubs (`protoc ...`).
+
+**Update `fedagent/grpc_server.go` scaffold + answers:** add Section for `GetK3sNodeHealth` (queries k3s API via kubeconfig in env) and `GetADBBackupStatus` (calls OCI CLI `oci db autonomous-database get`).
+
+**Update `fedtracker-app/grpc_client.py` scaffold + answers:** add `get_k3s_node_health()` and `get_adb_backup_status()` async methods.
+
+**Update `fedtracker-app/answers/routes/health.py`:** GET /health/deep enriched with k3s node status from gRPC; surfaces in `components.k3s_cluster` block.
+
+**Inline verification:**
+- fedagent gRPC server returns valid responses for `GetK3sNodeHealth` and `GetADBBackupStatus`
+- fedtracker-app /health/deep includes k3s node block from gRPC
+
+---
+
 ## Verification Gates
 
 1. `fedtracker-app/routes/ingest.py` has section-comment blocks
@@ -252,5 +296,5 @@ Add sections after existing k3s cluster setup content:
 5. `functions/go/dr-health-probe/main.go` compiles: `go build ./...` exits 0
 6. `phases/phase-2-fedanalytics-dr/INCIDENTS.md` has INC-002 and INC-003 with Prevention sections
 7. `scripts/INC-002-oscap-regression.sh` and `scripts/INC-003-k3s-dr-readiness.sh` exist and are executable
-8. `adrs/ADR-014-k3s-before-oke-pedagogy.md` exists with quiz questions
+8. `adrs/ADR-016-k3s-before-oke-pedagogy.md` exists with quiz questions (renumbered from ADR-014 — see verification-grpc-gateway-zap-2026-05-09 branch)
 9. `git status` shows no `answers/`, `breaks/`, `solutions/` tracked

@@ -216,6 +216,125 @@ Add sections after OKE cluster setup and Helm/ArgoCD content:
 
 ---
 
+### 11. Extend gRPC Interface — Supply Chain + Streaming
+
+**Update `fedagent/proto/compliance.proto`** to add P3 methods:
+
+```proto
+service ComplianceService {
+  rpc GetOscapScore(GetOscapScoreRequest) returns (GetOscapScoreResponse);
+  rpc GetK3sNodeHealth(google.protobuf.Empty) returns (K3sNodeHealthResponse);
+  rpc GetADBBackupStatus(google.protobuf.Empty) returns (ADBBackupStatusResponse);
+  // P3 methods
+  rpc GetSupplyChainStatus(ImageReference) returns (SupplyChainStatusResponse);
+  rpc StreamComplianceEvents(google.protobuf.Empty) returns (stream ComplianceEvent);
+}
+
+message ImageReference {
+  string registry = 1;     // "iad.ocir.io"
+  string repository = 2;   // "fedplatform/fedtracker"
+  string tag = 3;          // "v1.0.0"
+}
+
+message SupplyChainStatusResponse {
+  bool cosign_signature_valid = 1;
+  int32 trivy_findings_high = 2;
+  int32 trivy_findings_medium = 3;
+  int32 trivy_findings_low = 4;
+  repeated string sbom_components = 5;
+  string scanned_at = 6;
+}
+
+message ComplianceEvent {
+  string event_type = 1;       // "scan_complete" | "drift_detected" | "remediation"
+  string resource_id = 2;
+  string severity = 3;
+  string details = 4;
+  string occurred_at = 5;
+}
+```
+
+**Update fedagent gRPC server (scaffold + answers):** add `GetSupplyChainStatus` (calls Trivy + Cosign subprocesses) and `StreamComplianceEvents` (server-streaming RPC pushing events from a buffered channel as they occur).
+
+**Update fedtracker-app gRPC client (scaffold + answers):** unary calls + streaming consumer pattern (async iteration over event stream, writes to compliance-events table).
+
+**Inline verification:**
+- fedagent supports server-streaming `StreamComplianceEvents` RPC
+- fedtracker-app consumes the streaming RPC and persists events
+
+---
+
+### 12. Add OCI API Gateway (P3 Maturity Step)
+
+**On theme:** Federal architecture standard — terminate external traffic at API Gateway before it reaches compliance-critical workloads. JWT validation + audit logging at the edge reduces compliance scope of the backing service.
+
+**Create `phases/phase-3-fedcompliance-gitops-security/terraform/api-gateway.tf`** with resources for:
+- `oci_apigateway_gateway` — public-facing gateway in the public subnet
+- `oci_apigateway_deployment` — `/v1` path prefix with routes:
+  - `/personnel/{id*}` (GET, POST, PUT, DELETE) → fedtracker-app
+  - `/audit/{action*}` (GET, POST) → fedtracker-app
+  - `/compliance/{path*}` (GET, POST) → fedtracker-app
+- Request policies: CORS (allowed_origins for fedplatform.gov pattern), rate limiting (100 req/sec per CLIENT_IP), JWT authentication (issuer + audiences, no anonymous access)
+- Logging policies: log every request to OCI Logging service (audit evidence)
+
+**ADR:** `adrs/ADR-015-api-gateway-vs-direct-exposure.md` — why API Gateway over direct VM exposure for federal workloads. JWT validation at edge, rate limiting before backend, audit logging gate. End with 5 quiz questions.
+
+**Update implementation guide:** new step "Step X — Provision OCI API Gateway." Demonstrate `curl` with and without JWT to show 401 vs 200.
+
+**Inline verification:**
+- `terraform validate` passes for `phases/phase-3-fedcompliance-gitops-security/terraform/api-gateway.tf`
+- adrs/ADR-015 exists with quiz questions
+
+---
+
+### 13. Add OWASP ZAP DAST Scan in CI
+
+**On theme:** Federal compliance requires DAST in CI pipelines. ZAP is the OSS counterpart to Burp Suite — same vulnerability classes, fail-on-high.
+
+**Create `.github/workflows/security-scan.yml`:**
+```yaml
+name: ZAP Baseline Security Scan
+
+on:
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 4 * * 1'
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start fedtracker-app
+        run: |
+          cd fedtracker-app
+          pip install -r requirements.txt
+          # NOTE: answers/ is gitignored. CI provides answers via secret tarball or skips this scan in fork PRs.
+          uvicorn answers.main:app --host 0.0.0.0 --port 8000 &
+          sleep 10
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:8000'
+          rules_file_name: '.zap/rules.tsv'
+          fail_action: true
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: report_html.html
+```
+
+**Create `.zap/rules.tsv`** with comments for any rules to ignore (e.g., cookie rules don't apply since fedtracker-app uses JWT not cookies).
+
+**Inline verification:**
+- `.github/workflows/security-scan.yml` exists referencing zaproxy/action-baseline
+- `.zap/rules.tsv` exists
+
+---
+
 ## Verification Gates
 
 1. `fedtracker-app/routes/compliance.py` has section-comment blocks
