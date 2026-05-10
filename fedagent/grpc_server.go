@@ -43,7 +43,11 @@ package main
 //       K3sNodeHealthResponse with one NodeStatus per node.
 // LEARNING: gRPC server reuses domain helpers; the proto types are the
 //           edge schema, internal types stay free.
-// LOOK UP: pb.K3sNodeHealthResponse_NodeStatus, repeated field append
+// LOOK UP: pb.K3SNodeHealthResponse_NodeStatus, repeated field append
+//
+// CASING NOTE: protoc-gen-go uppercases the "K3s" acronym in Go type names.
+// The proto message is `K3sNodeHealthResponse`, but the generated Go type
+// is `pb.K3SNodeHealthResponse`. Python stubs preserve `K3sNodeHealthResponse`.
 //
 // Write your implementation below. Check answers/ only after attempting.
 

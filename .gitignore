@@ -103,3 +103,8 @@ fedagent/pb/
 fedtracker-app/proto/*_pb2.py
 fedtracker-app/proto/*_pb2_grpc.py
 fedtracker-app/proto/*_pb2.pyi
+
+# Go local build outputs
+fedagent/fedagent
+fedagent/fedagent.exe
+*.exe
