@@ -44,3 +44,22 @@ See adrs/ADR-014-grpc-internal-rest-external.md.
 # LOOK UP: FastAPI lifespan, asynccontextmanager
 #
 # Write your implementation below. Check answers/ only after attempting.
+
+
+# ── Section 5 (P2): get_k3s_node_health wrapper ───────────────────────
+# WHAT: Call ComplianceService.GetK3sNodeHealth (Empty request) and return
+#       a list of Pydantic NodeStatus models.
+# LEARNING: google.protobuf.empty_pb2.Empty maps to Python Empty() ctor;
+#           proto3 repeated fields → list[Message] in Python.
+# LOOK UP: from google.protobuf import empty_pb2, Empty()
+#
+# Write your implementation below. Check answers/ only after attempting.
+
+
+# ── Section 6 (P2): get_adb_backup_status wrapper ─────────────────────
+# WHAT: Call GetADBBackupStatus, return a Pydantic ADBBackupStatus model
+#       with within_rpo as a clean bool.
+# LEARNING: Map proto bool/int64/string fields → Pydantic types
+# LOOK UP: pydantic.BaseModel, ConfigDict
+#
+# Write your implementation below. Check answers/ only after attempting.

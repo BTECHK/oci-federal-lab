@@ -37,3 +37,21 @@ package main
 // LOOK UP: grpc.NewServer, pb.RegisterComplianceServiceServer
 //
 // Write your implementation below. Check answers/ only after attempting.
+
+// ── Section 5 (P2): GetK3sNodeHealth handler ──────────────────────────
+// WHAT: Reuse PollK3sNodes() from k3s.go (P2 answers) to build a
+//       K3sNodeHealthResponse with one NodeStatus per node.
+// LEARNING: gRPC server reuses domain helpers; the proto types are the
+//           edge schema, internal types stay free.
+// LOOK UP: pb.K3sNodeHealthResponse_NodeStatus, repeated field append
+//
+// Write your implementation below. Check answers/ only after attempting.
+
+// ── Section 6 (P2): GetADBBackupStatus handler ────────────────────────
+// WHAT: Call GetBackupAge for the configured ADB OCID, derive within_rpo
+//       boolean (age < 4h), return ADBBackupStatusResponse.
+// LEARNING: One handler can pull data from multiple sources (env, OCI CLI)
+//           but should still complete inside the deadline.
+// LOOK UP: time.Since, ctx.Deadline, status.Error wrapping
+//
+// Write your implementation below. Check answers/ only after attempting.

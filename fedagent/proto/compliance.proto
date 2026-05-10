@@ -4,6 +4,8 @@ package fedplatform.compliance.v1;
 
 option go_package = "fedplatform/fedagent/pb";
 
+import "google/protobuf/empty.proto";
+
 // ComplianceService is the internal gRPC contract between fedtracker-app
 // (intake / Python FastAPI) and fedagent (Go compliance scanner).
 //
@@ -13,6 +15,10 @@ option go_package = "fedplatform/fedagent/pb";
 service ComplianceService {
   // P1 method — returns the latest OpenSCAP score for a host.
   rpc GetOscapScore(GetOscapScoreRequest) returns (GetOscapScoreResponse);
+
+  // P2 methods — DR drill telemetry.
+  rpc GetK3sNodeHealth(google.protobuf.Empty) returns (K3sNodeHealthResponse);
+  rpc GetADBBackupStatus(google.protobuf.Empty) returns (ADBBackupStatusResponse);
 }
 
 message GetOscapScoreRequest {
@@ -26,4 +32,19 @@ message GetOscapScoreResponse {
   int32 findings_medium = 3;
   int32 findings_low = 4;
   string scanned_at = 5;  // ISO 8601 UTC
+}
+
+message K3sNodeHealthResponse {
+  message NodeStatus {
+    string node = 1;
+    bool ready = 2;
+    string last_heartbeat = 3;  // ISO 8601 UTC
+  }
+  repeated NodeStatus nodes = 1;
+}
+
+message ADBBackupStatusResponse {
+  string last_backup_at = 1;       // ISO 8601 UTC; empty when unknown
+  int64 backup_age_seconds = 2;    // -1 when last_backup_at is unknown
+  bool within_rpo = 3;             // age < 4h (RPO threshold)
 }
