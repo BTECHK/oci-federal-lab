@@ -63,3 +63,23 @@ See adrs/ADR-014-grpc-internal-rest-external.md.
 # LOOK UP: pydantic.BaseModel, ConfigDict
 #
 # Write your implementation below. Check answers/ only after attempting.
+
+
+# ── Section 7 (P3): get_supply_chain_status wrapper ───────────────────
+# WHAT: Build an ImageReference message from registry/repository/tag and
+#       call GetSupplyChainStatus. Return a Pydantic SupplyChainStatus.
+# LEARNING: Compose proto sub-messages by setting nested fields on the ctor
+# LOOK UP: ImageReference(registry=..., repository=..., tag=...)
+#
+# Write your implementation below. Check answers/ only after attempting.
+
+
+# ── Section 8 (P3): consume_compliance_events streaming consumer ──────
+# WHAT: Open the server-streaming RPC, async-iterate events, persist each
+#       to the compliance_events table. Reconnect on stream close.
+# LEARNING: gRPC server-streaming on Python uses `async for ev in stub.X(...)`.
+#           Wrap the consumer in a long-lived background task that respawns
+#           on disconnect (with backoff).
+# LOOK UP: async for, asyncio.create_task, exponential backoff
+#
+# Write your implementation below. Check answers/ only after attempting.

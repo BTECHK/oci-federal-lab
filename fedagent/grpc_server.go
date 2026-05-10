@@ -55,3 +55,23 @@ package main
 // LOOK UP: time.Since, ctx.Deadline, status.Error wrapping
 //
 // Write your implementation below. Check answers/ only after attempting.
+
+// ── Section 7 (P3): GetSupplyChainStatus handler ──────────────────────
+// WHAT: Reuse Trivy + Cosign helpers from answers/trivy.go and cosign.go
+//       for the requested image. Build SupplyChainStatusResponse.
+// LEARNING: Combine multiple subprocess scans into a single proto response;
+//           remember each subprocess inherits the gRPC handler's deadline.
+// LOOK UP: ScanTrivy, VerifyCosign, prometheus label keys
+//
+// Write your implementation below. Check answers/ only after attempting.
+
+// ── Section 8 (P3): StreamComplianceEvents handler ────────────────────
+// WHAT: Server-streaming RPC. Hold a buffered channel of ComplianceEvent
+//       and stream.Send each event as it arrives. Close the stream when
+//       the client disconnects (stream.Context().Done()).
+// LEARNING: gRPC server-streaming: handler signature is
+//           (req, stream) and you call stream.Send(...) until the
+//           client cancels. Don't block forever — drain on context cancel.
+// LOOK UP: pb.ComplianceService_StreamComplianceEventsServer, ctx cancellation
+//
+// Write your implementation below. Check answers/ only after attempting.

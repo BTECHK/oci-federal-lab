@@ -19,6 +19,10 @@ service ComplianceService {
   // P2 methods — DR drill telemetry.
   rpc GetK3sNodeHealth(google.protobuf.Empty) returns (K3sNodeHealthResponse);
   rpc GetADBBackupStatus(google.protobuf.Empty) returns (ADBBackupStatusResponse);
+
+  // P3 methods — supply chain + streaming.
+  rpc GetSupplyChainStatus(ImageReference) returns (SupplyChainStatusResponse);
+  rpc StreamComplianceEvents(google.protobuf.Empty) returns (stream ComplianceEvent);
 }
 
 message GetOscapScoreRequest {
@@ -47,4 +51,27 @@ message ADBBackupStatusResponse {
   string last_backup_at = 1;       // ISO 8601 UTC; empty when unknown
   int64 backup_age_seconds = 2;    // -1 when last_backup_at is unknown
   bool within_rpo = 3;             // age < 4h (RPO threshold)
+}
+
+message ImageReference {
+  string registry = 1;     // "iad.ocir.io"
+  string repository = 2;   // "fedplatform/fedtracker"
+  string tag = 3;          // "v1.0.0"
+}
+
+message SupplyChainStatusResponse {
+  bool cosign_signature_valid = 1;
+  int32 trivy_findings_high = 2;
+  int32 trivy_findings_medium = 3;
+  int32 trivy_findings_low = 4;
+  repeated string sbom_components = 5;
+  string scanned_at = 6;
+}
+
+message ComplianceEvent {
+  string event_type = 1;       // "scan_complete" | "drift_detected" | "remediation"
+  string resource_id = 2;
+  string severity = 3;          // "info" | "warning" | "critical"
+  string details = 4;
+  string occurred_at = 5;       // ISO 8601 UTC
 }

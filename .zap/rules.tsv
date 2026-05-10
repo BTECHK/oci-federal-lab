@@ -1,0 +1,32 @@
+# ZAP Baseline rule overrides for fedtracker-app.
+#
+# Format: <rule-id>	<threshold>	<comment>
+# Threshold values: IGNORE | WARN | FAIL
+#
+# Default for every rule is WARN. The action passes/fails based on `fail_action: true`
+# in security-scan.yml combined with each rule's threshold here. Set FAIL only for
+# classes where any finding is unacceptable — the goal is "fail on HIGH severity".
+
+# Cookie / session-fixation rules: fedtracker-app uses Bearer JWTs at the API
+# Gateway tier (see ADR-015), not cookies. Cookie-set rules false-positive against
+# our /health and /docs responses.
+10010	IGNORE	Cookie No HttpOnly Flag (we don't issue cookies)
+10011	IGNORE	Cookie Without Secure Flag (we don't issue cookies)
+10054	IGNORE	Cookie Without SameSite Attribute (we don't issue cookies)
+
+# OpenAPI / Swagger UI hosted at /docs serves an inline script bundle. ZAP flags
+# the inline script style; FastAPI ships it that way. Tracked separately if
+# we ever ship our own UI.
+10020	IGNORE	X-Frame-Options header missing on /docs (FastAPI default)
+
+# Anti-CSRF: API is JWT-authenticated and CORS-restricted at the gateway.
+# CSRF mitigations are at the auth-token layer, not request-token form fields.
+10202	IGNORE	Absence of Anti-CSRF Tokens (JWT auth, no form-based mutation)
+
+# These rules SHOULD fail the build — explicit FAIL keeps them gating even if
+# default thresholds change.
+40012	FAIL	Cross Site Scripting (Reflected)
+40014	FAIL	Cross Site Scripting (Persistent)
+40018	FAIL	SQL Injection
+90019	FAIL	Server Side Code Injection
+90020	FAIL	Remote OS Command Injection
