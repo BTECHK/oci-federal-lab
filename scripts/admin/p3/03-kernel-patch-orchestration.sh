@@ -5,7 +5,7 @@
 #
 # Purpose: Orchestrate a kernel update with pre-flight checks, app health
 #          gating, reboot, post-reboot verification, and rollback path.
-#          See evidence/admin/p3/patch-simulation-report.md for the full
+#          See docs/exercises/p3/patch-simulation-report.md for the full
 #          scenario template; this script is the executable companion.
 #
 # Usage: sudo ./scripts/admin/p3/03-kernel-patch-orchestration.sh [--dry-run]

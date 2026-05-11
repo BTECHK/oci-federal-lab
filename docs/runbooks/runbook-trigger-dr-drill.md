@@ -37,7 +37,7 @@ N/A — this is a planned drill, not a response to a symptom. Use this runbook t
 
 1. _<USER FILLS: restore primary if drill was a true failover>_
 2. _<USER FILLS: capture post-drill SLI snapshot to compare against pre>_
-3. _<USER FILLS: write `evidence/dr-drills/p2-fedanalytics-dr.md` report>_
+3. _<USER FILLS: write `docs/dr-drills/p2-fedanalytics-dr.md` report>_
 
 ## Escalation
 

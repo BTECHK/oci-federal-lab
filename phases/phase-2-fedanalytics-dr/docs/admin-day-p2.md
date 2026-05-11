@@ -16,9 +16,9 @@
 - Logging: log dropped packets, test with `nc` from outside
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] firewall-cmd output (before + after a rule add) → `evidence/admin/p2/command-outputs/p2-firewalld.txt`
-- [ ] iptables -L -n -v → `evidence/admin/p2/command-outputs/p2-iptables.txt`
-- [ ] conntrack snapshot → `evidence/admin/p2/command-outputs/p2-conntrack.txt`
+- [ ] firewall-cmd output (before + after a rule add) → `docs/exercises/p2/command-outputs/p2-firewalld.txt`
+- [ ] iptables -L -n -v → `docs/exercises/p2/command-outputs/p2-iptables.txt`
+- [ ] conntrack snapshot → `docs/exercises/p2/command-outputs/p2-conntrack.txt`
 
 ### 2. LVM hands-on (45 min)
 
@@ -29,8 +29,8 @@
 - Understand: LV → device-mapper → block layer
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] pvs / vgs / lvs output before + after operations → `evidence/admin/p2/command-outputs/p2-lvm.txt`
-- [ ] `df -h` before + after extension → `evidence/admin/p2/command-outputs/p2-lvm-df.txt`
+- [ ] pvs / vgs / lvs output before + after operations → `docs/exercises/p2/command-outputs/p2-lvm.txt`
+- [ ] `df -h` before + after extension → `docs/exercises/p2/command-outputs/p2-lvm-df.txt`
 
 ### 3. Network namespaces (30-45 min)
 
@@ -42,8 +42,8 @@
 - Tie back to containers: this is what Docker / containerd do under the hood
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] netns setup commands transcript → `evidence/admin/p2/command-outputs/p2-netns-setup.txt`
-- [ ] ip link / ip addr inside vs outside → `evidence/admin/p2/command-outputs/p2-netns-isolation.txt`
+- [ ] netns setup commands transcript → `docs/exercises/p2/command-outputs/p2-netns-setup.txt`
+- [ ] ip link / ip addr inside vs outside → `docs/exercises/p2/command-outputs/p2-netns-isolation.txt`
 
 ### 4. sysctl tuning (45 min)
 
@@ -60,9 +60,9 @@
 - `sysctl -p` to apply; verify
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] Your tuning file → `evidence/admin/p2/configs/sysctl-tuning.conf`
-- [ ] sysctl values before / after → `evidence/admin/p2/command-outputs/p2-sysctl-diff.txt`
-- [ ] Annotation on why each value was chosen → `evidence/admin/p2/admin-day-notes.md` (Section 4)
+- [ ] Your tuning file → `docs/exercises/p2/configs/sysctl-tuning.conf`
+- [ ] sysctl values before / after → `docs/exercises/p2/command-outputs/p2-sysctl-diff.txt`
+- [ ] Annotation on why each value was chosen → `docs/exercises/p2/admin-day-notes.md` (Section 4)
 
 ### 5. k3s node OS-level troubleshooting (60 min)
 
@@ -74,9 +74,9 @@
 - Network mode: Flannel vs Calico vs none — k3s defaults explained
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] crictl ps output → `evidence/admin/p2/command-outputs/p2-crictl-ps.txt`
-- [ ] k3s startup journal annotated → `evidence/admin/p2/command-outputs/p2-k3s-startup.txt`
-- [ ] Disk pressure recovery trace → `evidence/admin/p2/command-outputs/p2-k3s-disk-pressure.txt`
+- [ ] crictl ps output → `docs/exercises/p2/command-outputs/p2-crictl-ps.txt`
+- [ ] k3s startup journal annotated → `docs/exercises/p2/command-outputs/p2-k3s-startup.txt`
+- [ ] Disk pressure recovery trace → `docs/exercises/p2/command-outputs/p2-k3s-disk-pressure.txt`
 
 ### 6. Certificate stores (30 min)
 
@@ -87,12 +87,12 @@
 - Cert pinning awareness: how cert-manager + Let's Encrypt rotates
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] update-ca-trust before/after → `evidence/admin/p2/command-outputs/p2-ca-trust.txt`
-- [ ] Cert chain dump for a service → `evidence/admin/p2/command-outputs/p2-cert-chain.txt`
+- [ ] update-ca-trust before/after → `docs/exercises/p2/command-outputs/p2-ca-trust.txt`
+- [ ] Cert chain dump for a service → `docs/exercises/p2/command-outputs/p2-cert-chain.txt`
 
 ### 7. Wrap-up reflection (15 min)
 
-Fill in `evidence/admin/p2/admin-day-notes.md` Key Takeaways section.
+Fill in `docs/exercises/p2/admin-day-notes.md` Key Takeaways section.
 
 ---
 

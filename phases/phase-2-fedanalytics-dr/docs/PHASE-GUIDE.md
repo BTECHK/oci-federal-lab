@@ -46,7 +46,7 @@ New: OCI NoSQL `compliance_events_hot` table (ADR-017). Batch enrichment functio
 
 Stand up k3s cluster on 3 OL9 VMs (1 server + 2 agents).
 
-📋 **EVIDENCE CHECKPOINT** (`evidence/admin/p2/`):
+📋 **EVIDENCE CHECKPOINT** (`docs/exercises/p2/`):
 - [ ] `kubectl get nodes -o wide` → `command-outputs/p2-kubectl-nodes.txt`
 - [ ] k3s server systemd unit → `configs/k3s.service`
 - [ ] Flannel CNI config → `configs/flannel.yaml`
@@ -77,7 +77,7 @@ Provision NoSQL table per ADR-017. Wire fedagent to write events.
 - [ ] `terraform plan` output → `command-outputs/p2-tf-nosql-plan.txt`
 - [ ] OCI CLI: `oci nosql table get` → `command-outputs/p2-nosql-table.json`
 - [ ] Test event write from fedagent: `oci nosql query` → `command-outputs/p2-nosql-event-read.txt`
-- [ ] Update `evidence/db/design-doc.md` with NoSQL hot-write decision
+- [ ] Update `docs/architecture/database-design.md` with NoSQL hot-write decision
 
 ### Step 5 — compliance-event-batcher function
 
@@ -92,7 +92,7 @@ Deploy the batch enrichment function. Triggered hourly.
 Deploy P2 functions per the existing P2 plan.
 
 📋 **EVIDENCE CHECKPOINT**:
-- [ ] Sample compliance narrative output → `evidence/reports/p2-compliance-narrative-sample.md`
+- [ ] Sample compliance narrative output → `docs/compliance/p2-compliance-narrative-sample.md`
 - [ ] dr-health-probe response showing concurrent node polling → `command-outputs/p2-dr-probe-response.json`
 
 ### Step 7 — gRPC DR methods
@@ -113,7 +113,7 @@ Execute the dedicated admin day per `admin-day-p2.md`. iptables, LVM, namespaces
 
 Execute the DR drill scenario. Capture pre-drill state, inject failure (one of: k3s node down, ADB backup stale, full failover), measure RTO/RPO, write postmortem.
 
-📋 **EVIDENCE CHECKPOINT** — see `evidence/dr-drills/p2-fedanalytics-dr.md` template; fill all sections.
+📋 **EVIDENCE CHECKPOINT** — see `docs/dr-drills/p2-fedanalytics-dr.md` template; fill all sections.
 
 ### Step 10 — INC-002 + INC-003 simulations
 

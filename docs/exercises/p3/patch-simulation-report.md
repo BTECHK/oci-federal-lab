@@ -10,11 +10,11 @@
 ## Pre-Patch State
 
 **Capture before starting:**
-- [ ] `uname -r` output → save as `evidence/admin/p3/command-outputs/pre-patch-kernel.txt`
-- [ ] `uptime` → save as `evidence/admin/p3/command-outputs/pre-patch-uptime.txt`
-- [ ] `dnf history list` → save as `evidence/admin/p3/command-outputs/pre-patch-dnf-history.txt`
-- [ ] Application health: `curl -s localhost:8000/health/deep | jq .` → save as `evidence/admin/p3/command-outputs/pre-patch-app-health.json`
-- [ ] Screenshot of OCI console showing instance state → `evidence/admin/p3/screenshots/pre-patch-instance.png`
+- [ ] `uname -r` output → save as `docs/exercises/p3/command-outputs/pre-patch-kernel.txt`
+- [ ] `uptime` → save as `docs/exercises/p3/command-outputs/pre-patch-uptime.txt`
+- [ ] `dnf history list` → save as `docs/exercises/p3/command-outputs/pre-patch-dnf-history.txt`
+- [ ] Application health: `curl -s localhost:8000/health/deep | jq .` → save as `docs/exercises/p3/command-outputs/pre-patch-app-health.json`
+- [ ] Screenshot of OCI console showing instance state → `docs/exercises/p3/screenshots/pre-patch-instance.png`
 
 ## Patch Scenario
 
@@ -39,9 +39,9 @@ _<fill in: how you managed the reboot — single-host vs rolling, drain steps fo
 ## Post-Reboot Verification
 
 **Capture after reboot:**
-- [ ] `uname -r` → `evidence/admin/p3/command-outputs/post-patch-kernel.txt` (should differ from pre-patch)
-- [ ] `dnf history list` → `evidence/admin/p3/command-outputs/post-patch-dnf-history.txt`
-- [ ] Application health (same endpoint as pre-patch) → `evidence/admin/p3/command-outputs/post-patch-app-health.json`
+- [ ] `uname -r` → `docs/exercises/p3/command-outputs/post-patch-kernel.txt` (should differ from pre-patch)
+- [ ] `dnf history list` → `docs/exercises/p3/command-outputs/post-patch-dnf-history.txt`
+- [ ] Application health (same endpoint as pre-patch) → `docs/exercises/p3/command-outputs/post-patch-app-health.json`
 - [ ] Compare app metrics pre/post → annotate any differences
 
 ## Rollback Drill (mandatory — simulate a failed patch)

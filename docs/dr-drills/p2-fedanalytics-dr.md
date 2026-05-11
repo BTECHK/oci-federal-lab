@@ -10,11 +10,11 @@
 ## Pre-Drill SLI Snapshot
 
 **Capture before injecting failure:**
-- [ ] `kubectl get nodes -o wide` → save as `evidence/admin/p2/command-outputs/p2-drdrill-pre-nodes.txt`
+- [ ] `kubectl get nodes -o wide` → save as `docs/exercises/p2/command-outputs/p2-drdrill-pre-nodes.txt`
 - [ ] `fedplatform_backup_age_seconds` from Prometheus → annotate
 - [ ] All `fedplatform_k3s_node_ready{node}` = 1 → confirm
-- [ ] Grafana dashboard screenshot showing healthy state → `evidence/admin/p2/screenshots/p2-drdrill-pre.png`
-- [ ] curl /health/deep → 200 with all components green → `evidence/admin/p2/command-outputs/p2-drdrill-pre-health.json`
+- [ ] Grafana dashboard screenshot showing healthy state → `docs/exercises/p2/screenshots/p2-drdrill-pre.png`
+- [ ] curl /health/deep → 200 with all components green → `docs/exercises/p2/command-outputs/p2-drdrill-pre-health.json`
 - [ ] Note current RPO target (e.g., < 4h) and RTO target (e.g., < 30min)
 
 ## Stakeholder Notification
@@ -39,10 +39,10 @@ Commands executed:
 ## Failure Observation
 
 **Capture during failure:**
-- [ ] `kubectl get nodes` showing degraded state → `evidence/admin/p2/command-outputs/p2-drdrill-during-nodes.txt`
-- [ ] dr-health-probe function invocation log → `evidence/admin/p2/command-outputs/p2-drdrill-probe.txt`
+- [ ] `kubectl get nodes` showing degraded state → `docs/exercises/p2/command-outputs/p2-drdrill-during-nodes.txt`
+- [ ] dr-health-probe function invocation log → `docs/exercises/p2/command-outputs/p2-drdrill-probe.txt`
 - [ ] Alerts that fired (Alertmanager) → annotate with alert names
-- [ ] App behavior: /health/deep response → `evidence/admin/p2/command-outputs/p2-drdrill-during-health.json`
+- [ ] App behavior: /health/deep response → `docs/exercises/p2/command-outputs/p2-drdrill-during-health.json`
 
 ## Recovery Steps
 
@@ -65,10 +65,10 @@ Commands executed (in order):
 ## Post-Drill SLI Snapshot
 
 **Capture after recovery:**
-- [ ] `kubectl get nodes` all Ready → `evidence/admin/p2/command-outputs/p2-drdrill-post-nodes.txt`
+- [ ] `kubectl get nodes` all Ready → `docs/exercises/p2/command-outputs/p2-drdrill-post-nodes.txt`
 - [ ] All `fedplatform_k3s_node_ready` = 1
-- [ ] curl /health/deep → 200 with all components green → `evidence/admin/p2/command-outputs/p2-drdrill-post-health.json`
-- [ ] Grafana screenshot showing recovery → `evidence/admin/p2/screenshots/p2-drdrill-post.png`
+- [ ] curl /health/deep → 200 with all components green → `docs/exercises/p2/command-outputs/p2-drdrill-post-health.json`
+- [ ] Grafana screenshot showing recovery → `docs/exercises/p2/screenshots/p2-drdrill-post.png`
 
 ## Data Integrity Verification
 

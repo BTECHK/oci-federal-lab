@@ -12,7 +12,7 @@
 
 ## Diagnostics
 
-1. _<USER FILLS: pull the scan report from `evidence/supply-chain-results/` or OCIR console>_
+1. _<USER FILLS: pull the scan report from `docs/compliance/supply-chain-results/` or OCIR console>_
 2. _<USER FILLS: identify the specific CVE/findings — read the actual CVE description, not just the severity score>_
 3. _<USER FILLS: is the vulnerability reachable in our use of the dependency? (just because installed doesn't mean exploitable)>_
 4. _<USER FILLS: check if upstream has a patched version>_

@@ -44,7 +44,7 @@ Store structured scan results in **OCI NoSQL Database** as a document, keyed by 
 
 - Write order: Object Storage `PutObject` (idempotent on image_digest) → NoSQL `PutOperation` (idempotent on PK)
 - If NoSQL write fails after Object Storage success: retry later via background reconciliation (no compliance-relevant data lost; just queryability lag)
-- Cross-reference: `evidence/supply-chain-results/` Object Storage bucket + NoSQL `supply_chain_results` table — both share `image_digest` as their natural key
+- Cross-reference: `docs/compliance/supply-chain-results/` Object Storage bucket + NoSQL `supply_chain_results` table — both share `image_digest` as their natural key
 
 ## Quiz (5 questions)
 

@@ -10,14 +10,14 @@
 Walk through every line of a hardened sshd_config and understand WHY each line is there. Reference: CIS Benchmark for OL9, sections 5.2.x.
 
 **Activities:**
-- Read and annotate the entire sshd_config in `evidence/admin/p1/configs/sshd_config-hardened`
+- Read and annotate the entire sshd_config in `docs/exercises/p1/configs/sshd_config-hardened`
 - Apply: PermitRootLogin no, PasswordAuthentication no (after confirming key-based works!), Ciphers (modern only), MACs (modern only), KexAlgorithms (modern only), MaxAuthTries 4, ClientAliveInterval 300, ClientAliveCountMax 0, AllowGroups <restrict>, LoginGraceTime 60, UseDNS no
 - Test: `sshd -t` for syntax, `sshd -T | grep -i <option>` for runtime values
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] Hardened sshd_config → `evidence/admin/p1/configs/sshd_config-hardened`
-- [ ] `sshd -T` output → `evidence/admin/p1/command-outputs/p1-sshd-runtime.txt`
-- [ ] Notes on each non-default setting and why → `evidence/admin/p1/admin-day-notes.md` (Section 1)
+- [ ] Hardened sshd_config → `docs/exercises/p1/configs/sshd_config-hardened`
+- [ ] `sshd -T` output → `docs/exercises/p1/command-outputs/p1-sshd-runtime.txt`
+- [ ] Notes on each non-default setting and why → `docs/exercises/p1/admin-day-notes.md` (Section 1)
 
 ### 2. sudoers + privilege management (30-45 min)
 
@@ -29,9 +29,9 @@ Walk through every line of a hardened sshd_config and understand WHY each line i
 - Audit: `journalctl _COMM=sudo` shows the denied attempt
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] sudoers.d file → `evidence/admin/p1/configs/sudoers.d-fedplatform-admins`
-- [ ] `sudo -l -U <test-user>` → `evidence/admin/p1/command-outputs/p1-sudoers-test.txt`
-- [ ] journalctl entry for denied sudo → `evidence/admin/p1/command-outputs/p1-sudoers-deny.txt`
+- [ ] sudoers.d file → `docs/exercises/p1/configs/sudoers.d-fedplatform-admins`
+- [ ] `sudo -l -U <test-user>` → `docs/exercises/p1/command-outputs/p1-sudoers-test.txt`
+- [ ] journalctl entry for denied sudo → `docs/exercises/p1/command-outputs/p1-sudoers-deny.txt`
 
 ### 3. systemd unit authoring (45-60 min)
 
@@ -43,9 +43,9 @@ Walk through every line of a hardened sshd_config and understand WHY each line i
 - Test: introduce a deliberate config error, observe systemctl status output, debug
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] systemd unit file → `evidence/admin/p1/configs/fedtracker.service`
-- [ ] systemctl status output (healthy) → `evidence/admin/p1/command-outputs/p1-fedtracker-systemctl.txt`
-- [ ] systemctl status output (intentional failure mode) → `evidence/admin/p1/command-outputs/p1-fedtracker-systemctl-failed.txt`
+- [ ] systemd unit file → `docs/exercises/p1/configs/fedtracker.service`
+- [ ] systemctl status output (healthy) → `docs/exercises/p1/command-outputs/p1-fedtracker-systemctl.txt`
+- [ ] systemctl status output (intentional failure mode) → `docs/exercises/p1/command-outputs/p1-fedtracker-systemctl-failed.txt`
 
 ### 4. journalctl deep querying (30 min)
 
@@ -57,7 +57,7 @@ Walk through every line of a hardened sshd_config and understand WHY each line i
 - Export: structured JSON with `-o json` for tooling consumption
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] 5-10 useful journalctl query examples with output → `evidence/admin/p1/command-outputs/p1-journalctl-queries.txt`
+- [ ] 5-10 useful journalctl query examples with output → `docs/exercises/p1/command-outputs/p1-journalctl-queries.txt`
 
 ### 5. dnf hands-on (30-45 min)
 
@@ -69,8 +69,8 @@ Walk through every line of a hardened sshd_config and understand WHY each line i
 - dnf modules: `dnf module list nodejs`, switch streams
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] `dnf history list` → `evidence/admin/p1/command-outputs/p1-dnf-history.txt`
-- [ ] Rollback experiment trace → `evidence/admin/p1/command-outputs/p1-dnf-rollback.txt`
+- [ ] `dnf history list` → `docs/exercises/p1/command-outputs/p1-dnf-history.txt`
+- [ ] Rollback experiment trace → `docs/exercises/p1/command-outputs/p1-dnf-rollback.txt`
 
 ### 6. Users / groups / ACLs (30 min)
 
@@ -80,7 +80,7 @@ Walk through every line of a hardened sshd_config and understand WHY each line i
 - Understand: when traditional u/g/o is enough, when ACLs are needed (multi-tenant directories)
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] Demo file with ACLs applied: `getfacl` output → `evidence/admin/p1/command-outputs/p1-acl-demo.txt`
+- [ ] Demo file with ACLs applied: `getfacl` output → `docs/exercises/p1/command-outputs/p1-acl-demo.txt`
 
 ### 7. SELinux contexts (45 min)
 
@@ -92,13 +92,13 @@ Walk through every line of a hardened sshd_config and understand WHY each line i
 - audit2allow workflow: `ausearch -m avc | audit2allow -M mypol`
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] Initial SELinux denial → `evidence/admin/p1/command-outputs/p1-selinux-denial.txt`
-- [ ] semanage + restorecon resolution → `evidence/admin/p1/command-outputs/p1-selinux-fix.txt`
-- [ ] audit2allow output for the policy module created → `evidence/admin/p1/configs/p1-selinux-mypol.te`
+- [ ] Initial SELinux denial → `docs/exercises/p1/command-outputs/p1-selinux-denial.txt`
+- [ ] semanage + restorecon resolution → `docs/exercises/p1/command-outputs/p1-selinux-fix.txt`
+- [ ] audit2allow output for the policy module created → `docs/exercises/p1/configs/p1-selinux-mypol.te`
 
 ### 8. Wrap-up reflection (15 min)
 
-Fill in `evidence/admin/p1/admin-day-notes.md` Key Takeaways section with 5 bullets.
+Fill in `docs/exercises/p1/admin-day-notes.md` Key Takeaways section with 5 bullets.
 
 ---
 

@@ -52,7 +52,7 @@ New: ArgoCD GitOps, OCI API Gateway, supply-chain-validator function, evidence-c
 
 Migrate from k3s (decommission) to OKE Basic. Stand up cluster with managed control plane + 3-node pool.
 
-📋 **EVIDENCE CHECKPOINT** (`evidence/admin/p3/`):
+📋 **EVIDENCE CHECKPOINT** (`docs/exercises/p3/`):
 - [ ] `terraform plan` for OKE → `command-outputs/p3-tf-oke-plan.txt`
 - [ ] `kubectl config view --minify` → `configs/p3-oke-kubeconfig-sanitized.yaml`
 - [ ] `kubectl get nodes` showing managed nodes → `command-outputs/p3-oke-nodes.txt`
@@ -74,7 +74,7 @@ Provision OCI Cache per ADR-020. Wire `fedtracker-app/cache.py` cache-aside.
 - [ ] `terraform plan` → `command-outputs/p3-tf-cache-plan.txt`
 - [ ] redis-cli ping from fedtracker pod → `command-outputs/p3-cache-ping.txt`
 - [ ] Cache hit rate metric capture (before + after warmup) → `command-outputs/p3-cache-hit-rate.txt`
-- [ ] Latency comparison: cache hit vs cache miss → `evidence/reports/p3-cache-latency-comparison.md`
+- [ ] Latency comparison: cache hit vs cache miss → `docs/compliance/p3-cache-latency-comparison.md`
 
 ### Step 4 — OCI NoSQL `supply_chain_results` table
 
@@ -91,8 +91,8 @@ Deploy P3 functions. supply-chain-validator triggered by OCIR image push.
 
 📋 **EVIDENCE CHECKPOINT**:
 - [ ] Test image push → function invocation trace → `command-outputs/p3-supply-chain-flow.txt`
-- [ ] Sample scan result JSON in Object Storage → `evidence/screenshots/p3-supply-chain-result.json`
-- [ ] CMMC evidence package sample → `evidence/reports/p3-cmmc-evidence-package-sample.md`
+- [ ] Sample scan result JSON in Object Storage → `docs/exercises/p3/screenshots/p3-supply-chain-result.json`
+- [ ] CMMC evidence package sample → `docs/compliance/p3-cmmc-evidence-package-sample.md`
 
 ### Step 6 — OCI API Gateway deployment (ADR-015)
 
@@ -127,13 +127,13 @@ Add ZAP baseline scan to CI; runs on PR + weekly cron.
 
 📋 **EVIDENCE CHECKPOINT**:
 - [ ] ZAP workflow file → `.github/workflows/security-scan.yml`
-- [ ] Sample ZAP report → `evidence/reports/p3-zap-baseline-report.html` (or excerpt)
+- [ ] Sample ZAP report → `docs/compliance/p3-zap-baseline-report.html` (or excerpt)
 
 ### Step 10 — Admin Day P3 + Patch Simulation
 
-Execute the dedicated admin day per `admin-day-p3.md`. auditd + OpenSCAP + AIDE + PAM. Then run the kernel CVE patch simulation per `evidence/admin/p3/patch-simulation-report.md`.
+Execute the dedicated admin day per `admin-day-p3.md`. auditd + OpenSCAP + AIDE + PAM. Then run the kernel CVE patch simulation per `docs/exercises/p3/patch-simulation-report.md`.
 
-📋 See `admin-day-p3.md` and `evidence/admin/p3/patch-simulation-report.md` for full checkpoints.
+📋 See `admin-day-p3.md` and `docs/exercises/p3/patch-simulation-report.md` for full checkpoints.
 
 ### Step 11 — INC-004 + INC-005 simulations
 

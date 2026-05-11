@@ -18,9 +18,9 @@
 - Forward audit logs via plugin to remote syslog
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] Your custom rules file → `evidence/admin/p3/configs/audit-rules-fedplatform.rules`
-- [ ] auditctl -l → `evidence/admin/p3/command-outputs/p3-auditctl-list.txt`
-- [ ] ausearch sample showing your rules catching activity → `evidence/admin/p3/command-outputs/p3-ausearch-sample.txt`
+- [ ] Your custom rules file → `docs/exercises/p3/configs/audit-rules-fedplatform.rules`
+- [ ] auditctl -l → `docs/exercises/p3/command-outputs/p3-auditctl-list.txt`
+- [ ] ausearch sample showing your rules catching activity → `docs/exercises/p3/command-outputs/p3-ausearch-sample.txt`
 
 ### 2. OpenSCAP profile authoring (60-90 min)
 
@@ -32,10 +32,10 @@
 - Understand: XCCDF (the rules) vs OVAL (the checks) vs the report
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] Baseline scan result → `evidence/admin/p3/configs/oscap-baseline.xml`
-- [ ] Your tailoring file → `evidence/admin/p3/configs/oscap-tailoring.xml`
-- [ ] Post-tailoring scan result → `evidence/admin/p3/configs/oscap-tailored.xml`
-- [ ] Annotation on which rules you excluded and why → `evidence/admin/p3/admin-day-notes.md` (Section 2)
+- [ ] Baseline scan result → `docs/exercises/p3/configs/oscap-baseline.xml`
+- [ ] Your tailoring file → `docs/exercises/p3/configs/oscap-tailoring.xml`
+- [ ] Post-tailoring scan result → `docs/exercises/p3/configs/oscap-tailored.xml`
+- [ ] Annotation on which rules you excluded and why → `docs/exercises/p3/admin-day-notes.md` (Section 2)
 
 ### 3. AIDE deep dive (45 min)
 
@@ -48,10 +48,10 @@
 - Re-baseline after authorized changes: `aide --update`
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] Your aide.conf → `evidence/admin/p3/configs/aide.conf`
-- [ ] Initial baseline (size, count of files) → `evidence/admin/p3/command-outputs/p3-aide-baseline.txt`
-- [ ] Detection demo: file modified → aide --check output → `evidence/admin/p3/command-outputs/p3-aide-detection.txt`
-- [ ] systemd timer for daily check → `evidence/admin/p3/configs/aide-check.timer`
+- [ ] Your aide.conf → `docs/exercises/p3/configs/aide.conf`
+- [ ] Initial baseline (size, count of files) → `docs/exercises/p3/command-outputs/p3-aide-baseline.txt`
+- [ ] Detection demo: file modified → aide --check output → `docs/exercises/p3/command-outputs/p3-aide-detection.txt`
+- [ ] systemd timer for daily check → `docs/exercises/p3/configs/aide-check.timer`
 
 ### 4. PAM custom module configuration (45-60 min)
 
@@ -65,13 +65,13 @@
 - Document the security/usability tradeoff
 
 📋 **EVIDENCE CHECKPOINT:**
-- [ ] PAM config file → `evidence/admin/p3/configs/p3-pam-system-auth`
-- [ ] Test trigger + denial trace → `evidence/admin/p3/command-outputs/p3-pam-test.txt`
-- [ ] Audit log entry → `evidence/admin/p3/command-outputs/p3-pam-audit.txt`
+- [ ] PAM config file → `docs/exercises/p3/configs/p3-pam-system-auth`
+- [ ] Test trigger + denial trace → `docs/exercises/p3/command-outputs/p3-pam-test.txt`
+- [ ] Audit log entry → `docs/exercises/p3/command-outputs/p3-pam-audit.txt`
 
 ### 5. Kernel CVE Patch Simulation (180 min, separate report)
 
-**This is the canonical drill.** See `evidence/admin/p3/patch-simulation-report.md` for the full template.
+**This is the canonical drill.** See `docs/exercises/p3/patch-simulation-report.md` for the full template.
 
 Outline:
 1. Capture pre-patch state (kernel version, uptime, app health, dnf history)
@@ -83,11 +83,11 @@ Outline:
 7. **Rollback drill** — force a "bad" kernel via `dnf history rollback`, verify recovery
 8. Lessons + what'd you do differently at scale (Ansible orchestration, multi-host rolling, k8s drain coordination)
 
-📋 **EVIDENCE CHECKPOINT:** all sections of `evidence/admin/p3/patch-simulation-report.md` filled in.
+📋 **EVIDENCE CHECKPOINT:** all sections of `docs/exercises/p3/patch-simulation-report.md` filled in.
 
 ### 6. Wrap-up reflection (15 min)
 
-Fill in `evidence/admin/p3/admin-day-notes.md` Key Takeaways section.
+Fill in `docs/exercises/p3/admin-day-notes.md` Key Takeaways section.
 
 ---
 
