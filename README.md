@@ -123,6 +123,49 @@ See the [design documents](docs/plans/) and [ADR log](docs/ARCHITECTURE-DECISION
 
 ---
 
+## Cost Considerations
+
+### Run-rate (lab scale)
+
+- **Estimated $0-$20/month** at typical lab usage. Always Free tier covers the majority of the architecture.
+- **Always Free coverage:**
+  - 2× VM.Standard.E2.1.Micro AMD instances (24GB RAM each)
+  - Oracle Autonomous Database: 1 OCPU, 20GB storage, 60-day auto-backup
+  - Object Storage: 20GB total across buckets
+  - OCI Functions: 2M invocations/mo
+  - OCI NoSQL Database: 133M reads/writes/mo + 25GB storage
+  - OCI Vault: free tier covers ~150 secret operations/sec
+  - OCI API Gateway: 1M req/mo free
+  - Cloud Guard, IAM, basic VCN networking: free
+- **First paid-tier hits as traffic grows:**
+  1. Object Storage egress beyond 10TB/mo
+  2. Function invocations beyond 2M/mo (Ollama-driven workflows could push this)
+  3. NoSQL read/write units if event rate exceeds ~50/sec sustained
+  4. OCI Cache (managed Redis) — small managed tier; ~$15/mo at smallest config (P3 addition)
+
+### Cost levers
+
+- **Lever 1: VM count.** Lab runs on 2 Always Free VMs; doubling to 4 (P2 k3s expansion to 4 nodes) crosses into paid tier ($30-50/mo for additional E2.1.Standard or Flex instances).
+- **Lever 2: ADB tier upgrade.** Always Free → Always-on (production) tier is the single biggest lab-vs-prod cost delta; ~$1000/mo for the smallest paid ADB.
+- **Lever 3: Object Storage class.** Standard → Archive saves ~50% but adds retrieval latency; matters at compliance-archive scale.
+- **Lever 4: Function memory + concurrency.** Default Functions are cheap; tuning memory up for Ollama-bound workflows linearly scales cost.
+
+### Architectural decisions driven by cost
+
+- **ADB Always Free over RDS-equivalent paid:** chose ADB for the Always Free tier (vs. a paid Oracle DB option) — accepted the tier's OCPU/storage caps and built the architecture around them (hot-write decoupling to OCI NoSQL per ADR-017).
+- **k3s in P2 before OKE in P3:** k3s on existing VMs avoided OKE's managed-control-plane cost during the learning phase. OKE in P3 is justified because P3's GitOps + supply chain story needs the managed primitives.
+- **Self-hosted Ollama vs managed LLM:** LLM inference happens on the existing VM (Always Free) rather than paying for a managed inference service. Slower, but $0 incremental cost.
+- **Cosign in CI vs OCI Vulnerability Scanning Service:** Cosign + Trivy in CI is free; OCIR built-in scanning is paid. Both are documented; only the free path is enabled by default.
+
+### What changes at production scale
+
+- **Tier upgrades become primary cost driver.** ADB paid tier alone exceeds $1000/mo; production OKE clusters with 3+ node pools run $300-500/mo; Object Storage at compliance scale (10+ TB) runs $250-500/mo.
+- **Cross-region replication doubles storage cost.** Production DR needs active cross-region replica, not just backups.
+- **Managed observability adds up.** OCI Monitoring + OCI Logging at production retention (90d+) becomes a $200-400/mo line item.
+- **Security tooling tiers up.** OCI Vulnerability Scanning Service, Cloud Guard advanced features, Threat Intel — each is a $0 → $100s/mo step.
+
+---
+
 ## License
 
 This is a portfolio project built for educational and self-study purposes.
