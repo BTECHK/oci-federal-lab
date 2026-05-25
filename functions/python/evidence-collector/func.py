@@ -50,6 +50,24 @@ from fdk import response
 # Write your implementation below. Check answers/ only after attempting.
 
 
+# ── Section 6 (v3): LLM-assisted control classification (Ollama) ──────
+# WHAT: replace/augment Section 3's STATIC finding->control lookup with a local
+#       Ollama classifier. For each finding (CVE, severity, asset), prompt the
+#       model to assign the most relevant NIST 800-53 / CMMC control family +
+#       control_id(s) with a confidence score and a one-line rationale. Keep the
+#       static table as a deterministic fallback when confidence is low.
+# LEARNING: the original stub ("every High finding maps to every control") is
+#       noise an auditor won't trust; an LLM classifier yields a specific,
+#       defensible mapping. Air-gap holds — same local Ollama as log-summarizer,
+#       no external API.
+# LOOK UP: requests.post(f"{OLLAMA_URL}/api/generate", json={"model","prompt",
+#       "stream":False}) returning STRICT JSON {control_ids, family, confidence,
+#       rationale}; parse defensively; threshold via env CLASSIFY_MIN_CONFIDENCE.
+# ADR: adrs/ADR-022-llm-evidence-classification-poam.md
+#
+# Write your implementation below. Check answers/ only after attempting.
+
+
 def handler(ctx, data: io.BytesIO = None):
     return response.Response(
         ctx,

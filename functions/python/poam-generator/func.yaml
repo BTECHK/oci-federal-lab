@@ -1,0 +1,11 @@
+schema_version: 20180708
+name: poam-generator
+version: 0.0.1
+runtime: python3.11
+entrypoint: /python/bin/fdk /function/func.py handler
+memory: 256
+timeout: 120
+config:
+  OLLAMA_URL: http://10.0.2.50:11434
+  POAM_BUCKET: compliance-artifacts
+  POAM_PREFIX: poam-drafts
