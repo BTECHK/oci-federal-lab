@@ -227,6 +227,8 @@ Create gitignored:
 
 `adrs/ADR-016-k3s-before-oke-pedagogy.md` — why k3s DIY cluster in P2 before managed OKE in P3. Key: feel the primitives (control plane, kubelet, Flannel CNI, kubeconfig) before the managed abstraction. Include 5 quiz questions. (Renumbered from ADR-014 to free that slot for the gRPC ADR.)
 
+**ADR-021 (v3 AI) — decide at phase start:** `adrs/ADR-021-airgapped-rag-bm25.md` — how to do air-gapped compliance Q&A (BM25/vectorless vs dense-vector vs managed RAG) and how the chatbot grounds or abstains. Decide BEFORE building `fedtracker-app/rag.py` + `routes/chat.py`; build steps + evidence in `docs/exercises/p2/ai/rag-chatbot-notes.md`. Include 5 quiz questions; confirm consequences after the phase.
+
 ---
 
 ### 10. Update P2 Implementation Guide

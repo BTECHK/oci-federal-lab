@@ -90,6 +90,8 @@ functions/python/evidence-collector/
 - Section 4: Bundle evidence package (scan JSON + control mapping + audit excerpt)
 - Section 5: Write package to compliance-artifacts/evidence-TIMESTAMP/ with manifest
 
+**ADR-022 (v3 AI) — decide at phase start:** `adrs/ADR-022-llm-evidence-classification-poam.md` — whether to replace the static finding→control table (Section 3 above) with an Ollama classifier (confidence + static fallback + human sign-off), plus the optional POA&M-drafter stretch. Decide BEFORE building `evidence-collector` Section 6 (+ optional `poam-generator`); build steps + evidence in `docs/exercises/p3/ai/evidence-classification-notes.md`. Include 5 quiz questions; confirm consequences after the phase.
+
 ---
 
 ### 6. Create `functions/go/supply-chain-validator/` — New P3 Go Function
