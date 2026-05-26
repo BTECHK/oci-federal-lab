@@ -313,7 +313,7 @@ Regenerate Go stubs (`protoc ...`).
 
 **Decide first — ADR-021** (`adrs/ADR-021-airgapped-rag-bm25.md`, blank quiz): BM25/vectorless vs dense-vector vs managed RAG for air-gapped controls lookup; why no embedding model (keyword/control-ID precision, e.g. "AC-3"); how the chatbot grounds answers or **abstains** when retrieval is weak; document OCI GenAI as the managed alternative.
 
-**Build** `fedtracker-app/rag/` + `fedtracker-app/routes/chat.py`:
+**Build** `fedtracker-app/rag.py` + `fedtracker-app/routes/chat.py`:
 - BM25 / FTS5 retrieval (`rank_bm25` or SQLite FTS5) over a NIST 800-53 / 800-171 / CMMC controls catalog (JSON/markdown in-repo or Object Storage) — keyword/ID precise, no vectors.
 - `POST /chat/ask` → retrieve control(s) → Ollama generate → plain-English answer + cited control IDs.
 - Realizes the previously-placeholder "OCI GenAI Agents for incident triage" — done air-gapped on Ollama.
