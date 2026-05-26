@@ -300,3 +300,40 @@ Regenerate Go stubs (`protoc ...`).
 7. `scripts/INC-002-oscap-regression.sh` and `scripts/INC-003-k3s-dr-readiness.sh` exist and are executable
 8. `adrs/ADR-016-k3s-before-oke-pedagogy.md` exists with quiz questions (renumbered from ADR-014 — see verification-grpc-gateway-zap-2026-05-09 branch)
 9. `git status` shows no `answers/`, `breaks/`, `solutions/` tracked
+
+---
+
+## Addendum 2026-05-24 — v3 AI-Forward Pass (P2)
+
+**Status:** v3 AI layer. Delta-add on top of the v1+v2 P2 lock — nothing above changes. Scaffold committed; **you build the AI logic** (chunking/retrieval, prompts, the catalog). Decide the ADR at phase **START**, confirm at end. Scope: scaffold-only — `answers/` is yours.
+
+### v3-P2a. Air-gapped RAG over the controls catalog + compliance Q&A chatbot
+
+**Theme:** GRC automation that works **offline** — the air-gap differentiator no cloud-API project can claim. Deliberately **BM25 / vectorless** (no embedding model at all) — the opposite pattern from AWS's dense-vector RAG, and maximally air-gap-pure. Ollama generates only; it never retrieves.
+
+**Decide first — ADR-021** (`adrs/ADR-021-airgapped-rag-bm25.md`, blank quiz): BM25/vectorless vs dense-vector vs managed RAG for air-gapped controls lookup; why no embedding model (keyword/control-ID precision, e.g. "AC-3"); how the chatbot grounds answers or **abstains** when retrieval is weak; document OCI GenAI as the managed alternative.
+
+**Build** `fedtracker-app/rag/` + `fedtracker-app/routes/chat.py`:
+- BM25 / FTS5 retrieval (`rank_bm25` or SQLite FTS5) over a NIST 800-53 / 800-171 / CMMC controls catalog (JSON/markdown in-repo or Object Storage) — keyword/ID precise, no vectors.
+- `POST /chat/ask` → retrieve control(s) → Ollama generate → plain-English answer + cited control IDs.
+- Realizes the previously-placeholder "OCI GenAI Agents for incident triage" — done air-gapped on Ollama.
+
+**answers/ spec (you write it):** chunking/retrieval logic + the chat route + the Ollama prompt; you provide the catalog.
+
+**Cross-phase dependency:** the controls catalog + finding→control vocabulary you build here is reused by **P3** evidence classification (ADR-022) — keep the control IDs consistent.
+
+**Evidence:** `docs/exercises/p2/ai/rag-chatbot-notes.md` — most important: the **air-gap test** (block network egress, prove RAG still answers) + Q&A traces.
+
+**Verify:** with the host's outbound network blocked, `POST /chat/ask "what does AC-3 require?"` still returns a grounded answer citing the control ID.
+
+### v3-P2b. Container pull-through cache (cache #2, container layer — no ADR)
+
+**Theme:** the project's SECOND cache, at the **container** layer (cache #1 = OCI Cache at the API edge). A pull-through registry / in-cluster mirror so image pulls survive a registry blip — fits the air-gapped story. Kept feature, **no dedicated ADR**.
+
+**Build** per `docs/exercises/p2/container-cache-notes.md`: configure a pull-through cache / mirror (Podman → k3s → OKE progression), point the cluster at it, prove a cache hit.
+
+**answers/ spec (you write it):** the registry/mirror config (config, not code).
+
+**Evidence:** `docs/exercises/p2/container-cache-notes.md` (pull-through config, a warm-cache pull served without hitting the upstream registry, latency delta).
+
+**Verify:** a second image pull is served from the local cache with the upstream unreachable.

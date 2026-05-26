@@ -347,3 +347,27 @@ jobs:
 6. `phases/phase-3-fedcompliance-gitops-security/INCIDENTS.md` has INC-004 and INC-005 with Prevention sections
 7. `scripts/INC-004-cert-expiry-check.sh` and `scripts/INC-005-slo-budget-check.py` exist and are executable
 8. `git status` shows no `answers/`, `breaks/`, `solutions/` tracked
+
+---
+
+## Addendum 2026-05-24 — v3 AI-Forward Pass (P3)
+
+**Status:** v3 AI layer. Delta-add on top of the v1+v2 P3 lock. Scaffold committed; **you build the AI logic** (classifier prompt, taxonomy, POA&M template). Decide the ADR at phase **START**, confirm at end. Scope: scaffold-only — `answers/` + DDL are yours.
+
+### v3-P3. LLM evidence auto-classification + POA&M drafting (stretch)
+
+**Theme:** GRC automation — turn raw findings into control-mapped, sign-off-ready evidence. Air-gapped (Ollama), with a deterministic fallback and human sign-off.
+
+**Decide first — ADR-022** (`adrs/ADR-022-llm-evidence-classification-poam.md`, blank quiz): whether to replace the static finding→control table (`evidence-collector` Section 3) with an **Ollama classifier** (confidence score + static fallback + human sign-off), and whether to add the optional **POA&M drafter** stretch.
+
+**Build:**
+- upgrade `functions/python/evidence-collector/` (Section 6) — Ollama tags each finding to NIST control families (AC/AU/SC/…) + confidence; the static table is the fallback when confidence is low.
+- **stretch:** `functions/python/poam-generator/` — drafts a POA&M item (risk, remediation, est. completion) from a High finding into a new `poam_items` table (**you write the DDL** per the v2 DB track).
+
+**answers/ spec (you write it):** the classification prompt + taxonomy + confidence/fallback logic; the POA&M template.
+
+**Cross-phase dependency:** reuses the **P2** controls catalog/vocabulary (ADR-021) so classifications cite the same control IDs the chatbot does — keep them in sync.
+
+**Evidence:** `docs/exercises/p3/ai/evidence-classification-notes.md` (classified-findings sample with confidences, fallback-on-low-confidence proof, a drafted POA&M item).
+
+**Verify:** a sample finding is classified to a control family with a confidence; a low-confidence case falls back to the static table; (stretch) a POA&M row is drafted.
