@@ -46,7 +46,7 @@ Build the foundation: OCI networking, compute, Oracle Autonomous Database, a Fas
 | **CI/CD** | Jenkins |
 | **Containers** | Podman (Oracle Linux native) + Docker (comparison) |
 | **API** | FastAPI (Python) — REST |
-| **AI** | Ollama (FedRAMP readiness agent, on-prem / air-gap capable) · **v3:** air-gapped BM25 RAG + compliance Q&A chatbot, LLM evidence classification + POA&M drafting — see ADRs 021-022 |
+| **AI** | Ollama (FedRAMP readiness agent, on-prem / air-gap capable) · **v3:** air-gapped BM25 RAG + compliance Q&A chatbot, LLM evidence classification + POA&M drafting — see ADRs 021-022 · container-layer pull-through cache (cache #2, no ADR) |
 | **Security** | OpenSCAP (CIS / DISA STIG baselines) |
 | **Scripting** | Bash, Python |
 
