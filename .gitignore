@@ -108,3 +108,13 @@ fedtracker-app/proto/*_pb2.pyi
 fedagent/fedagent
 fedagent/fedagent.exe
 *.exe
+
+# --- Local agent tooling & knowledge base — kept local, not part of this portfolio repo ---
+.agents/
+.claude/skills/
+.gitnexus/
+skills-lock.json
+AGENTS.md
+learnings.md
+wiki/
+raw/
